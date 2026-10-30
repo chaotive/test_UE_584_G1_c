@@ -11,6 +11,7 @@ sandbox to try different coding patterns and features.
 4. Commits: if a task is being implemented, always mention it on the description.
 5. Commits: commits should give a brief but useful description of changes.
 6. Avoid too many one liners, when possible, separate in functions that act as groupers to have a better top down understanding of code.
+7. Always add a one line comment explaining the type of pointer reference been used on each function declared.
 
 ## TASKS
 
