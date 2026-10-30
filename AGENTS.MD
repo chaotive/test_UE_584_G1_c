@@ -10,6 +10,7 @@ sandbox to try different coding patterns and features.
 3. No need to ask editor or other guards unless required to.
 4. Commits: if a task is being implemented, always mention it on the description.
 5. Commits: commits should give a brief but useful description of changes.
+6. Avoid too many one liners, when possible, separate in functions that act as groupers to have a better top down understanding of code.
 
 ## TASKS
 
@@ -17,8 +18,6 @@ sandbox to try different coding patterns and features.
 
 1. Create a ball through code, which should be created at game mode start.
 2. Please add on BeginPlay() and all main lifecycle events messages to the ue log. Add main other lifecycle functions and just do the log if needed be.
-
-### TO DO
-
 3. Have the training ball start moving on a random direction, following a random trajectory.
 
+### TO DO
