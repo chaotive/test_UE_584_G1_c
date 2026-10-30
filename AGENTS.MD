@@ -12,8 +12,9 @@ sandbox to try different coding patterns and features.
 
 ### DONE
 
+1. Create a ball through code, which should be created at game mode start.
+
 ### TO DO
 
-1. Create a ball through code, which should be created at game mode start.
 2. Have the ball start moving on a random direction.
 
