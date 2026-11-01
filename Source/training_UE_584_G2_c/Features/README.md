@@ -24,6 +24,8 @@ An **Actor** is an object that lives in Unreal's world. It need not be visible: 
 
 The `U` controller is an ordinary Unreal object, not a world actor or a player controller. It needs no position or physics. The `F` spawner is a plain C++ helper stored directly inside the game mode.
 
+We keep dependency knowledge close to the relationship that needs it. Balls publish events without knowing the shared state; the game-state controller translates those events into state changes. The HUD owns its own state subscription, while the player controller only manages the HUD's presence on screen. This is the general decoupling rule in `AGENTS.MD`: avoid spreading one feature's relationships into unrelated classes, without adding abstraction solely for its own sake.
+
 For the wider framework, read Epic's [Game Mode and Game State](https://dev.epicgames.com/documentation/en-us/unreal-engine/game-mode-and-game-state-in-unreal-engine).
 
 ## 1. Pressing Play: prepare the session
@@ -229,7 +231,7 @@ The widget tree contains a full-screen canvas, a dark border positioned at `(20,
 
 `CreateText()` centralizes the font and color setup. `SetIsFocusable(false)` and `HitTestInvisible` make the overlay non-interactive, including its children: it displays information without taking keyboard focus or intercepting mouse clicks intended for gameplay.
 
-For task 12 the panel says `TRAINING DEBUG HUD`, `C++ feature sandbox`, and `Debug overlay is active`. It does not yet read or display the bounce total; that connection is task 13. The game-state logs and getter remain the way to inspect the count.
+The panel displays `TRAINING DEBUG HUD`, `C++ feature sandbox`, and `Total bounces: N`. The HUD itself connects to `ATrainingGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
 
 ## Reading the types without getting lost
 
@@ -261,7 +263,7 @@ These are tradeoffs visible in the implementation, not benchmark results. The cu
 
 The controller adds an event dispatch and a function call to each accepted bounce. Broadcasting runs listeners on the same call path; an expensive listener would delay the physics-hit handler too. We bind once per actor creation, which avoids accumulating duplicate callbacks on pool reuse. Neither the controller nor the spawner adds a polling tick loop.
 
-The debug overlay builds its widget tree once per local player controller. It has static text, no custom tick, and no per-frame state polling. UMG still has layout and rendering costs, and each local player gets a separate widget. Building UI in C++ does not automatically make the same underlying controls faster than a Widget Blueprint; here it makes creation explicit and keeps the example self-contained. `HitTestInvisible` is an input-routing choice, not a way to eliminate UI drawing costs.
+The debug overlay builds its widget tree once per local player controller. It has no custom tick or per-frame state polling; only the bounce text changes when a state event arrives. UMG still has layout and rendering costs, and each local player gets a separate widget. Building UI in C++ does not automatically make the same underlying controls faster than a Widget Blueprint; here it makes creation explicit and keeps the example self-contained. `HitTestInvisible` is an input-routing choice, not a way to eliminate UI drawing costs.
 
 Logs are intentionally detailed for learning. A bounce formats several messages across the ball, controller, and state. With many active balls, string formatting and log output may be more noticeable than the counter increment or delegate call. Before increasing counts substantially, consider reducing log frequency and measuring again.
 
@@ -281,7 +283,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 2. Press Play and search the World Outliner for `Training_Ball_`. Runtime balls appear during Play. Inactive pooled actors can remain listed while hidden in the game view.
 3. Filter Output Log by `TrainingBallSpawner`, `TrainingBall`, `TrainingGameStateController`, or `TrainingGameState` to follow each part of the flow.
 4. Look for the dark `TRAINING DEBUG HUD` panel in the top-left corner. It appears during Play through the Third Person player controller; there is no widget asset to place in the level.
-5. Read the total through `GetTotalBounces()` or inspect `Total Bounces` on the game-state actor. The debug panel is present, but displaying the live total is still task 13.
+5. Read the total through `GetTotalBounces()` or inspect `Total Bounces` on the game-state actor. The debug panel also displays the live total through state-change events.
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 

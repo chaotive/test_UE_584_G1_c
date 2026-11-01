@@ -1,4 +1,6 @@
 #include "TrainingDebugHUD.h"
+#include "TrainingGameState.h"
+#include "Engine/World.h"
 #include "training_UE_584_G2_c.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -15,6 +17,25 @@ void UTrainingDebugHUD::NativeOnInitialized()
 	SetIsFocusable(false);
 	BuildLayout();
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingDebugHUD: Initialized"));
+}
+
+void UTrainingDebugHUD::NativeConstruct()
+{
+	Super::NativeConstruct();
+	ATrainingGameState* State = GetWorld()->GetGameState<ATrainingGameState>();
+	ObservedState = State;
+	State->OnTotalBouncesChanged.AddUObject(this, &UTrainingDebugHUD::SetTotalBounces);
+	SetTotalBounces(State->GetTotalBounces());
+}
+
+void UTrainingDebugHUD::NativeDestruct()
+{
+	if (ATrainingGameState* State = ObservedState.Get())
+	{
+		State->OnTotalBouncesChanged.RemoveAll(this);
+	}
+	ObservedState.Reset();
+	Super::NativeDestruct();
 }
 
 void UTrainingDebugHUD::BuildLayout()
@@ -40,7 +61,8 @@ UBorder* UTrainingDebugHUD::BuildPanel()
 	Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.2f, 0.85f, 1.0f)));
 	Rows->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
 	Rows->AddChildToVerticalBox(CreateText(FText::FromString(TEXT("C++ feature sandbox")), 14));
-	Rows->AddChildToVerticalBox(CreateText(FText::FromString(TEXT("Debug overlay is active")), 14));
+	TotalBouncesText = CreateText(FText::FromString(TEXT("Total bounces: 0")), 14);
+	Rows->AddChildToVerticalBox(TotalBouncesText);
 	return Panel;
 }
 
@@ -51,4 +73,9 @@ UTextBlock* UTrainingDebugHUD::CreateText(const FText& Text, int32 FontSize)
 	Row->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), FontSize));
 	Row->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 	return Row;
+}
+
+void UTrainingDebugHUD::SetTotalBounces(int32 TotalBounces)
+{
+	TotalBouncesText->SetText(FText::Format(NSLOCTEXT("TrainingDebugHUD", "TotalBounces", "Total bounces: {0}"), FText::AsNumber(TotalBounces)));
 }

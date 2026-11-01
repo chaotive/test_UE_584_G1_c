@@ -4,6 +4,7 @@
 void ATrainingGameState::RecordBounce()
 {
 	++TotalBounces;
+	OnTotalBouncesChanged.Broadcast(TotalBounces);
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingGameState [%s]: Total bounces: %d"), *GetName(), TotalBounces);
 }
 

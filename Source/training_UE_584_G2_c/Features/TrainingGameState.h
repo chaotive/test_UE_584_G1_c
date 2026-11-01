@@ -12,6 +12,12 @@ class ATrainingGameState : public AGameStateBase
 
 public:
 
+	DECLARE_EVENT_OneParam(ATrainingGameState, FTotalBouncesChangedEvent, int32);
+
+	// Notifies listeners whenever the shared bounce total changes.
+	// This native multicast event passes int32 by value; only the game state can broadcast it.
+	FTotalBouncesChangedEvent OnTotalBouncesChanged;
+
 	// Adds one ball bounce to the session total and logs the updated count.
 	// No pointer or reference parameters or return value; modifies this world-owned game state.
 	void RecordBounce();

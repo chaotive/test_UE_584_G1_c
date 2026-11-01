@@ -14,6 +14,7 @@ sandbox to try different coding patterns and features.
 7. Above every function declaration and class property, add two separate one-line comments: first describe its functional purpose; second explain the types, pointer/reference semantics, ownership, and why any wrapper (such as TArray or TWeakObjectPtr) is used. For functions without pointers or references, say so in the technical line.
 8. On every change, review and update the relevant READMEs so their explanations, examples, flows, and performance considerations stay aligned with the current implementation.
 9. Code separate the non UE classes from the UE classes. The non UE classes should go in Features_NonUE folder, along Features for UE classes.
+10. Design for maximum practical decoupling: minimize direct dependencies and prevent dependency knowledge from spreading into unrelated classes. Keep each relationship within the components that need it or a focused binding class; prefer events and narrow interfaces where they preserve clarity without unnecessary abstraction. For example, HUD-to-game-state subscriptions, initial synchronization, and unsubscription belong inside the HUD or a dedicated UI binding class, while the player controller only creates, retains, and removes the HUD and does not know which state events update which widget methods.
 
 ## TASKS
 
@@ -32,9 +33,10 @@ sandbox to try different coding patterns and features.
 11. Decouple the dependency of trainingball to the state and make it emit events so another new class can subscribe to them and the state updated. This class could be a gamestate controller or something like that, which would be to handle arbitrary state changes based on emitted events.
 12. Display a code dynamic created debug hud on the game UI, implemented in a way that is decoupled and pure code like TrainingBallSpawner
 
+13. Show the total bounces as they updated on the debug hud
+
 ### TO DO
 
-13. Show the total bounces as they updated on the debug hud
 14. Savegame
 15. Mass, as a second element (a square)
 16. generalize spawner with objects pooling
