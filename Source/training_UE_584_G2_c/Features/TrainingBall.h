@@ -12,20 +12,27 @@ class ATrainingBall : public AStaticMeshActor
 
 public:
 
+	// Creates a training ball with its sphere mesh and physics configured.
 	// No pointer or reference parameters; Unreal creates and owns this actor instance.
 	ATrainingBall();
 
 protected:
 
-	// No pointer or reference parameters; initializes this existing actor for play.
+	// Logs play startup and launches the ball along a random trajectory.
+	// No pointer or reference parameters or return value; operates on this actor instance.
 	virtual void BeginPlay() override;
+
+	// Logs why the ball stopped playing and runs the inherited cleanup.
 	// EndPlayReason is passed by value; no pointer or reference ownership is transferred.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 
-	// No pointer or reference parameters; configures the mesh component owned by this actor.
+	// Assigns the sphere mesh and enables movable physics with gravity and collision.
+	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void ConfigureBall();
-	// No pointer or reference parameters; changes the velocity of this actor's mesh component.
+
+	// Applies a random upward launch velocity and logs it.
+	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 };

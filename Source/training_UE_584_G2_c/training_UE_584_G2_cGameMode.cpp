@@ -2,7 +2,6 @@
 
 #include "training_UE_584_G2_cGameMode.h"
 #include "training_UE_584_G2_c.h"
-#include "Features/TrainingBallSpawner.h"
 
 Atraining_UE_584_G2_cGameMode::Atraining_UE_584_G2_cGameMode()
 {
@@ -38,7 +37,7 @@ void Atraining_UE_584_G2_cGameMode::BeginPlay()
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("GameMode [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
 
-	FTrainingBallSpawner::Spawn(*GetWorld(), TrainingBallSpawnLocation);
+	TrainingBallSpawner.SpawnMultiple(*GetWorld(), TrainingBallCount, TrainingBallSpawnMin, TrainingBallSpawnMax);
 }
 
 void Atraining_UE_584_G2_cGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
