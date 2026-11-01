@@ -20,6 +20,35 @@ ATrainingBall* FTrainingBallSpawner::Spawn(UWorld& World, const FVector& Locatio
 {
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner: Spawn started (Location: %s)"), *Location.ToString());
 
+	ATrainingBall* Ball = FindAvailableBall();
+	if (Ball)
+	{
+		UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner [%s]: Reusing pooled ball"), *Ball->GetName());
+	}
+	else
+	{
+		Ball = CreateBall(World, Location);
+	}
+
+	Ball->Activate(Location);
+	return Ball;
+}
+
+ATrainingBall* FTrainingBallSpawner::FindAvailableBall() const
+{
+	for (const TWeakObjectPtr<ATrainingBall>& Entry : SpawnedBalls)
+	{
+		ATrainingBall* Ball = Entry.Get();
+		if (Ball && !Ball->IsActive())
+		{
+			return Ball;
+		}
+	}
+	return nullptr;
+}
+
+ATrainingBall* FTrainingBallSpawner::CreateBall(UWorld& World, const FVector& Location)
+{
 	FActorSpawnParameters SpawnParameters;
 	const FString BallName = FString::Printf(TEXT("Training_Ball_%d"), SpawnedBalls.Num());
 	SpawnParameters.Name = FName(*BallName);
@@ -28,7 +57,7 @@ ATrainingBall* FTrainingBallSpawner::Spawn(UWorld& World, const FVector& Locatio
 	Ball->SetActorLabel(BallName);
 	SpawnedBalls.Add(Ball);
 
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner [%s]: Spawn complete"), *Ball->GetName());
+	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner [%s]: Pool grew to %d balls"), *Ball->GetName(), SpawnedBalls.Num());
 	return Ball;
 }
 

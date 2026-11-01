@@ -7,7 +7,7 @@
 class UPhysicalMaterial;
 class UPrimitiveComponent;
 
-/** A sphere that launches along a random physics trajectory when play begins. */
+/** A reusable physics sphere that returns to its pool after two bounces. */
 UCLASS()
 class ATrainingBall : public AStaticMeshActor
 {
@@ -19,9 +19,21 @@ public:
 	// No pointer or reference parameters; Unreal creates and owns this actor instance.
 	ATrainingBall();
 
+	// Resets and launches this ball for a new use at the requested position.
+	// Location is a read-only FVector reference; no pointer ownership is transferred.
+	void Activate(const FVector& Location);
+
+	// Stops and hides this ball so the spawner can reuse it later.
+	// No pointer or reference parameters or return value; modifies this world-owned actor.
+	void Deactivate();
+
+	// Reports whether this ball is currently in use rather than available in the pool.
+	// Returns bool by value without pointers or references; const keeps this query read-only.
+	bool IsActive() const;
+
 protected:
 
-	// Logs play startup and launches the ball along a random trajectory.
+	// Logs play startup and connects collision handling once for this actor's lifetime.
 	// No pointer or reference parameters or return value; operates on this actor instance.
 	virtual void BeginPlay() override;
 
@@ -31,7 +43,7 @@ protected:
 
 private:
 
-	// Assigns the sphere mesh and enables movable physics with gravity and collision.
+	// Assigns the sphere mesh and prepares an inactive ball for later activation.
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void ConfigureBall();
 
@@ -43,15 +55,19 @@ private:
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 
-	// Counts collision impulses as bounces and destroys the ball on its second bounce.
+	// Counts collision impulses as bounces and returns the ball to the pool on its second bounce.
 	// Component and actor pointers are non-owning event inputs, NormalImpulse is by value, and Hit is a read-only reference.
 	UFUNCTION()
 	void OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
 		FVector NormalImpulse, const FHitResult& Hit);
 
-	// Tracks how many times this ball has bounced since it was spawned.
+	// Tracks how many times this ball has bounced during its current activation.
 	// int32 stores a per-instance counter by value without pointer ownership or a wrapper.
 	int32 BounceCount = 0;
+
+	// Distinguishes active balls from inactive balls available for reuse.
+	// bool stores per-instance state by value without pointer ownership or a wrapper.
+	bool bActive = false;
 
 	// Supplies the restitution that makes the sphere rebound on contact.
 	// UPROPERTY tracks the actor-owned material for garbage collection; TObjectPtr is a strong Unreal object pointer.

@@ -19,8 +19,10 @@ void ATrainingBall::ConfigureBall()
 	BallMesh->SetMobility(EComponentMobility::Movable);
 	BallMesh->SetStaticMesh(SphereMesh.Object);
 	BallMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
-	BallMesh->SetSimulatePhysics(true);
+	BallMesh->SetSimulatePhysics(false);
 	BallMesh->SetEnableGravity(true);
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
 }
 
 void ATrainingBall::BeginPlay()
@@ -28,7 +30,39 @@ void ATrainingBall::BeginPlay()
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
 	GetStaticMeshComponent()->OnComponentHit.AddDynamic(this, &ATrainingBall::OnBallHit);
+}
+
+void ATrainingBall::Activate(const FVector& Location)
+{
+	BounceCount = 0;
+	bActive = true;
+	SetActorLocationAndRotation(Location, FRotator::ZeroRotator, false, nullptr, ETeleportType::TeleportPhysics);
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+
+	UStaticMeshComponent* BallMesh = GetStaticMeshComponent();
+	BallMesh->SetSimulatePhysics(true);
+	BallMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 	StartRandomMovement();
+	BallMesh->WakeAllRigidBodies();
+	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Activated (Location: %s)"), *GetName(), *Location.ToString());
+}
+
+void ATrainingBall::Deactivate()
+{
+	bActive = false;
+	UStaticMeshComponent* BallMesh = GetStaticMeshComponent();
+	BallMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	BallMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+	BallMesh->SetSimulatePhysics(false);
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
+	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Returned to pool"), *GetName());
+}
+
+bool ATrainingBall::IsActive() const
+{
+	return bActive;
 }
 
 void ATrainingBall::ConfigureBouncing()
@@ -46,8 +80,8 @@ void ATrainingBall::ConfigureBouncing()
 void ATrainingBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Ignore contacts with no physical impulse, which do not represent a bounce.
-	if (NormalImpulse.IsNearlyZero())
+	// Ignore queued contacts after release and contacts with no bounce impulse.
+	if (!bActive || NormalImpulse.IsNearlyZero())
 	{
 		return;
 	}
@@ -57,8 +91,7 @@ void ATrainingBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 
 	if (BounceCount == 2)
 	{
-		UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Destroying after second bounce"), *GetName());
-		Destroy();
+		Deactivate();
 	}
 }
 
