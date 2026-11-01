@@ -1,15 +1,14 @@
 #include "TrainingDebugHUD.h"
+#include "TrainingSaveGamePanel.h"
 #include "TrainingGameState.h"
-#include "TrainingSaveGameSubsystem.h"
-#include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "training_UE_584_G2_c.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
-#include "Components/ScrollBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Styling/CoreStyle.h"
@@ -29,24 +28,14 @@ void UTrainingDebugHUD::NativeConstruct()
 	ObservedState = State;
 	State->OnTotalBouncesChanged.AddUObject(this, &UTrainingDebugHUD::SetTotalBounces);
 	SetTotalBounces(State->GetTotalBounces());
-	UTrainingSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UTrainingSaveGameSubsystem>();
-	ObservedSaves = Saves;
-	Saves->OnStatusChanged.AddUObject(this, &UTrainingDebugHUD::RefreshSaveStatus);
-	RefreshSaveStatus(FString(), false);
+	GetOwningPlayer()->bShowMouseCursor = true;
+	GetOwningPlayer()->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
 }
 
 void UTrainingDebugHUD::NativeDestruct()
 {
-	if (ATrainingGameState* State = ObservedState.Get())
-	{
-		State->OnTotalBouncesChanged.RemoveAll(this);
-	}
+	if (ATrainingGameState* State = ObservedState.Get()) { State->OnTotalBouncesChanged.RemoveAll(this); }
 	ObservedState.Reset();
-	if (UTrainingSaveGameSubsystem* Saves = ObservedSaves.Get())
-	{
-		Saves->OnStatusChanged.RemoveAll(this);
-	}
-	ObservedSaves.Reset();
 	Super::NativeDestruct();
 }
 
@@ -75,11 +64,8 @@ UBorder* UTrainingDebugHUD::BuildPanel()
 	Rows->AddChildToVerticalBox(CreateText(FText::FromString(TEXT("C++ feature sandbox")), 14));
 	TotalBouncesText = CreateText(FText::FromString(TEXT("Total bounces: 0")), 14);
 	Rows->AddChildToVerticalBox(TotalBouncesText);
-	SaveDiagnosticsText = CreateText(FText::GetEmpty(), 12);
-	SaveDiagnosticsText->SetAutoWrapText(true);
-	UScrollBox* Diagnostics = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass());
-	Diagnostics->AddChild(SaveDiagnosticsText);
-	Rows->AddChildToVerticalBox(Diagnostics)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+	SavePanel = CreateWidget<UTrainingSaveGamePanel>(GetOwningPlayer(), UTrainingSaveGamePanel::StaticClass());
+	Rows->AddChildToVerticalBox(SavePanel)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 	return Panel;
 }
 
@@ -95,17 +81,4 @@ UTextBlock* UTrainingDebugHUD::CreateText(const FText& Text, int32 FontSize)
 void UTrainingDebugHUD::SetTotalBounces(int32 TotalBounces)
 {
 	TotalBouncesText->SetText(FText::Format(NSLOCTEXT("TrainingDebugHUD", "TotalBounces", "Total bounces: {0}"), FText::AsNumber(TotalBounces)));
-}
-
-FString UTrainingDebugHUD::FormatSaveDiagnostics(const UTrainingSaveGameSubsystem& Saves)
-{
-	const TArray<FString>& History = Saves.GetStatusHistory();
-	const FString CurrentStatus = History.IsEmpty() ? TEXT("Idle") : History.Last();
-	return FString::Printf(TEXT("I/O state: %s\nSave slot: %s (user 0)\nFile: %s\nI/O history: %s"),
-		*CurrentStatus, *Saves.GetSlotName(), *Saves.GetSaveFilePath(), *FString::Join(History, TEXT(" -> ")));
-}
-
-void UTrainingDebugHUD::RefreshSaveStatus(const FString& Status, bool bBusy)
-{
-	SaveDiagnosticsText->SetText(FText::FromString(FormatSaveDiagnostics(*ObservedSaves.Get())));
 }

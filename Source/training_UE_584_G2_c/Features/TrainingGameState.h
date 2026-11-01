@@ -27,13 +27,14 @@ public:
 	UFUNCTION(BlueprintPure, Category="Training_Ball")
 	int32 GetTotalBounces() const;
 
+	// Requests an in-game save and optionally an orderly quit after completion.
+	// bQuitAfter is passed by value; no actor or widget ownership is transferred.
+	UFUNCTION(BlueprintCallable, Category="Training_Ball")
+	void SaveSession(bool bQuitAfter = false);
+
 protected:
 
-	// Restores the saved total before gameplay and HUD construction begin.
-	// No pointer or reference parameters or return value; loads a value snapshot into this world-owned actor.
-	virtual void PostInitializeComponents() override;
-
-	// Logs the initial bounce count when the game session begins.
+	// Starts paused in-game loading and listens for restored state.
 	// No pointer or reference parameters or return value; operates on this world-owned game state.
 	virtual void BeginPlay() override;
 
@@ -42,6 +43,14 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
+
+	// Prevents forced teardown during loading from overwriting saved progress with an uninitialized total.
+	// bool records per-level restoration state by value without pointer ownership.
+	bool bHasRestoredTotal = false;
+
+	// Applies a restored total before the save subsystem releases gameplay.
+	// Count is passed by value without pointer or reference ownership.
+	void ApplyLoadedTotal(int32 Count);
 
 	// Accumulates bounces from all balls, including balls reused from the pool.
 	// int32 stores the count by value; UPROPERTY exposes it for inspection and Blueprint reads without allowing edits.

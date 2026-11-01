@@ -17,6 +17,7 @@ sandbox to try different coding patterns and features.
 10. Design for maximum practical decoupling: minimize direct dependencies and prevent dependency knowledge from spreading into unrelated classes. Keep each relationship within the components that need it or a focused binding class; prefer events and narrow interfaces where they preserve clarity without unnecessary abstraction. For example, HUD-to-game-state subscriptions, initial synchronization, and unsubscription belong inside the HUD or a dedicated UI binding class, while the player controller only creates, retains, and removes the HUD and does not know which state events update which widget methods.
 11. For every system/class/feature, attempt to use an UE base class definition and extend from it where possible.
 12. Keep UI construction, layout, styling, window management, and rendering synchronization in UI classes or the HUD. Handling systems publish state and operation events; they must not build or render UI. Route diagnostic information, including persistence slot, physical file path, phases, and results, to the debug HUD through observation rather than controller-side UI wiring.
+13. When implementation or testing produces useful screenshots or images, preserve them under docs (for example docs/images) and use them to enhance the root README and relevant documentation. Caption the actual verified behavior and identify historical captures when later changes affect their appearance; do not present mockups or unverified states as runtime evidence.
 
 ## TASKS
 
@@ -37,6 +38,8 @@ sandbox to try different coding patterns and features.
 13. Show the total bounces as they updated on the debug hud
 14. Implement simple savegame, and save the state into it just before the level or the game mode stops, and load it just before it resumes, making sure the HUD shows the data correctly when loaded back
 15. Display a code generated modal loading/saving screen UI state while the I/O for the game save and load is being used. The game should not be playable until the loaded game state is in, and it should not quit until the saved game is completed.
+
+16. Please give the IO loading UI step a 1 second before and after load just to see it working on save and loads.
 
 ### TO DO
 

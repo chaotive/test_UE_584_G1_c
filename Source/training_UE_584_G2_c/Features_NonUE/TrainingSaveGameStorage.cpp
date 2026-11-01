@@ -4,6 +4,30 @@
 #include "training_UE_584_G2_c.h"
 #include "Misc/Paths.h"
 
+void FTrainingSaveGameStorage::LoadAsync(TFunction<void(int32, const FString&)> Completion)
+{
+	const bool bExists = UGameplayStatics::DoesSaveGameExist(GetSlotName(), 0);
+	UGameplayStatics::AsyncLoadGameFromSlot(GetSlotName(), 0,
+		FAsyncLoadGameFromSlotDelegate::CreateLambda([Completion = MoveTemp(Completion), bExists](const FString&, int32, USaveGame* Data)
+		{
+			UTrainingSaveGame* Save = Cast<UTrainingSaveGame>(Data);
+			const int32 Count = Save ? Save->TotalBounces : 0;
+			Completion(Count, Save ? FString::Printf(TEXT("Loaded %d total bounces"), Count)
+				: (bExists ? TEXT("Load failed; starting at zero") : TEXT("No save found; starting at zero")));
+		}));
+}
+
+void FTrainingSaveGameStorage::SaveAsync(int32 Count, TFunction<void(bool)> Completion)
+{
+	UTrainingSaveGame* Save = Cast<UTrainingSaveGame>(UGameplayStatics::CreateSaveGameObject(UTrainingSaveGame::StaticClass()));
+	Save->TotalBounces = Count;
+	UGameplayStatics::AsyncSaveGameToSlot(Save, GetSlotName(), 0,
+		FAsyncSaveGameToSlotDelegate::CreateLambda([Completion = MoveTemp(Completion)](const FString&, int32, bool bSuccess)
+		{
+			Completion(bSuccess);
+		}));
+}
+
 int32 FTrainingSaveGameStorage::LoadTotalBounces(FString& Result)
 {
 	if (!UGameplayStatics::DoesSaveGameExist(GetSlotName(), 0))

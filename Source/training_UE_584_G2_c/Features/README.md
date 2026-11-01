@@ -1,5 +1,7 @@
 # Training balls: how this feature works
 
+For a documentation-only assessment of efficiency, risks, and proposed improvements, see [Performance and design ideas](../../../PERFORMANCE_IDEAS.md). Those ideas are not implementation changes or measured benchmark results.
+
 This folder is a small C++ learning example: create balls, launch them, count their bounces, and reuse them. You can follow the code without knowing Unreal's whole gameplay framework.
 
 Start with the startup flow below. The later sections explain the event connections, object lifetime, and performance tradeoffs. Code snippets are excerpts from this project; examples that you can try are labeled separately.
@@ -17,7 +19,7 @@ Start with the startup flow below. The later sections explain the event connecti
 | `ATrainingBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [TrainingBall.cpp](TrainingBall.cpp) |
 | `ATrainingGameState` | Stores the shared total number of bounces. | [TrainingGameState.cpp](TrainingGameState.cpp) |
 | `UTrainingGameStateController` | Listens to ball events and updates that shared total. | [TrainingGameStateController.cpp](TrainingGameStateController.cpp) |
-| `UTrainingSaveGameSubsystem` | Performs persistence and publishes operation state at session boundaries. | [TrainingSaveGameSubsystem.cpp](TrainingSaveGameSubsystem.cpp) |
+| `UTrainingSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [TrainingSaveGameSubsystem.cpp](TrainingSaveGameSubsystem.cpp) |
 | `UTrainingDebugHUD` | Builds the C++ debug panel with live counts and scrollable persistence diagnostics. | [TrainingDebugHUD.cpp](TrainingDebugHUD.cpp) |
 | `FTrainingDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [TrainingDebugHUDSpawner.cpp](../Features_NonUE/TrainingDebugHUDSpawner.cpp) |
 
@@ -200,9 +202,9 @@ Stopping the session ends the world actors' play. Balls and the game state log `
 
 The controller is a `UObject`, so it has no actor `BeginPlay()` or `EndPlay()` callbacks. It is initialized explicitly. Unreal's object lifetime system cleans it up when it is no longer referenced. Weak delegate bindings do not prolong that lifetime.
 
-A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a restored game-state total loaded from disk.
+A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a game state whose total is restored during paused in-game loading. The HUD remains rendered and operative during its real-time preview holds and asynchronous disk operations.
 
-The player controller also removes its debug widget from the screen in `EndPlay()`. The overlay is a widget, not an actor, so its setup uses the UMG lifecycle described below.
+The player controller removes its debug widget in EndPlay. Interactive Save game / Save and quit operations happen before teardown so the HUD can stay operative. Editor Stop and forced teardown use a synchronous fallback without a preview.
 
 ## 7. The debug HUD: a separate UI flow
 
@@ -230,9 +232,9 @@ Player controller BeginPlay
 
 The widget tree contains a full-screen canvas, a dark border positioned at `(20, 20)`, and a vertical stack of debug rows and scrollable persistence diagnostics. The panel is `700 x 290` UI units before the viewport's UI scaling. The tree owns its controls; the local raw pointers in `BuildPanel()` do not require manual deletion.
 
-`CreateText()` centralizes font and color setup. The HUD does not take keyboard focus. Its outer widget uses `SelfHitTestInvisible`, so only its child controls participate in pointer input; the diagnostic scroll box accepts wheel input to inspect long histories.
+`CreateText()` centralizes font and color setup. The HUD enables a visible mouse cursor and Game-and-UI input. Its outer widget uses SelfHitTestInvisible; diagnostic scrolling and save buttons remain usable while the game world is paused.
 
-The panel displays `TRAINING DEBUG HUD`, `C++ feature sandbox`, and `Total bounces: N`. The HUD itself connects to `ATrainingGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
+The panel displays TRAINING DEBUG HUD, C++ feature sandbox, Total bounces: N, save controls, and live persistence diagnostics. The HUD itself connects to `ATrainingGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
 
 ## Reading the types without getting lost
 
@@ -290,32 +292,39 @@ This example assumes the configured training game state and controller wiring. I
 
 For a first code-reading pass, follow [GameMode.cpp](../training_UE_584_G2_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
 
-## Saving and resuming the bounce total (task 14)
+## In-game load/save and HUD-controlled previews (tasks 14–16)
 
-`UTrainingSaveGame` is a small reflected data container in [TrainingSaveGame.h](TrainingSaveGame.h). It stores only an integer snapshot, not pointers to balls, UI, or the live game state. [FTrainingSaveGameStorage](../Features_NonUE/TrainingSaveGameStorage.cpp) handles disk operations without knowing those live classes.
+The debug HUD is the only persistence UI. The former TrainingSaveGameUI subsystem and native modal window have been removed. The persistence subsystem contains no rendering code, sleeps, or manual Slate ticks. Storage exposes asynchronous Unreal load/save APIs and remains independent of the game state and HUD.
 
-On gameplay-world initialization, `ATrainingGameState::PostInitializeComponents()` loads the snapshot before BeginPlay and the player's HUD construction. Editor preview worlds do not load it. The HUD's existing NativeConstruct reads the current total, so it shows the restored value immediately; later bounces continue through the same state-change event. The game state broadcasts its restored value as well for any listeners already attached.
+At GameState BeginPlay, the state subscribes to OnLoaded and requests loading. The subsystem pauses the game world and publishes a waiting phase. The normal player HUD is constructed in the active game viewport and reads the current operation even if the request happened before its subscription. NativeConstruct installs Game-and-UI input and a visible cursor so the HUD remains operative. Physics/gameplay waits while Slate continues rendering and accepting scrolling and button input.
 
-When the game state receives EndPlay during normal level travel, stopping Play, or game shutdown, it synchronously saves the current total before its inherited cleanup. The slot is `TrainingSandbox`, user index `0`; desktop saves normally appear at `Saved/SaveGames/TrainingSandbox.sav`. All levels and local players in this sandbox share this slot. When no save exists, the total starts at zero; an unreadable save logs a warning and starts at zero. Failed writes log a warning. This is a simple synchronous teaching example: it has no backup, migration, concurrent PIE-slot isolation, or crash-recovery autosave. A forced process termination cannot run EndPlay.
+The HUD's specialized UTrainingSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
 
-The ball pool is freshly created each session. Positions, velocities, active flags, and per-activation counters are not restored. The player controller and HUD do not know about save slots or disk operations. Only the game's accumulated bounce total persists.
+The HUD displays current I/O state, slot TrainingSandbox, user index 0, the absolute default desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result; writes report success or failure. Custom bounce totals are not replicated over the network. The save contains only the accumulated total, not ball positions or the pool.
 
-To check the flow, start Play, let the total increase, stop normally, and check the `Saved ... total bounces` log. Start again and compare the `Loaded ... total bounces` log and initial HUD value, then verify new bounces increase that value. Test level travel too. To deliberately start fresh, remove the sandbox save file while no session is running.
+Use **Save game** to save while staying in the current level. Use **Save and quit** for an orderly exit: snapshot the total, keep the world paused during preview and asynchronous saving, show the result, then quit only if the write succeeded. A failed save keeps the game open. The active HUD also intercepts a normal native game-window close and requests this path. Repeated save/close clicks do not launch competing writes; a quit request received during load is queued until a following save can complete.
 
-Synchronous load/save can briefly block the game thread. Here the payload is tiny and operations occur at startup/shutdown, not on every bounce or every frame. A larger save system may need asynchronous writes with completion coordinated before level teardown. These performance considerations are design expectations, not measured timings.
+Unreal Editor Stop, console/engine-forced exit, or external process termination can bypass the HUD close request. EndPlay cannot keep a destroyed level running to show progress. A synchronous fallback saves an initialized total during forced teardown, without a UI preview; stopping during initial loading does not overwrite progress with an uninitialized zero. A successful gated quit skips this redundant fallback. Crashes and forced OS process termination cannot guarantee a save. Pending async callbacks carry a generation token so results from a torn-down level are ignored; an already-issued disk write itself cannot be cancelled by that token.
 
-## Persistence diagnostics and blocking UI (task 15)
+The one-second preview adds approximately two seconds of paused-game time per interactive operation. The game thread is no longer deliberately slept and there are no manual renderer flushes. Unreal still serializes save data and constructs loaded objects on the game thread as part of its asynchronous API; async disk access does not make all CPU work free. Long histories still cost memory and formatting work. Headless runs skip HUD timing and directly advance the async operation.
 
-`UTrainingSaveGameSubsystem` is the I/O coordinator. It contains no Slate/UMG construction, widget operations, layout, styling, or rendering flushes. It records status transitions and broadcasts `OnStatusChanged`, then `OnBeforeIO` before each synchronous disk operation. Load results distinguish missing saves, read failures, and successful restored totals; saves report success or failure.
+### Runtime verification checklist
 
-[UTrainingSaveGameUI](TrainingSaveGameUI.h) is a separate UI subsystem extending UGameInstanceSubsystem. It initializes its dependency on the save subsystem and subscribes before levels load. It creates the Slate modal when busy, closes it on completion, and owns all window, parent, layout, and paint/flush details. OnBeforeIO paints after every status listener has updated, so rendering does not depend on delegate subscription order. Persistence never calls a widget or renderer.
+Verified on 2026-11-01 after extracting the save panel: Unreal Header Tool, native compilation, and DLL linking passed. An offscreen game run rendered the child panel, restored the existing total of 96, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. The startup preview can take longer than one second while the engine initializes. The root README contains the actual runtime capture. Save/quit button interaction, write failures, and forced-teardown races remain manual checks below; this loading smoke test does not establish those outcomes. Existing ball physics-material initialization errors and startup shader/sky warnings were present during the run.
 
-The debug HUD independently observes the same diagnostic events. It immediately reads retained history when constructed, making startup loading visible even when the HUD did not exist during the operation. It shows the current I/O state first, followed by the local save slot, user index 0, absolute desktop save-file path, and transitions such as Loading -> Loaded 10 total bounces -> Saving -> Saved 20 total bounces. Showing the current state separately keeps it visible even when the history grows long. The slot and path are supplied by storage, not duplicated in UI. The path describes the desktop project's default Saved/SaveGames backend; other platform save backends may not expose a physical file in this form.
+1. Start Play with a saved total: the in-game HUD should show Loading while the character and balls remain paused, then show the restored total before gameplay resumes.
+2. Move the mouse and scroll the debug HUD during both one-second holds. The viewport should keep rendering; no native dialog should open.
+3. Click Save game: the level remains visible, pauses, reports the real result, and resumes without leaving the map.
+4. Click Save and quit or close a standalone game window: the game remains open until successful saving and its result preview finish. A write failure must keep it open.
+5. Try missing saves, failed reads, repeated clicks, and close requests during loading. Existing error policy and slot sharing are unchanged.
+6. Use editor Stop during loading and saving: verify the fallback and check that callbacks do not update a new level. This forced path intentionally has no in-game delay.
 
-`UTrainingDebugHUD::FormatSaveDiagnostics()` centralizes diagnostic text for the HUD and blocking modal. The modal displays the same information while loading or saving, including when the world HUD has not yet been created or has already been removed during teardown. A removed HUD cannot itself be painted, so this separate UI presentation remains available across those lifecycle boundaries. Status history persists across levels for the game instance lifetime. The HUD's scroll box allows longer histories and paths to be inspected; the modal is a transient snapshot of the current operation.
+The player controller still only creates, retains, and removes the HUD. The outer HUD owns bounce display and general input presentation. Its UTrainingSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its scalar snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
 
-The UI is a native Slate modal with no close button, parented to the game viewport when available, not an extra game-state responsibility. The sequence is: publish busy -> update diagnostic listeners -> paint UI -> perform synchronous I/O -> publish result -> close modal. Gameplay and normal exit processing cannot advance while I/O is running; normal teardown returns only after saving completes. Failures are displayed/logged and release the modal. Forced process termination, crashes, and power loss cannot be deferred by this implementation.
+## UI composition and documentation captures
 
-There is no artificial delay or asynchronous progress animation. Synchronous I/O and render flushes can stall the game thread, while diagnostic history and repeated string formatting grow with operation count. The scrollable HUD adds layout/paint work on changes. Headless runs retain status and complete persistence without rendering a modal. For larger saves, use asynchronous I/O and explicitly defer travel/exit until completion rather than blocking the game thread.
+The outer [TrainingDebugHUD](TrainingDebugHUD.cpp) now composes the panel rather than implementing its save/load behavior. [TrainingSaveGamePanel](TrainingSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains the child through UPROPERTY/TObjectPtr and adds it as a normal layout section. The player's controller still has no save-to-widget wiring.
 
-To verify: start with an existing save and compare the HUD slot/path/result with the log and file; repeat with no save or an unreadable save. Trigger saving while a HUD exists and during normal teardown, checking both the modal snapshot and completion status. Test failed writes and long histories. Neither player controllers nor ball classes bind persistence UI or know save-file paths.
+This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. A child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
+
+See the [root README](../../../README.md) for a preserved runtime loading screenshot under docs/images. That capture is labeled with its verification context; generated test images should be incorporated into documentation when useful, rather than remaining only in ignored Saved output.

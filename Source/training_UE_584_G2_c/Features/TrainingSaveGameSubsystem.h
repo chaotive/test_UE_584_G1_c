@@ -1,56 +1,100 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "TrainingSaveGameSubsystem.generated.h"
 
-/** Coordinates synchronous persistence and publishes diagnostic state without rendering UI. */
+/** Async persistence state machine; gameplay pauses while HUD-managed previews and I/O run. */
 UCLASS()
 class UTrainingSaveGameSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
-
 public:
-
 	DECLARE_EVENT_TwoParams(UTrainingSaveGameSubsystem, FStatusChangedEvent, const FString&, bool);
-
-	// Announces operation transitions before I/O starts and after it completes.
-	// The native event borrows a const string reference and passes busy state by value; listeners are not owned.
+	DECLARE_EVENT_OneParam(UTrainingSaveGameSubsystem, FLoadedEvent, int32);
+	// Announces preview, disk activity, completion, and resume transitions.
+	// Native multicast event borrows a string and passes bool by value without owning listeners.
 	FStatusChangedEvent OnStatusChanged;
+	// Delivers restored data before gameplay resumes.
+	// Native event passes int32 by value without transferring object ownership.
+	FLoadedEvent OnLoaded;
 
-	DECLARE_EVENT(UTrainingSaveGameSubsystem, FBeforeIOEvent);
-
-	// Lets UI listeners finish presenting the published phase before disk access begins.
-	// Native event has no pointer or reference parameters; the subsystem does not know which listeners render UI.
-	FBeforeIOEvent OnBeforeIO;
-
-	// Exposes all transitions so a HUD created after loading still shows earlier phases.
-	// Returns a const TArray reference without copying or allowing callers to modify the history.
+	// Requests a paused, in-game load with HUD previews.
+	// No pointer or reference parameters or return value; callbacks use this game-instance subsystem.
+	void RequestLoad();
+	// Requests an in-game save, optionally followed by a successful orderly quit.
+	// Count and bQuitAfter are value snapshots without actor ownership.
+	void RequestSave(int32 Count, bool bQuitAfter = false);
+	// Starts disk access after the HUD's nonblocking pre-operation hold.
+	// No pointer or reference parameters or return value; starts one pending operation.
+	void BeginPendingIO();
+	// Resumes gameplay or quits after the HUD's nonblocking result hold.
+	// No pointer or reference parameters or return value; applies the operation outcome.
+	void FinishOperation();
+	// Invalidates callbacks when the owning level is forcibly torn down.
+	// No pointer or reference parameters or return value; advances a value generation token.
+	void CancelOperation();
+	// Reports whether gameplay is currently gated by persistence.
+	// Returns bool by value without pointers or references.
+	bool IsBusy() const { return bBusy; }
+	// Reports whether the pending disk call is waiting for its preview.
+	// Returns bool by value without pointers or references.
+	bool IsWaitingForIO() const { return bWaitingForIO; }
+	// Reports whether the result preview may now end the operation.
+	// Returns bool by value without pointers or references.
+	bool IsIOComplete() const { return bIOComplete; }
+	// Reports whether an orderly quit already persisted the current snapshot.
+	// Returns bool by value without pointers or references.
+	bool HasSavedForQuit() const { return bSavedForQuit; }
+	// Reads retained diagnostic transitions.
+	// Returns a const array reference without copying or transferring ownership.
 	const TArray<FString>& GetStatusHistory() const;
-
-	// Identifies the save slot for diagnostic consumers.
-	// Returns a const FString reference owned by the storage helper without ownership transfer.
+	// Identifies the storage slot.
+	// Returns a const string reference owned by storage.
 	const FString& GetSlotName() const;
-
-	// Identifies the desktop save file being read or written.
-	// Returns an absolute FString path by value without pointers or references.
+	// Identifies the desktop save file.
+	// Returns the absolute path by value without object references.
 	FString GetSaveFilePath() const;
-
-	// Restores the saved total while a modal loading screen blocks interaction.
-	// Returns int32 by value without pointer or reference ownership transfer.
-	int32 LoadTotalBounces();
-
-	// Completes a save before returning control to level teardown or shutdown.
-	// TotalBounces and the bool success result are passed by value without live actor references.
-	bool SaveTotalBounces(int32 TotalBounces);
-
 private:
-
-	// Records a transition and notifies diagnostic consumers synchronously.
-	// Status is read-only and bBusy is by value; the history retains a string copy.
-	void PublishStatus(const FString& Status, bool bBusy);
-
-	// Retains startup and operation results until the game instance ends.
-	// TArray owns copied FString values; no live actors or UI objects are retained.
+	// Pauses the current world and announces a pending operation.
+	// bLoad, Count, and bQuitAfter are passed by value without ownership transfer.
+	void StartOperation(bool bLoad, int32 Count, bool bQuitAfter);
+	// Records a diagnostic transition for HUD observers.
+	// Status is borrowed read-only and copied into owned history.
+	void PublishStatus(const FString& Status);
+	// Retains diagnostics across levels.
+	// TArray owns FString values and no actor pointers.
 	TArray<FString> StatusHistory;
+	// Tracks the world whose pause state this operation owns.
+	// TWeakObjectPtr observes world lifetime without retaining a destroyed level.
+	TWeakObjectPtr<UWorld> OperationWorld;
+	// Identifies the current callback generation across level teardown.
+	// uint32 is a value token without pointer ownership.
+	uint32 OperationId = 0;
+	// Holds the requested snapshot or restored count.
+	// int32 stores data by value without live state references.
+	int32 PendingCount = 0;
+	// Indicates a persistence gate is active.
+	// bool is per-instance value state without pointers.
+	bool bBusy = false;
+	// Indicates that the HUD preview must run before disk access.
+	// bool is per-instance value state without pointers.
+	bool bWaitingForIO = false;
+	// Indicates a completed operation waiting for its result preview.
+	// bool is per-instance value state without pointers.
+	bool bIOComplete = false;
+	// Selects loading rather than saving.
+	// bool is per-instance value state without pointers.
+	bool bLoading = false;
+	// Remembers the operation's success.
+	// bool is per-instance value state without pointers.
+	bool bSucceeded = false;
+	// Requests quit only after a successful save and preview.
+	// bool is per-instance value state without pointers.
+	bool bQuitRequested = false;
+	// Preserves a pause that existed before this operation.
+	// bool is per-instance value state without pointers.
+	bool bWasPaused = false;
+	// Suppresses redundant shutdown saving after the gated quit path.
+	// bool is per-instance value state without pointers.
+	bool bSavedForQuit = false;
 };
