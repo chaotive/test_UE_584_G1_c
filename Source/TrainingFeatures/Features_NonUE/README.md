@@ -13,7 +13,6 @@ The [feature guide](../Features/README.md) explains startup, spawning, pooling, 
 
 Task 17 moves these helpers into the TrainingFeatures runtime module alongside the UE classes. TRAININGFEATURES_API exports their symbols. NonUE means non-UObject, not independent of Unreal Engine. The extraction changes build organization without adding runtime work.
 
+Storage uses standard Unreal asynchronous loading and saving; object creation and deserialization follow the engine API. Missing or incompatible saves start from zero. No raw payload reader or old-class migration remains.
 
-Storage reads bytes on a worker thread and constructs/deserializes the known UTrainingSaveGame on the game thread. Using the slot's known type preserves the payload across the task 17 class-package move; it avoids the stock loader's lookup of the historical class name. Both async and synchronous reads use this path; async saving remains Unreal's implementation. No actor or widget is accessed by the read worker.
-
-Review follow-up: the known-type save reader now returns deserialization success separately from the bounce count. Empty data and archive read errors produce the existing load-failed/zero result rather than a successful-load message. This reader assumes this slot contains our save payload; it is not a general format validator or a schema migration system.
+Compatibility policy: old data may be discarded. The configured game mode and player controller still create the current feature classes in code, so a missing save does not prevent startup.
