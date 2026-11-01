@@ -8,3 +8,5 @@ This folder holds classes that are not Unreal-reflected `UCLASS` types and do no
 Include these helpers through `Features_NonUE/TrainingBallSpawner.h` or `Features_NonUE/TrainingDebugHUDSpawner.h` from the project module.
 
 The [feature guide](../Features/README.md) explains startup, spawning, pooling, event subscriptions, UI creation, ownership, and performance tradeoffs. This folder split changes code organization without changing those flows or their runtime costs.
+
+`FTrainingSaveGameStorage` loads and saves scalar bounce-total snapshots using `Features/TrainingSaveGame.h`. It has no dependency on the live game state or HUD; the main feature guide documents the save slot, lifecycle, failure behavior, and synchronous I/O costs.

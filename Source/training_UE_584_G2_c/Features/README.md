@@ -149,9 +149,9 @@ There are two counters with different lifetimes:
 | Counter | Meaning | When it resets |
 | --- | --- | --- |
 | `BounceCount` on each ball | Bounces during this activation; two means return to the pool. | Every `Activate()` call. |
-| `TotalBounces` on the game state | Bounces reported by all balls in the session. | A new game-state instance, normally a new Play session. |
+| `TotalBounces` on the game state | Bounces reported by all balls in the session. | Loaded from the save on startup; pool reuse does not reset it. |
 
-For example, ball 0 bouncing twice and ball 1 bouncing once produces a shared total of three. If ball 0 is reused, its local count returns to zero while the shared total stays three.
+For example, starting from a saved total of zero, ball 0 bouncing twice and ball 1 bouncing once produces a shared total of three. If ball 0 is reused, its local count returns to zero while the shared total stays three. With an existing saved total, those same bounces add three to that total.
 
 Here, a “bounce” means an accepted physics hit callback with a nonzero impulse. Wall and ball impacts can count too. If two training balls collide and both report a hit, each ball can add one to the total. We are counting ball responses, not unique pairs of colliding objects or only floor contacts.
 
@@ -199,7 +199,7 @@ Stopping the session ends the world actors' play. Balls and the game state log `
 
 The controller is a `UObject`, so it has no actor `BeginPlay()` or `EndPlay()` callbacks. It is initialized explicitly. Unreal's object lifetime system cleans it up when it is no longer referenced. Weak delegate bindings do not prolong that lifetime.
 
-A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a new game-state total. The current total is not saved to disk.
+A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a restored game-state total loaded from disk.
 
 The player controller also removes its debug widget from the screen in `EndPlay()`. The overlay is a widget, not an actor, so its setup uses the UMG lifecycle described below.
 
@@ -288,3 +288,17 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
 For a first code-reading pass, follow [GameMode.cpp](../training_UE_584_G2_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
+
+## Saving and resuming the bounce total (task 14)
+
+`UTrainingSaveGame` is a small reflected data container in [TrainingSaveGame.h](TrainingSaveGame.h). It stores only an integer snapshot, not pointers to balls, UI, or the live game state. [FTrainingSaveGameStorage](../Features_NonUE/TrainingSaveGameStorage.cpp) handles disk operations without knowing those live classes.
+
+On gameplay-world initialization, `ATrainingGameState::PostInitializeComponents()` loads the snapshot before BeginPlay and the player's HUD construction. Editor preview worlds do not load it. The HUD's existing NativeConstruct reads the current total, so it shows the restored value immediately; later bounces continue through the same state-change event. The game state broadcasts its restored value as well for any listeners already attached.
+
+When the game state receives EndPlay during normal level travel, stopping Play, or game shutdown, it synchronously saves the current total before its inherited cleanup. The slot is `TrainingSandbox`, user index `0`; desktop saves normally appear at `Saved/SaveGames/TrainingSandbox.sav`. All levels and local players in this sandbox share this slot. When no save exists, the total starts at zero; an unreadable save logs a warning and starts at zero. Failed writes log a warning. This is a simple synchronous teaching example: it has no backup, migration, concurrent PIE-slot isolation, or crash-recovery autosave. A forced process termination cannot run EndPlay.
+
+The ball pool is freshly created each session. Positions, velocities, active flags, and per-activation counters are not restored. The player controller and HUD do not know about save slots or disk operations. Only the game's accumulated bounce total persists.
+
+To check the flow, start Play, let the total increase, stop normally, and check the `Saved ... total bounces` log. Start again and compare the `Loaded ... total bounces` log and initial HUD value, then verify new bounces increase that value. Test level travel too. To deliberately start fresh, remove the sandbox save file while no session is running.
+
+Synchronous load/save can briefly block the game thread. Here the payload is tiny and operations occur at startup/shutdown, not on every bounce or every frame. A larger save system may need asynchronous writes with completion coordinated before level teardown. These performance considerations are design expectations, not measured timings.

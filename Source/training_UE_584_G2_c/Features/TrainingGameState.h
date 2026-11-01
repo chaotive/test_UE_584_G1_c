@@ -4,7 +4,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "TrainingGameState.generated.h"
 
-/** Holds the total number of training ball bounces in the current game session. */
+/** Holds the accumulated training ball bounce total, restored and saved at session boundaries. */
 UCLASS()
 class ATrainingGameState : public AGameStateBase
 {
@@ -29,11 +29,15 @@ public:
 
 protected:
 
+	// Restores the saved total before gameplay and HUD construction begin.
+	// No pointer or reference parameters or return value; loads a value snapshot into this world-owned actor.
+	virtual void PostInitializeComponents() override;
+
 	// Logs the initial bounce count when the game session begins.
 	// No pointer or reference parameters or return value; operates on this world-owned game state.
 	virtual void BeginPlay() override;
 
-	// Logs the final bounce count when the game session ends.
+	// Saves and logs the final bounce count when the level or game session ends.
 	// EndPlayReason is passed by value; no pointer or reference ownership is transferred.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 

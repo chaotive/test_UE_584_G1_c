@@ -15,6 +15,7 @@ sandbox to try different coding patterns and features.
 8. On every change, review and update the relevant READMEs so their explanations, examples, flows, and performance considerations stay aligned with the current implementation.
 9. Code separate the non UE classes from the UE classes. The non UE classes should go in Features_NonUE folder, along Features for UE classes.
 10. Design for maximum practical decoupling: minimize direct dependencies and prevent dependency knowledge from spreading into unrelated classes. Keep each relationship within the components that need it or a focused binding class; prefer events and narrow interfaces where they preserve clarity without unnecessary abstraction. For example, HUD-to-game-state subscriptions, initial synchronization, and unsubscription belong inside the HUD or a dedicated UI binding class, while the player controller only creates, retains, and removes the HUD and does not know which state events update which widget methods.
+11. For every system/class/feature, attempt to use an UE base class definition and extend from it where possible.
 
 ## TASKS
 
@@ -35,8 +36,10 @@ sandbox to try different coding patterns and features.
 
 13. Show the total bounces as they updated on the debug hud
 
+14. Implement simple savegame, and save the state into it just before the level or the game mode stops, and load it just before it resumes, making sure the HUD shows the data correctly when loaded back
+
 ### TO DO
 
-14. Savegame
-15. Mass, as a second element (a square)
-16. generalize spawner with objects pooling
+15. Display a code generated modal loading/saving screen UI state while the I/O for the game save and load is being used. The game should not be playable until the loaded game state is in.
+150. Mass, as a second element (a square)
+160. generalize spawner with objects pooling
