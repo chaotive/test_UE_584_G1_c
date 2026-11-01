@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "Features/TrainingBallSpawner.h"
+#include "Features_NonUE/TrainingBallSpawner.h"
 #include "training_UE_584_G2_cGameMode.generated.h"
 
 class UTrainingGameStateController;

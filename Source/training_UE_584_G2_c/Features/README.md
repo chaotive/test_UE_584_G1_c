@@ -4,15 +4,21 @@ This folder is a small C++ learning example: create balls, launch them, count th
 
 Start with the startup flow below. The later sections explain the event connections, object lifetime, and performance tradeoffs. Code snippets are excerpts from this project; examples that you can try are labeled separately.
 
+## Folder organization
+
+`Features` contains the Unreal-reflected actor and widget classes and the UObject-based state controller. The sibling `Features_NonUE` folder contains plain C++ helpers: `FTrainingBallSpawner` and `FTrainingDebugHUDSpawner`. These helpers still use Unreal APIs; non-UE here means they do not derive from UObject and are not UCLASS types.
+
 ## Who does what?
 
 | Class | Plain-language job | Where to read |
 | --- | --- | --- |
 | `Atraining_UE_584_G2_cGameMode` | Sets up the session and connects the pieces. | [GameMode.cpp](../training_UE_584_G2_cGameMode.cpp) |
-| `FTrainingBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [TrainingBallSpawner.cpp](TrainingBallSpawner.cpp) |
+| `FTrainingBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) |
 | `ATrainingBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [TrainingBall.cpp](TrainingBall.cpp) |
 | `ATrainingGameState` | Stores the shared total number of bounces. | [TrainingGameState.cpp](TrainingGameState.cpp) |
 | `UTrainingGameStateController` | Listens to ball events and updates that shared total. | [TrainingGameStateController.cpp](TrainingGameStateController.cpp) |
+| `UTrainingDebugHUD` | Builds a small non-interactive debug panel entirely in C++. | [TrainingDebugHUD.cpp](TrainingDebugHUD.cpp) |
+| `FTrainingDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [TrainingDebugHUDSpawner.cpp](../Features_NonUE/TrainingDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
 
@@ -193,6 +199,38 @@ The controller is a `UObject`, so it has no actor `BeginPlay()` or `EndPlay()` c
 
 A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a new game-state total. The current total is not saved to disk.
 
+The player controller also removes its debug widget from the screen in `EndPlay()`. The overlay is a widget, not an actor, so its setup uses the UMG lifecycle described below.
+
+## 7. The debug HUD: a separate UI flow
+
+The widget layout lives in `TrainingDebugHUD.h/.cpp`, while its creation helper lives separately in `../Features_NonUE/TrainingDebugHUDSpawner.h/.cpp`. The player controller includes both headers: one for the widget instance and one for the spawning API.
+
+The Third Person player controller requests the overlay in its own `BeginPlay()`, only when `IsLocalPlayerController()` is true:
+
+```cpp
+DebugHUD = FTrainingDebugHUDSpawner::Spawn(*this);
+```
+
+This local-player check is meaningful: the screen belongs to a player on this machine, not to a remote player's controller. The helper has no dependency on the ball spawner, ball events, or game state.
+
+`FTrainingDebugHUDSpawner::Spawn()` calls `CreateWidget<UTrainingDebugHUD>()` with the player controller as the owning player. It then calls `AddToPlayerScreen(10)` and returns the widget. The controller stores it in a `UPROPERTY`-tracked `TObjectPtr` so it remains reachable throughout the player's session. See Epic's [AddToPlayerScreen](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/UMG/UUserWidget/AddToPlayerScreen?lang=en-US) reference for player-specific viewport placement and layering.
+
+During widget creation, `NativeOnInitialized()` builds the controls once. No Widget Blueprint asset or designer layout is needed:
+
+```text
+Player controller BeginPlay
+  -> FTrainingDebugHUDSpawner::Spawn()
+  -> CreateWidget<UTrainingDebugHUD>()
+  -> NativeOnInitialized() -> BuildLayout() -> BuildPanel()
+  -> AddToPlayerScreen(10)
+```
+
+The widget tree contains a full-screen canvas, a dark border positioned at `(20, 20)`, and a vertical stack of three text rows. The panel is `320 x 110` UI units before the viewport's UI scaling. The tree owns its controls; the local raw pointers in `BuildPanel()` do not require manual deletion.
+
+`CreateText()` centralizes the font and color setup. `SetIsFocusable(false)` and `HitTestInvisible` make the overlay non-interactive, including its children: it displays information without taking keyboard focus or intercepting mouse clicks intended for gameplay.
+
+For task 12 the panel says `TRAINING DEBUG HUD`, `C++ feature sandbox`, and `Debug overlay is active`. It does not yet read or display the bounce total; that connection is task 13. The game-state logs and getter remain the way to inspect the count.
+
 ## Reading the types without getting lost
 
 | Example from our code | How to read it |
@@ -223,6 +261,8 @@ These are tradeoffs visible in the implementation, not benchmark results. The cu
 
 The controller adds an event dispatch and a function call to each accepted bounce. Broadcasting runs listeners on the same call path; an expensive listener would delay the physics-hit handler too. We bind once per actor creation, which avoids accumulating duplicate callbacks on pool reuse. Neither the controller nor the spawner adds a polling tick loop.
 
+The debug overlay builds its widget tree once per local player controller. It has static text, no custom tick, and no per-frame state polling. UMG still has layout and rendering costs, and each local player gets a separate widget. Building UI in C++ does not automatically make the same underlying controls faster than a Widget Blueprint; here it makes creation explicit and keeps the example self-contained. `HitTestInvisible` is an input-routing choice, not a way to eliminate UI drawing costs.
+
 Logs are intentionally detailed for learning. A bounce formats several messages across the ball, controller, and state. With many active balls, string formatting and log output may be more noticeable than the counter increment or delegate call. Before increasing counts substantially, consider reducing log frequency and measuring again.
 
 Random positions are sampled independently, and `AlwaysSpawn` allows overlapping starts. A small spawn box with many balls can produce dense contacts, more physics work, and immediate hit callbacks. The callback-based bounce counter can also consume its two hits quickly in crowded contact situations; it does not separately detect a visually completed rebound.
@@ -240,8 +280,9 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 1. Use the Third Person game mode. In its Blueprint Class Defaults, find `Training_Ball` and adjust count and minimum/maximum spawn corners. Coordinates are world centimeters; minimum must not exceed maximum on any axis.
 2. Press Play and search the World Outliner for `Training_Ball_`. Runtime balls appear during Play. Inactive pooled actors can remain listed while hidden in the game view.
 3. Filter Output Log by `TrainingBallSpawner`, `TrainingBall`, `TrainingGameStateController`, or `TrainingGameState` to follow each part of the flow.
-4. Read the total through `GetTotalBounces()` or inspect `Total Bounces` on the game-state actor. There is no debug HUD for it yet.
+4. Look for the dark `TRAINING DEBUG HUD` panel in the top-left corner. It appears during Play through the Third Person player controller; there is no widget asset to place in the level.
+5. Read the total through `GetTotalBounces()` or inspect `Total Bounces` on the game-state actor. The debug panel is present, but displaying the live total is still task 13.
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../training_UE_584_G2_cGameMode.cpp) → [TrainingBallSpawner.cpp](TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../training_UE_584_G2_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).

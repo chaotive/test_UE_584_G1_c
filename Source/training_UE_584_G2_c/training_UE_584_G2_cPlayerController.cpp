@@ -2,6 +2,8 @@
 
 
 #include "training_UE_584_G2_cPlayerController.h"
+#include "Features/TrainingDebugHUD.h"
+#include "Features_NonUE/TrainingDebugHUDSpawner.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
@@ -12,6 +14,11 @@
 void Atraining_UE_584_G2_cPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsLocalPlayerController())
+	{
+		DebugHUD = FTrainingDebugHUDSpawner::Spawn(*this);
+	}
 
 	// only spawn touch controls on local player controllers
 	if (IsLocalPlayerController() && ShouldUseTouchControls())
@@ -31,6 +38,15 @@ void Atraining_UE_584_G2_cPlayerController::BeginPlay()
 		}
 
 	}
+}
+
+void Atraining_UE_584_G2_cPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (IsLocalPlayerController())
+	{
+		DebugHUD->RemoveFromParent();
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 void Atraining_UE_584_G2_cPlayerController::SetupInputComponent()

@@ -1,5 +1,5 @@
 #include "TrainingBallSpawner.h"
-#include "TrainingBall.h"
+#include "Features/TrainingBall.h"
 #include "training_UE_584_G2_c.h"
 #include "Engine/World.h"
 
