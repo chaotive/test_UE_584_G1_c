@@ -7,6 +7,7 @@
 
 ATrainingBall::ATrainingBall()
 {
+	BallMesh = GetStaticMeshComponent();
 	ConfigureBall();
 	ConfigureBouncing();
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Constructor (base setup complete)"), *GetName());
@@ -15,7 +16,6 @@ ATrainingBall::ATrainingBall()
 void ATrainingBall::ConfigureBall()
 {
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-	UStaticMeshComponent* BallMesh = GetStaticMeshComponent();
 	BallMesh->SetMobility(EComponentMobility::Movable);
 	BallMesh->SetStaticMesh(SphereMesh.Object);
 	BallMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
@@ -29,7 +29,7 @@ void ATrainingBall::BeginPlay()
 {
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
-	GetStaticMeshComponent()->OnComponentHit.AddDynamic(this, &ATrainingBall::OnBallHit);
+	BallMesh->OnComponentHit.AddDynamic(this, &ATrainingBall::OnBallHit);
 }
 
 void ATrainingBall::Activate(const FVector& Location)
@@ -40,7 +40,6 @@ void ATrainingBall::Activate(const FVector& Location)
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 
-	UStaticMeshComponent* BallMesh = GetStaticMeshComponent();
 	BallMesh->SetSimulatePhysics(true);
 	BallMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 	StartRandomMovement();
@@ -51,7 +50,6 @@ void ATrainingBall::Activate(const FVector& Location)
 void ATrainingBall::Deactivate()
 {
 	bActive = false;
-	UStaticMeshComponent* BallMesh = GetStaticMeshComponent();
 	BallMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	BallMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 	BallMesh->SetSimulatePhysics(false);
@@ -72,7 +70,6 @@ void ATrainingBall::ConfigureBouncing()
 	BounceMaterial->bOverrideRestitutionCombineMode = true;
 	BounceMaterial->RestitutionCombineMode = EFrictionCombineMode::Max;
 
-	UStaticMeshComponent* BallMesh = GetStaticMeshComponent();
 	BallMesh->SetPhysMaterialOverride(BounceMaterial);
 	BallMesh->SetNotifyRigidBodyCollision(true);
 }
@@ -101,7 +98,7 @@ void ATrainingBall::StartRandomMovement()
 	const FVector Direction = FMath::VRandCone(FVector::UpVector, FMath::DegreesToRadians(60.0f));
 	const float Speed = FMath::FRandRange(500.0f, 900.0f);
 	const FVector Velocity = Direction * Speed;
-	GetStaticMeshComponent()->SetPhysicsLinearVelocity(Velocity);
+	BallMesh->SetPhysicsLinearVelocity(Velocity);
 
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Random movement started (Velocity: %s cm/s)"),
 		*GetName(), *Velocity.ToString());

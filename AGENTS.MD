@@ -25,7 +25,8 @@ sandbox to try different coding patterns and features.
 6. Allow still to have spawner to spawn a single ball with just public spawn, and spawn in multiple with a second public function, that calls spawn several times. The spawned balls remain in a dynamic list and when single spawned, the name follows the list index.
 7. Now makes that each ball is destroyed after bouncing 2 times.
 8. Implement objects pooling for the balls spawner.
+9. Avoid recalling GetStaticMeshComponent and just do once, while keeping references to it
 
 ### TO DO
 
-9.
+10. Add a centralized game state on its own independent class and keep tracking of the total bounces made by any and all balls

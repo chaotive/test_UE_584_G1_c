@@ -6,6 +6,7 @@
 
 class UPhysicalMaterial;
 class UPrimitiveComponent;
+class UStaticMeshComponent;
 
 /** A reusable physics sphere that returns to its pool after two bounces. */
 UCLASS()
@@ -60,6 +61,11 @@ private:
 	UFUNCTION()
 	void OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
 		FVector NormalImpulse, const FHitResult& Hit);
+
+	// Caches the inherited sphere mesh component for setup, movement, collision, and pooling.
+	// UPROPERTY tracks this strong TObjectPtr through Unreal object duplication and garbage collection; the actor owns the component.
+	UPROPERTY()
+	TObjectPtr<UStaticMeshComponent> BallMesh;
 
 	// Tracks how many times this ball has bounced during its current activation.
 	// int32 stores a per-instance counter by value without pointer ownership or a wrapper.
