@@ -21,7 +21,7 @@ public class training_UE_584_G2_c : ModuleRules
 			"Slate"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "PhysicsCore", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "PhysicsCore", "SlateCore", "RenderCore" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"training_UE_584_G2_c",

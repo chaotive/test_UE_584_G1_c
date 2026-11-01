@@ -7,12 +7,19 @@
 class UBorder;
 class UTextBlock;
 class ATrainingGameState;
+class UTrainingSaveGameSubsystem;
 
-/** A non-interactive debug overlay built entirely in C++ without a Widget Blueprint. */
+/** A code-built debug overlay with live state and scrollable persistence diagnostics. */
 UCLASS()
 class UTrainingDebugHUD : public UUserWidget
 {
 	GENERATED_BODY()
+
+public:
+
+	// Formats the same persistence diagnostics for the HUD and blocking modal.
+	// Saves is a read-only subsystem reference; the formatted FString is returned by value.
+	static FString FormatSaveDiagnostics(const UTrainingSaveGameSubsystem& Saves);
 
 protected:
 
@@ -29,6 +36,10 @@ protected:
 	virtual void NativeDestruct() override;
 
 private:
+
+	// Refreshes persistence details when an I/O phase or result changes.
+	// Status is read-only and bBusy is by value; the widget reads the retained diagnostic history.
+	void RefreshSaveStatus(const FString& Status, bool bBusy);
 
 	// Displays the shared bounce total received from the state event.
 	// TotalBounces is passed by value; no pointers or references are passed or returned.
@@ -54,4 +65,13 @@ private:
 	// Remembers the observed state so the HUD can disconnect on removal or reconstruction.
 	// TWeakObjectPtr observes the world-owned actor without keeping it alive and detects destruction during teardown.
 	TWeakObjectPtr<ATrainingGameState> ObservedState;
+
+	// Displays slot, physical desktop file path, and operation history including blocking phases.
+	// UPROPERTY tracks a strong TObjectPtr to a widget-tree-owned text control.
+	UPROPERTY()
+	TObjectPtr<UTextBlock> SaveDiagnosticsText;
+
+	// Observes the persistence diagnostic source without extending its lifetime.
+	// TWeakObjectPtr detects subsystem destruction and does not prevent garbage collection.
+	TWeakObjectPtr<UTrainingSaveGameSubsystem> ObservedSaves;
 };

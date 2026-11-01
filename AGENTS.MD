@@ -16,6 +16,7 @@ sandbox to try different coding patterns and features.
 9. Code separate the non UE classes from the UE classes. The non UE classes should go in Features_NonUE folder, along Features for UE classes.
 10. Design for maximum practical decoupling: minimize direct dependencies and prevent dependency knowledge from spreading into unrelated classes. Keep each relationship within the components that need it or a focused binding class; prefer events and narrow interfaces where they preserve clarity without unnecessary abstraction. For example, HUD-to-game-state subscriptions, initial synchronization, and unsubscription belong inside the HUD or a dedicated UI binding class, while the player controller only creates, retains, and removes the HUD and does not know which state events update which widget methods.
 11. For every system/class/feature, attempt to use an UE base class definition and extend from it where possible.
+12. Keep UI construction, layout, styling, window management, and rendering synchronization in UI classes or the HUD. Handling systems publish state and operation events; they must not build or render UI. Route diagnostic information, including persistence slot, physical file path, phases, and results, to the debug HUD through observation rather than controller-side UI wiring.
 
 ## TASKS
 
@@ -33,13 +34,11 @@ sandbox to try different coding patterns and features.
 10. Add a centralized game state on its own independent class and keep tracking of the total bounces made by any and all balls
 11. Decouple the dependency of trainingball to the state and make it emit events so another new class can subscribe to them and the state updated. This class could be a gamestate controller or something like that, which would be to handle arbitrary state changes based on emitted events.
 12. Display a code dynamic created debug hud on the game UI, implemented in a way that is decoupled and pure code like TrainingBallSpawner
-
 13. Show the total bounces as they updated on the debug hud
-
 14. Implement simple savegame, and save the state into it just before the level or the game mode stops, and load it just before it resumes, making sure the HUD shows the data correctly when loaded back
+15. Display a code generated modal loading/saving screen UI state while the I/O for the game save and load is being used. The game should not be playable until the loaded game state is in, and it should not quit until the saved game is completed.
 
 ### TO DO
 
-15. Display a code generated modal loading/saving screen UI state while the I/O for the game save and load is being used. The game should not be playable until the loaded game state is in.
 150. Mass, as a second element (a square)
 160. generalize spawner with objects pooling

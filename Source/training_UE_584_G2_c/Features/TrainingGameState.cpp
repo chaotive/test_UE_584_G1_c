@@ -1,5 +1,6 @@
 #include "TrainingGameState.h"
-#include "Features_NonUE/TrainingSaveGameStorage.h"
+#include "TrainingSaveGameSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "training_UE_584_G2_c.h"
 
@@ -21,7 +22,7 @@ void ATrainingGameState::PostInitializeComponents()
 	// Editor preview worlds must not load session data; only gameplay worlds resume a save.
 	if (GetWorld()->IsGameWorld())
 	{
-		TotalBounces = FTrainingSaveGameStorage::LoadTotalBounces();
+		TotalBounces = GetGameInstance()->GetSubsystem<UTrainingSaveGameSubsystem>()->LoadTotalBounces();
 		OnTotalBouncesChanged.Broadcast(TotalBounces);
 	}
 }
@@ -34,7 +35,7 @@ void ATrainingGameState::BeginPlay()
 
 void ATrainingGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	FTrainingSaveGameStorage::SaveTotalBounces(TotalBounces);
+	GetGameInstance()->GetSubsystem<UTrainingSaveGameSubsystem>()->SaveTotalBounces(TotalBounces);
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingGameState [%s]: EndPlay (Total bounces: %d)"), *GetName(), TotalBounces);
 	Super::EndPlay(EndPlayReason);
 }

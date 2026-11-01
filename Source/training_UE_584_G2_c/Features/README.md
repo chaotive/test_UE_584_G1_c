@@ -17,7 +17,8 @@ Start with the startup flow below. The later sections explain the event connecti
 | `ATrainingBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [TrainingBall.cpp](TrainingBall.cpp) |
 | `ATrainingGameState` | Stores the shared total number of bounces. | [TrainingGameState.cpp](TrainingGameState.cpp) |
 | `UTrainingGameStateController` | Listens to ball events and updates that shared total. | [TrainingGameStateController.cpp](TrainingGameStateController.cpp) |
-| `UTrainingDebugHUD` | Builds a small non-interactive debug panel entirely in C++. | [TrainingDebugHUD.cpp](TrainingDebugHUD.cpp) |
+| `UTrainingSaveGameSubsystem` | Performs persistence and publishes operation state at session boundaries. | [TrainingSaveGameSubsystem.cpp](TrainingSaveGameSubsystem.cpp) |
+| `UTrainingDebugHUD` | Builds the C++ debug panel with live counts and scrollable persistence diagnostics. | [TrainingDebugHUD.cpp](TrainingDebugHUD.cpp) |
 | `FTrainingDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [TrainingDebugHUDSpawner.cpp](../Features_NonUE/TrainingDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
@@ -227,9 +228,9 @@ Player controller BeginPlay
   -> AddToPlayerScreen(10)
 ```
 
-The widget tree contains a full-screen canvas, a dark border positioned at `(20, 20)`, and a vertical stack of three text rows. The panel is `320 x 110` UI units before the viewport's UI scaling. The tree owns its controls; the local raw pointers in `BuildPanel()` do not require manual deletion.
+The widget tree contains a full-screen canvas, a dark border positioned at `(20, 20)`, and a vertical stack of debug rows and scrollable persistence diagnostics. The panel is `700 x 290` UI units before the viewport's UI scaling. The tree owns its controls; the local raw pointers in `BuildPanel()` do not require manual deletion.
 
-`CreateText()` centralizes the font and color setup. `SetIsFocusable(false)` and `HitTestInvisible` make the overlay non-interactive, including its children: it displays information without taking keyboard focus or intercepting mouse clicks intended for gameplay.
+`CreateText()` centralizes font and color setup. The HUD does not take keyboard focus. Its outer widget uses `SelfHitTestInvisible`, so only its child controls participate in pointer input; the diagnostic scroll box accepts wheel input to inspect long histories.
 
 The panel displays `TRAINING DEBUG HUD`, `C++ feature sandbox`, and `Total bounces: N`. The HUD itself connects to `ATrainingGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
 
@@ -263,7 +264,7 @@ These are tradeoffs visible in the implementation, not benchmark results. The cu
 
 The controller adds an event dispatch and a function call to each accepted bounce. Broadcasting runs listeners on the same call path; an expensive listener would delay the physics-hit handler too. We bind once per actor creation, which avoids accumulating duplicate callbacks on pool reuse. Neither the controller nor the spawner adds a polling tick loop.
 
-The debug overlay builds its widget tree once per local player controller. It has no custom tick or per-frame state polling; only the bounce text changes when a state event arrives. UMG still has layout and rendering costs, and each local player gets a separate widget. Building UI in C++ does not automatically make the same underlying controls faster than a Widget Blueprint; here it makes creation explicit and keeps the example self-contained. `HitTestInvisible` is an input-routing choice, not a way to eliminate UI drawing costs.
+The debug overlay builds its widget tree once per local player controller. It has no custom tick or per-frame state polling; only the bounce text changes when a state event arrives. UMG still has layout and rendering costs, and each local player gets a separate widget. Building UI in C++ does not automatically make the same underlying controls faster than a Widget Blueprint; here it makes creation explicit and keeps the example self-contained. The HUD visibility mode controls pointer routing, not UI drawing costs.
 
 Logs are intentionally detailed for learning. A bounce formats several messages across the ball, controller, and state. With many active balls, string formatting and log output may be more noticeable than the counter increment or delegate call. Before increasing counts substantially, consider reducing log frequency and measuring again.
 
@@ -302,3 +303,19 @@ The ball pool is freshly created each session. Positions, velocities, active fla
 To check the flow, start Play, let the total increase, stop normally, and check the `Saved ... total bounces` log. Start again and compare the `Loaded ... total bounces` log and initial HUD value, then verify new bounces increase that value. Test level travel too. To deliberately start fresh, remove the sandbox save file while no session is running.
 
 Synchronous load/save can briefly block the game thread. Here the payload is tiny and operations occur at startup/shutdown, not on every bounce or every frame. A larger save system may need asynchronous writes with completion coordinated before level teardown. These performance considerations are design expectations, not measured timings.
+
+## Persistence diagnostics and blocking UI (task 15)
+
+`UTrainingSaveGameSubsystem` is the I/O coordinator. It contains no Slate/UMG construction, widget operations, layout, styling, or rendering flushes. It records status transitions and broadcasts `OnStatusChanged`, then `OnBeforeIO` before each synchronous disk operation. Load results distinguish missing saves, read failures, and successful restored totals; saves report success or failure.
+
+[UTrainingSaveGameUI](TrainingSaveGameUI.h) is a separate UI subsystem extending UGameInstanceSubsystem. It initializes its dependency on the save subsystem and subscribes before levels load. It creates the Slate modal when busy, closes it on completion, and owns all window, parent, layout, and paint/flush details. OnBeforeIO paints after every status listener has updated, so rendering does not depend on delegate subscription order. Persistence never calls a widget or renderer.
+
+The debug HUD independently observes the same diagnostic events. It immediately reads retained history when constructed, making startup loading visible even when the HUD did not exist during the operation. It shows the current I/O state first, followed by the local save slot, user index 0, absolute desktop save-file path, and transitions such as Loading -> Loaded 10 total bounces -> Saving -> Saved 20 total bounces. Showing the current state separately keeps it visible even when the history grows long. The slot and path are supplied by storage, not duplicated in UI. The path describes the desktop project's default Saved/SaveGames backend; other platform save backends may not expose a physical file in this form.
+
+`UTrainingDebugHUD::FormatSaveDiagnostics()` centralizes diagnostic text for the HUD and blocking modal. The modal displays the same information while loading or saving, including when the world HUD has not yet been created or has already been removed during teardown. A removed HUD cannot itself be painted, so this separate UI presentation remains available across those lifecycle boundaries. Status history persists across levels for the game instance lifetime. The HUD's scroll box allows longer histories and paths to be inspected; the modal is a transient snapshot of the current operation.
+
+The UI is a native Slate modal with no close button, parented to the game viewport when available, not an extra game-state responsibility. The sequence is: publish busy -> update diagnostic listeners -> paint UI -> perform synchronous I/O -> publish result -> close modal. Gameplay and normal exit processing cannot advance while I/O is running; normal teardown returns only after saving completes. Failures are displayed/logged and release the modal. Forced process termination, crashes, and power loss cannot be deferred by this implementation.
+
+There is no artificial delay or asynchronous progress animation. Synchronous I/O and render flushes can stall the game thread, while diagnostic history and repeated string formatting grow with operation count. The scrollable HUD adds layout/paint work on changes. Headless runs retain status and complete persistence without rendering a modal. For larger saves, use asynchronous I/O and explicitly defer travel/exit until completion rather than blocking the game thread.
+
+To verify: start with an existing save and compare the HUD slot/path/result with the log and file; repeat with no save or an unreadable save. Trigger saving while a HUD exists and during normal teardown, checking both the modal snapshot and completion status. Test failed writes and long histories. Neither player controllers nor ball classes bind persistence UI or know save-file paths.
