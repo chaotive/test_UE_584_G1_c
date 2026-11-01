@@ -1,7 +1,6 @@
 #include "TrainingDebugHUD.h"
 #include "TrainingSaveGamePanel.h"
-#include "TrainingGameState.h"
-#include "Engine/World.h"
+#include "TrainingBallPanel.h"
 #include "GameFramework/PlayerController.h"
 #include "training_UE_584_G2_c.h"
 #include "Blueprint/WidgetTree.h"
@@ -24,19 +23,8 @@ void UTrainingDebugHUD::NativeOnInitialized()
 void UTrainingDebugHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-	ATrainingGameState* State = GetWorld()->GetGameState<ATrainingGameState>();
-	ObservedState = State;
-	State->OnTotalBouncesChanged.AddUObject(this, &UTrainingDebugHUD::SetTotalBounces);
-	SetTotalBounces(State->GetTotalBounces());
 	GetOwningPlayer()->bShowMouseCursor = true;
 	GetOwningPlayer()->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
-}
-
-void UTrainingDebugHUD::NativeDestruct()
-{
-	if (ATrainingGameState* State = ObservedState.Get()) { State->OnTotalBouncesChanged.RemoveAll(this); }
-	ObservedState.Reset();
-	Super::NativeDestruct();
 }
 
 void UTrainingDebugHUD::BuildLayout()
@@ -62,8 +50,8 @@ UBorder* UTrainingDebugHUD::BuildPanel()
 	Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.2f, 0.85f, 1.0f)));
 	Rows->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
 	Rows->AddChildToVerticalBox(CreateText(FText::FromString(TEXT("C++ feature sandbox")), 14));
-	TotalBouncesText = CreateText(FText::FromString(TEXT("Total bounces: 0")), 14);
-	Rows->AddChildToVerticalBox(TotalBouncesText);
+	BallPanel = CreateWidget<UTrainingBallPanel>(GetOwningPlayer(), UTrainingBallPanel::StaticClass());
+	Rows->AddChildToVerticalBox(BallPanel);
 	SavePanel = CreateWidget<UTrainingSaveGamePanel>(GetOwningPlayer(), UTrainingSaveGamePanel::StaticClass());
 	Rows->AddChildToVerticalBox(SavePanel)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 	return Panel;
@@ -76,9 +64,4 @@ UTextBlock* UTrainingDebugHUD::CreateText(const FText& Text, int32 FontSize)
 	Row->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), FontSize));
 	Row->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 	return Row;
-}
-
-void UTrainingDebugHUD::SetTotalBounces(int32 TotalBounces)
-{
-	TotalBouncesText->SetText(FText::Format(NSLOCTEXT("TrainingDebugHUD", "TotalBounces", "Total bounces: {0}"), FText::AsNumber(TotalBounces)));
 }

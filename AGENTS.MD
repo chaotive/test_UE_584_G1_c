@@ -18,6 +18,7 @@ sandbox to try different coding patterns and features.
 11. For every system/class/feature, attempt to use an UE base class definition and extend from it where possible.
 12. Keep UI construction, layout, styling, window management, and rendering synchronization in UI classes or the HUD. Handling systems publish state and operation events; they must not build or render UI. Route diagnostic information, including persistence slot, physical file path, phases, and results, to the debug HUD through observation rather than controller-side UI wiring.
 13. When implementation or testing produces useful screenshots or images, preserve them under docs (for example docs/images) and use them to enhance the root README and relevant documentation. Caption the actual verified behavior and identify historical captures when later changes affect their appearance; do not present mockups or unverified states as runtime evidence.
+14. During code checkups, review our own project-produced code for unneeded includes and remove them. Limit this cleanup to code we authored or changed; do not clean up Unreal Engine, generated, third-party, or unrelated template code. Keep direct includes required by used types and APIs rather than relying on incidental transitive includes.
 
 ## TASKS
 

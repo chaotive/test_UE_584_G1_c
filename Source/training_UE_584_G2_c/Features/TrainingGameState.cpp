@@ -2,7 +2,6 @@
 #include "TrainingSaveGameSubsystem.h"
 #include "Features_NonUE/TrainingSaveGameStorage.h"
 #include "Engine/GameInstance.h"
-#include "Engine/World.h"
 #include "training_UE_584_G2_c.h"
 
 void ATrainingGameState::RecordBounce()

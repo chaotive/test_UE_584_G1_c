@@ -6,7 +6,7 @@ A small Unreal Engine 5.8 C++ project for learning actor lifecycles, pooling, ev
 
 ![The in-game debug HUD showing the loading preview while the world is paused](docs/images/in-game-loading-hud.png)
 
-Runtime capture from the in-game loading verification. The HUD shows the pause phase, local save slot, and desktop file path while the level remains visible. The zero total is the initial value during loading; the saved total is applied before gameplay resumes. Captured after extracting UTrainingSaveGamePanel: the child widget renders the controls and diagnostics inside the same HUD. The engine's temporary shader-preparation message and sky-material warnings are also visible in this startup frame.
+Runtime capture from the in-game loading verification. The HUD shows the pause phase, local save slot, and desktop file path while the level remains visible. The zero total is the initial value during loading; the saved total is applied before gameplay resumes. Captured after extracting both UTrainingBallPanel and UTrainingSaveGamePanel: the child widgets render the bounce label, controls, and diagnostics inside the same HUD. The engine's temporary shader-preparation message and sky-material warnings are also visible in this startup frame.
 
 ## Current flow
 
@@ -17,7 +17,7 @@ Runtime capture from the in-game loading verification. The HUD shows the pause p
 - Show one-second real-time previews before I/O and after the result.
 - Use **Save game** or **Save and quit** in the HUD. Normal game-window close requests the saved quit flow. Editor Stop and forced teardown have a synchronous save fallback rather than an interactive preview.
 
-`UTrainingDebugHUD` composes the overall overlay. `UTrainingSaveGamePanel` owns save/load controls, status subscriptions, preview timing, and orderly-close UI handling as a child section of that same HUD. It is not a separate window.
+`UTrainingDebugHUD` composes the overall overlay and manages shared layout/input. `UTrainingBallPanel` owns bounce labels, initial synchronization, and subscriptions to game-state changes. `UTrainingSaveGamePanel` owns save/load controls, status subscriptions, preview timing, and orderly-close UI handling as a child section of that same HUD. It is not a separate window.
 
 ## Read the code
 
@@ -27,6 +27,8 @@ Runtime capture from the in-game loading verification. The HUD shows the pause p
 - [Project rules and task list](AGENTS.MD)
 
 Open `training_UE_584_G2_c.uproject` with UE 5.8, build the editor target, and play the Third Person map. Save data uses the local `TrainingSandbox` slot, user index 0. On the default desktop backend, its file is `Saved/SaveGames/TrainingSandbox.sav`.
+
+Code checkups also remove unneeded includes from our own authored code, while retaining direct dependencies and leaving engine, generated, third-party, and unrelated template code alone. See the full scope in AGENTS.MD.
 
 ## Documentation images
 

@@ -20,7 +20,9 @@ Start with the startup flow below. The later sections explain the event connecti
 | `ATrainingGameState` | Stores the shared total number of bounces. | [TrainingGameState.cpp](TrainingGameState.cpp) |
 | `UTrainingGameStateController` | Listens to ball events and updates that shared total. | [TrainingGameStateController.cpp](TrainingGameStateController.cpp) |
 | `UTrainingSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [TrainingSaveGameSubsystem.cpp](TrainingSaveGameSubsystem.cpp) |
-| `UTrainingDebugHUD` | Builds the C++ debug panel with live counts and scrollable persistence diagnostics. | [TrainingDebugHUD.cpp](TrainingDebugHUD.cpp) |
+| `UTrainingDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [TrainingDebugHUD.cpp](TrainingDebugHUD.cpp) |
+| `UTrainingBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [TrainingBallPanel.cpp](TrainingBallPanel.cpp) |
+| `UTrainingSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [TrainingSaveGamePanel.cpp](TrainingSaveGamePanel.cpp) |
 | `FTrainingDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [TrainingDebugHUDSpawner.cpp](../Features_NonUE/TrainingDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
@@ -232,9 +234,25 @@ Player controller BeginPlay
 
 The widget tree contains a full-screen canvas, a dark border positioned at `(20, 20)`, and a vertical stack of debug rows and scrollable persistence diagnostics. The panel is `700 x 290` UI units before the viewport's UI scaling. The tree owns its controls; the local raw pointers in `BuildPanel()` do not require manual deletion.
 
+The HUD is a composing manager: it decides where sections go, while each child owns the meaning of its displayed data. The ball display follows this flow:
+
+```text
+TrainingDebugHUD::BuildPanel()
+  -> CreateWidget<UTrainingBallPanel>() -> add child to rows
+Ball panel NativeConstruct()
+  -> subscribe to game-state OnTotalBouncesChanged
+  -> read GetTotalBounces() immediately
+Loaded total or accepted bounce
+  -> state broadcasts -> ball panel SetTotalBounces() -> label updates
+Ball panel NativeDestruct()
+  -> remove subscription and clear weak state reference
+```
+
+Reading the current count after subscribing covers either startup order: the panel sees a previously restored total or receives the later load event. The HUD never forwards counts or binds state events on behalf of the child. Adding another ball diagnostic belongs in TrainingBallPanel; adding another feature section belongs in the HUD composition.
+
 `CreateText()` centralizes font and color setup. The HUD enables a visible mouse cursor and Game-and-UI input. Its outer widget uses SelfHitTestInvisible; diagnostic scrolling and save buttons remain usable while the game world is paused.
 
-The panel displays TRAINING DEBUG HUD, C++ feature sandbox, Total bounces: N, save controls, and live persistence diagnostics. The HUD itself connects to `ATrainingGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
+The panel displays TRAINING DEBUG HUD, C++ feature sandbox, Total bounces: N, save controls, and live persistence diagnostics. The specialized UTrainingBallPanel child connects to `ATrainingGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
 
 ## Reading the types without getting lost
 
@@ -310,7 +328,7 @@ The one-second preview adds approximately two seconds of paused-game time per in
 
 ### Runtime verification checklist
 
-Verified on 2026-11-01 after extracting the save panel: Unreal Header Tool, native compilation, and DLL linking passed. An offscreen game run rendered the child panel, restored the existing total of 96, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. The startup preview can take longer than one second while the engine initializes. The root README contains the actual runtime capture. Save/quit button interaction, write failures, and forced-teardown races remain manual checks below; this loading smoke test does not establish those outcomes. Existing ball physics-material initialization errors and startup shader/sky warnings were present during the run.
+Verified on 2026-11-01 after extracting both specialized panels: Unreal Header Tool, native compilation, and DLL linking passed. An offscreen game run rendered both child panels, restored the existing total of 96, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. The startup preview can take longer than one second while the engine initializes. The root README contains the actual runtime capture. Save/quit button interaction, write failures, and forced-teardown races remain manual checks below; this loading smoke test does not establish those outcomes. Existing ball physics-material initialization errors and startup shader/sky warnings were present during the run.
 
 1. Start Play with a saved total: the in-game HUD should show Loading while the character and balls remain paused, then show the restored total before gameplay resumes.
 2. Move the mouse and scroll the debug HUD during both one-second holds. The viewport should keep rendering; no native dialog should open.
@@ -319,12 +337,14 @@ Verified on 2026-11-01 after extracting the save panel: Unreal Header Tool, nati
 5. Try missing saves, failed reads, repeated clicks, and close requests during loading. Existing error policy and slot sharing are unchanged.
 6. Use editor Stop during loading and saving: verify the fallback and check that callbacks do not update a new level. This forced path intentionally has no in-game delay.
 
-The player controller still only creates, retains, and removes the HUD. The outer HUD owns bounce display and general input presentation. Its UTrainingSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its scalar snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
+The player controller still only creates, retains, and removes the HUD. The outer HUD composes sections and owns general input presentation; its UTrainingBallPanel child owns bounce display and state observation. Its UTrainingSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its scalar snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
 
 ## UI composition and documentation captures
 
-The outer [TrainingDebugHUD](TrainingDebugHUD.cpp) now composes the panel rather than implementing its save/load behavior. [TrainingSaveGamePanel](TrainingSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains the child through UPROPERTY/TObjectPtr and adds it as a normal layout section. The player's controller still has no save-to-widget wiring.
+The outer [TrainingDebugHUD](TrainingDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [TrainingBallPanel](TrainingBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [TrainingSaveGamePanel](TrainingSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UTrainingBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
 
-This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. A child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
+Include cleanup follows those boundaries too: the composing HUD no longer needs Engine/World.h, while TrainingBallPanel still includes it for its GetGameState template call. TrainingGameState no longer needs the world header either; it keeps Engine/GameInstance.h for subsystem access. Removing unused dependencies can reduce compile coupling, but does not change runtime behavior or establish a measured build-speed improvement.
+
+This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
 See the [root README](../../../README.md) for a preserved runtime loading screenshot under docs/images. That capture is labeled with its verification context; generated test images should be incorporated into documentation when useful, rather than remaining only in ignored Saved output.
