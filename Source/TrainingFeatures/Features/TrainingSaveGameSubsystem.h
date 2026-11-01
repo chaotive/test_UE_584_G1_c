@@ -5,7 +5,7 @@
 
 /** Async persistence state machine; gameplay pauses while HUD-managed previews and I/O run. */
 UCLASS()
-class UTrainingSaveGameSubsystem : public UGameInstanceSubsystem
+class TRAININGFEATURES_API UTrainingSaveGameSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 public:

@@ -8,7 +8,7 @@ class UTextBlock;
 
 /** Owns the ball diagnostics and their game-state observation inside the debug HUD. */
 UCLASS()
-class UTrainingBallPanel : public UUserWidget
+class TRAININGFEATURES_API UTrainingBallPanel : public UUserWidget
 {
 	GENERATED_BODY()
 protected:

@@ -5,6 +5,11 @@
 	"Description": "",
 	"Modules": [
 		{
+			"Name": "TrainingFeatures",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
 			"Name": "training_UE_584_G2_c",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",

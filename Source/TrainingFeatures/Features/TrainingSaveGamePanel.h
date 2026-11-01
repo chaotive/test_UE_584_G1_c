@@ -11,7 +11,7 @@ class UTextBlock;
 
 /** Specialized in-game persistence UI, composed inside the debug HUD. */
 UCLASS()
-class UTrainingSaveGamePanel : public UUserWidget
+class TRAININGFEATURES_API UTrainingSaveGamePanel : public UUserWidget
 {
 	GENERATED_BODY()
 protected:

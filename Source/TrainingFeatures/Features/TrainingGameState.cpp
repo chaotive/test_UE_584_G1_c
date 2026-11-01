@@ -2,13 +2,13 @@
 #include "TrainingSaveGameSubsystem.h"
 #include "Features_NonUE/TrainingSaveGameStorage.h"
 #include "Engine/GameInstance.h"
-#include "training_UE_584_G2_c.h"
+#include "TrainingFeatures.h"
 
 void ATrainingGameState::RecordBounce()
 {
 	++TotalBounces;
 	OnTotalBouncesChanged.Broadcast(TotalBounces);
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingGameState [%s]: Total bounces: %d"), *GetName(), TotalBounces);
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingGameState [%s]: Total bounces: %d"), *GetName(), TotalBounces);
 }
 
 int32 ATrainingGameState::GetTotalBounces() const
@@ -34,7 +34,7 @@ void ATrainingGameState::BeginPlay()
 	UTrainingSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UTrainingSaveGameSubsystem>();
 	Saves->OnLoaded.AddUObject(this, &ATrainingGameState::ApplyLoadedTotal);
 	Saves->RequestLoad();
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingGameState [%s]: BeginPlay (Total bounces: %d)"), *GetName(), TotalBounces);
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingGameState [%s]: BeginPlay (Total bounces: %d)"), *GetName(), TotalBounces);
 }
 
 void ATrainingGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -47,6 +47,6 @@ void ATrainingGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		FTrainingSaveGameStorage::SaveTotalBounces(TotalBounces);
 	}
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingGameState [%s]: EndPlay (Total bounces: %d)"), *GetName(), TotalBounces);
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingGameState [%s]: EndPlay (Total bounces: %d)"), *GetName(), TotalBounces);
 	Super::EndPlay(EndPlayReason);
 }

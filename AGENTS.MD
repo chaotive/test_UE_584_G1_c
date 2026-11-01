@@ -42,6 +42,8 @@ sandbox to try different coding patterns and features.
 
 16. Please give the IO loading UI step a 1 second before and after load just to see it working on save and loads.
 
+17. Move all featured UE and non-UE code into its own independent runtime module.
+
 ### TO DO
 
 150. Mass, as a second element (a square)

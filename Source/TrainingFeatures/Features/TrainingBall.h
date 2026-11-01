@@ -10,7 +10,7 @@ class UStaticMeshComponent;
 
 /** A reusable physics sphere that returns to its pool after two bounces. */
 UCLASS()
-class ATrainingBall : public AStaticMeshActor
+class TRAININGFEATURES_API ATrainingBall : public AStaticMeshActor
 {
 	GENERATED_BODY()
 

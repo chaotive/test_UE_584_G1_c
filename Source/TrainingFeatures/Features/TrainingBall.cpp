@@ -1,5 +1,5 @@
 #include "TrainingBall.h"
-#include "training_UE_584_G2_c.h"
+#include "TrainingFeatures.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
@@ -10,7 +10,7 @@ ATrainingBall::ATrainingBall()
 	BallMesh = GetStaticMeshComponent();
 	ConfigureBall();
 	ConfigureBouncing();
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Constructor (base setup complete)"), *GetName());
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBall [%s]: Constructor (base setup complete)"), *GetName());
 }
 
 void ATrainingBall::ConfigureBall()
@@ -27,7 +27,7 @@ void ATrainingBall::ConfigureBall()
 
 void ATrainingBall::BeginPlay()
 {
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: BeginPlay"), *GetName());
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBall [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
 	BallMesh->OnComponentHit.AddDynamic(this, &ATrainingBall::OnBallHit);
 }
@@ -44,7 +44,7 @@ void ATrainingBall::Activate(const FVector& Location)
 	BallMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 	StartRandomMovement();
 	BallMesh->WakeAllRigidBodies();
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Activated (Location: %s)"), *GetName(), *Location.ToString());
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBall [%s]: Activated (Location: %s)"), *GetName(), *Location.ToString());
 }
 
 void ATrainingBall::Deactivate()
@@ -55,7 +55,7 @@ void ATrainingBall::Deactivate()
 	BallMesh->SetSimulatePhysics(false);
 	SetActorEnableCollision(false);
 	SetActorHiddenInGame(true);
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Returned to pool"), *GetName());
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBall [%s]: Returned to pool"), *GetName());
 }
 
 bool ATrainingBall::IsActive() const
@@ -86,7 +86,7 @@ void ATrainingBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 	++BounceCount;
 	// Broadcast calls subscribed handlers immediately; the ball does not know which listeners update state.
 	OnBounced.Broadcast(*this);
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Bounce %d/2"), *GetName(), BounceCount);
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBall [%s]: Bounce %d/2"), *GetName(), BounceCount);
 
 	if (BounceCount == 2)
 	{
@@ -102,13 +102,13 @@ void ATrainingBall::StartRandomMovement()
 	const FVector Velocity = Direction * Speed;
 	BallMesh->SetPhysicsLinearVelocity(Velocity);
 
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Random movement started (Velocity: %s cm/s)"),
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBall [%s]: Random movement started (Velocity: %s cm/s)"),
 		*GetName(), *Velocity.ToString());
 }
 
 void ATrainingBall::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: EndPlay (Reason: %s)"),
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBall [%s]: EndPlay (Reason: %s)"),
 		*GetName(), *UEnum::GetValueAsString(EndPlayReason));
 	Super::EndPlay(EndPlayReason);
 }

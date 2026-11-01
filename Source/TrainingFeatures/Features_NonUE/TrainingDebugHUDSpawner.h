@@ -6,7 +6,7 @@ class APlayerController;
 class UTrainingDebugHUD;
 
 /** Creates and displays a debug overlay independently of gameplay state or ball spawning. */
-class FTrainingDebugHUDSpawner
+class TRAININGFEATURES_API FTrainingDebugHUDSpawner
 {
 public:
 

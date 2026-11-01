@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/App.h"
-#include "training_UE_584_G2_c.h"
+#include "TrainingFeatures.h"
 
 void UTrainingSaveGameSubsystem::RequestLoad()
 {
@@ -98,7 +98,7 @@ void UTrainingSaveGameSubsystem::CancelOperation()
 void UTrainingSaveGameSubsystem::PublishStatus(const FString& Status)
 {
 	StatusHistory.Add(Status);
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingSaveGameSubsystem: %s"), *Status);
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingSaveGameSubsystem: %s"), *Status);
 	OnStatusChanged.Broadcast(Status, bBusy);
 }
 const TArray<FString>& UTrainingSaveGameSubsystem::GetStatusHistory() const { return StatusHistory; }

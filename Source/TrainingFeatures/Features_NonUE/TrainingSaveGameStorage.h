@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 
 /** Stores value snapshots without depending on the live game state or HUD. */
-class FTrainingSaveGameStorage
+class TRAININGFEATURES_API FTrainingSaveGameStorage
 {
 public:
 
@@ -30,4 +30,8 @@ public:
 	// Writes a bounce-total snapshot to the sandbox's save slot before shutdown.
 	// TotalBounces and the bool success result are passed by value; no live actor references are serialized.
 	static bool SaveTotalBounces(int32 TotalBounces);
+private:
+    // Reads this slot's payload across module renames and reports deserialization success.
+    // Data is borrowed read-only; Count is an output reference, bool is by value, and the temporary UObject is garbage collected.
+    static bool ReadSnapshot(const TArray<uint8>& Data, int32& Count);
 };

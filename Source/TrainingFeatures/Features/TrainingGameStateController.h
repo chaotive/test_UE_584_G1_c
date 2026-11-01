@@ -9,7 +9,7 @@ class ATrainingGameState;
 
 /** Translates gameplay events into updates to the shared game state. */
 UCLASS()
-class UTrainingGameStateController : public UObject
+class TRAININGFEATURES_API UTrainingGameStateController : public UObject
 {
 	GENERATED_BODY()
 

@@ -2,7 +2,7 @@
 #include "TrainingSaveGamePanel.h"
 #include "TrainingBallPanel.h"
 #include "GameFramework/PlayerController.h"
-#include "training_UE_584_G2_c.h"
+#include "TrainingFeatures.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
@@ -17,7 +17,7 @@ void UTrainingDebugHUD::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	SetIsFocusable(false);
 	BuildLayout();
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingDebugHUD: Initialized"));
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingDebugHUD: Initialized"));
 }
 
 void UTrainingDebugHUD::NativeConstruct()

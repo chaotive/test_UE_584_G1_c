@@ -14,7 +14,7 @@ Start with the startup flow below. The later sections explain the event connecti
 
 | Class | Plain-language job | Where to read |
 | --- | --- | --- |
-| `Atraining_UE_584_G2_cGameMode` | Sets up the session and connects the pieces. | [GameMode.cpp](../training_UE_584_G2_cGameMode.cpp) |
+| `Atraining_UE_584_G2_cGameMode` | Sets up the session and connects the pieces. | [GameMode.cpp](../../training_UE_584_G2_c/training_UE_584_G2_cGameMode.cpp) |
 | `FTrainingBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) |
 | `ATrainingBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [TrainingBall.cpp](TrainingBall.cpp) |
 | `ATrainingGameState` | Stores the shared total number of bounces. | [TrainingGameState.cpp](TrainingGameState.cpp) |
@@ -308,7 +308,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../training_UE_584_G2_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../../training_UE_584_G2_c/training_UE_584_G2_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
 
 ## In-game load/save and HUD-controlled previews (tasks 14–16)
 
@@ -348,3 +348,13 @@ Include cleanup follows those boundaries too: the composing HUD no longer needs 
 This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
 See the [root README](../../../README.md) for a preserved runtime loading screenshot under docs/images. That capture is labeled with its verification context; generated test images should be incorporated into documentation when useful, rather than remaining only in ignored Saved output.
+
+## Task 17 module boundary
+
+This folder and its sibling `Features_NonUE` now belong to the independent `TrainingFeatures` runtime module. The project game mode and player controller consume its exported API. The feature module uses only engine dependencies and its own log category, `LogTrainingFeatures`. All moved reflected classes have old-to-new script-package redirects in the project config. The save loader reads raw slot bytes on a worker thread, then strips the Unreal header and deserializes into the known save type on the game thread. This handles historical module-qualified save class names, which the stock save loader did not resolve through the class redirect. Saves still use Unreal asynchronous saving. The existing event, ownership, pooling, UI, and persistence flows are unchanged. Earlier runtime verification in this guide predates this extraction. No runtime performance gain is claimed from the build boundary.
+
+Task 17 verification (2026-11-01): Unreal Header Tool, native compilation, and both runtime-module DLL links passed. A headless game smoke test loaded the pre-migration save total of 145, released gameplay, counted ball bounces, returned balls to their pool, and saved during orderly teardown. The original save bytes were restored after testing. Headless testing skips UI preview timing and does not verify rendering or button interaction. Existing physics-material CDO initialization errors remain outside this module extraction.
+
+Review follow-up: the known-type save reader now returns deserialization success separately from the bounce count. Empty data and archive read errors produce the existing load-failed/zero result rather than a successful-load message. This reader assumes this slot contains our save payload; it is not a general format validator or a schema migration system.
+
+Review validation: the adjusted storage source compiled and the TrainingFeatures DLL linked successfully. A fresh headless smoke test loaded 145 total bounces, released gameplay, and returned balls to the pool. The test process was stopped without a shutdown save. Corrupt-file recovery and UI interaction were not exercised by this follow-up.

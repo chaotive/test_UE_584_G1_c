@@ -1,11 +1,11 @@
 #include "TrainingBallSpawner.h"
 #include "Features/TrainingBall.h"
-#include "training_UE_584_G2_c.h"
+#include "TrainingFeatures.h"
 #include "Engine/World.h"
 
 void FTrainingBallSpawner::SpawnMultiple(UWorld& World, int32 Count, const FVector& MinLocation, const FVector& MaxLocation)
 {
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner: Spawning %d balls (Min: %s, Max: %s)"),
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBallSpawner: Spawning %d balls (Min: %s, Max: %s)"),
 		Count, *MinLocation.ToString(), *MaxLocation.ToString());
 
 	const FBox SpawnBounds(MinLocation, MaxLocation);
@@ -18,12 +18,12 @@ void FTrainingBallSpawner::SpawnMultiple(UWorld& World, int32 Count, const FVect
 
 ATrainingBall* FTrainingBallSpawner::Spawn(UWorld& World, const FVector& Location)
 {
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner: Spawn started (Location: %s)"), *Location.ToString());
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBallSpawner: Spawn started (Location: %s)"), *Location.ToString());
 
 	ATrainingBall* Ball = FindAvailableBall();
 	if (Ball)
 	{
-		UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner [%s]: Reusing pooled ball"), *Ball->GetName());
+		UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBallSpawner [%s]: Reusing pooled ball"), *Ball->GetName());
 	}
 	else
 	{
@@ -59,7 +59,7 @@ ATrainingBall* FTrainingBallSpawner::CreateBall(UWorld& World, const FVector& Lo
 	// Notify listeners once per actor creation, before Spawn activates it; pool reuse skips CreateBall.
 	OnBallCreated.Broadcast(*Ball);
 
-	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner [%s]: Pool grew to %d balls"), *Ball->GetName(), SpawnedBalls.Num());
+	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingBallSpawner [%s]: Pool grew to %d balls"), *Ball->GetName(), SpawnedBalls.Num());
 	return Ball;
 }
 

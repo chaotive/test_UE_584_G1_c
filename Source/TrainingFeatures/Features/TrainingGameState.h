@@ -6,7 +6,7 @@
 
 /** Holds the accumulated training ball bounce total, restored and saved at session boundaries. */
 UCLASS()
-class ATrainingGameState : public AGameStateBase
+class TRAININGFEATURES_API ATrainingGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 

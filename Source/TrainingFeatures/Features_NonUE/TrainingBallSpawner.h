@@ -6,7 +6,7 @@ class ATrainingBall;
 class UWorld;
 
 /** Reuses inactive training balls and grows the pool when all balls are active. */
-class FTrainingBallSpawner
+class TRAININGFEATURES_API FTrainingBallSpawner
 {
 public:
 

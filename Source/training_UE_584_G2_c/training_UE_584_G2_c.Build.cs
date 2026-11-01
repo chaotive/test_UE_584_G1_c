@@ -9,6 +9,7 @@ public class training_UE_584_G2_c : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] {
+			"TrainingFeatures",
 			"Core",
 			"CoreUObject",
 			"Engine",
@@ -21,7 +22,7 @@ public class training_UE_584_G2_c : ModuleRules
 			"Slate"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "PhysicsCore", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "SlateCore" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"training_UE_584_G2_c",

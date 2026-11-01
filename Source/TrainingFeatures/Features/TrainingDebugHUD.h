@@ -10,7 +10,7 @@ class UTrainingSaveGamePanel;
 
 /** Composes specialized debug panels and manages their shared presentation. */
 UCLASS()
-class UTrainingDebugHUD : public UUserWidget
+class TRAININGFEATURES_API UTrainingDebugHUD : public UUserWidget
 {
 	GENERATED_BODY()
 protected:

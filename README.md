@@ -21,8 +21,8 @@ Runtime capture from the in-game loading verification. The HUD shows the pause p
 
 ## Read the code
 
-- [Feature guide and lifecycle flows](Source/training_UE_584_G2_c/Features/README.md)
-- [Plain C++ helpers](Source/training_UE_584_G2_c/Features_NonUE/README.md)
+- [Feature guide and lifecycle flows](Source/TrainingFeatures/Features/README.md)
+- [Plain C++ helpers](Source/TrainingFeatures/Features_NonUE/README.md)
 - [Performance review ideas](PERFORMANCE_IDEAS.md) — a historical source review with current-flow notes
 - [Project rules and task list](AGENTS.MD)
 
@@ -33,3 +33,15 @@ Code checkups also remove unneeded includes from our own authored code, while re
 ## Documentation images
 
 Preserve useful implementation/test captures under `docs/images` and reference them from this README or the relevant guide. Captions should identify the behavior actually verified and whether a capture predates later changes. Avoid committing generated binaries, logs, or save-game data alongside images.
+
+## Task 17: independent feature module
+
+All training UE classes and non-UObject helpers compile in the `TrainingFeatures` runtime module under `Source/TrainingFeatures`. A runtime module gives this sandbox a separate build and dependency boundary without plugin packaging. The project module depends on it; features do not depend on the project module. The project game mode and player controller remain the integration points.
+
+Headers retain `Features/` and `Features_NonUE/` include paths. Classes export their symbols with `TRAININGFEATURES_API`; feature diagnostics use `LogTrainingFeatures`. Class redirects in `Config/DefaultEngine.ini` preserve old reflected asset references. Storage reads the slot payload into its known save type so saves with the old module-qualified class name still load. Save slot and data remain unchanged. Close the editor, regenerate project files, and rebuild after this migration.
+
+This extraction adds no per-frame work or gameplay threads; no runtime performance improvement is claimed. The runtime screenshot above predates the module extraction.
+
+Validation: UE 5.8 editor build passed. A headless smoke test restored the existing 145-bounce save, resumed gameplay, exercised pooled balls and teardown saving. The original save was restored afterward. UI rendering and controls were not rechecked; existing physics-material initialization errors remain.
+
+Review follow-up: the known-type save reader now returns deserialization success separately from the bounce count. Empty data and archive read errors produce the existing load-failed/zero result rather than a successful-load message. This reader assumes this slot contains our save payload; it is not a general format validator or a schema migration system.

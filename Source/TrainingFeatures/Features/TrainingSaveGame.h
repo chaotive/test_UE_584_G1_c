@@ -6,7 +6,7 @@
 
 /** Serialized data for the training sandbox; independent of actors and widgets. */
 UCLASS()
-class UTrainingSaveGame : public USaveGame
+class TRAININGFEATURES_API UTrainingSaveGame : public USaveGame
 {
 	GENERATED_BODY()
 
