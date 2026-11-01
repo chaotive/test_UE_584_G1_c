@@ -7,6 +7,7 @@
 class UPhysicalMaterial;
 class UPrimitiveComponent;
 class UStaticMeshComponent;
+class ATrainingGameState;
 
 /** A reusable physics sphere that returns to its pool after two bounces. */
 UCLASS()
@@ -34,7 +35,7 @@ public:
 
 protected:
 
-	// Logs play startup and connects collision handling once for this actor's lifetime.
+	// Logs play startup, caches the shared game state, and connects collision handling once.
 	// No pointer or reference parameters or return value; operates on this actor instance.
 	virtual void BeginPlay() override;
 
@@ -56,7 +57,7 @@ private:
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 
-	// Counts collision impulses as bounces and returns the ball to the pool on its second bounce.
+	// Records bounces locally and in the game state, returning the ball to the pool after two.
 	// Component and actor pointers are non-owning event inputs, NormalImpulse is by value, and Hit is a read-only reference.
 	UFUNCTION()
 	void OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
@@ -66,6 +67,11 @@ private:
 	// UPROPERTY tracks this strong TObjectPtr through Unreal object duplication and garbage collection; the actor owns the component.
 	UPROPERTY()
 	TObjectPtr<UStaticMeshComponent> BallMesh;
+
+	// Caches the session's shared bounce counter so every ball reports to the same game state.
+	// UPROPERTY tracks a strong TObjectPtr for garbage collection and duplication; the world owns the game state.
+	UPROPERTY()
+	TObjectPtr<ATrainingGameState> TrainingGameState;
 
 	// Tracks how many times this ball has bounced during its current activation.
 	// int32 stores a per-instance counter by value without pointer ownership or a wrapper.

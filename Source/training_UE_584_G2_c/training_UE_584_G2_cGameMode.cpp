@@ -2,9 +2,14 @@
 
 #include "training_UE_584_G2_cGameMode.h"
 #include "training_UE_584_G2_c.h"
+#include "Features/TrainingGameState.h"
 
 Atraining_UE_584_G2_cGameMode::Atraining_UE_584_G2_cGameMode()
 {
+	// Selects TrainingGameState as the class Unreal will instantiate for this game mode.
+	// StaticClass() returns its UClass metadata pointer, not an actor instance; GameStateClass stores this as a TSubclassOf<AGameStateBase>.
+	// AGameModeBase::PreInitializeComponents() spawns this actor, registers it with the world, then calls InitGameState(), before BeginPlay().
+	GameStateClass = ATrainingGameState::StaticClass();
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("GameMode [%s]: Constructor"), *GetName());
 }
 

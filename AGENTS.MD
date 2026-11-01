@@ -26,7 +26,10 @@ sandbox to try different coding patterns and features.
 7. Now makes that each ball is destroyed after bouncing 2 times.
 8. Implement objects pooling for the balls spawner.
 9. Avoid recalling GetStaticMeshComponent and just do once, while keeping references to it
+10. Add a centralized game state on its own independent class and keep tracking of the total bounces made by any and all balls
 
 ### TO DO
 
-10. Add a centralized game state on its own independent class and keep tracking of the total bounces made by any and all balls
+11. Decouple the dependency of trainingball to the state and make it emit events so another new class can subscribe to them and the state updated. This class could be a gamestate controller or something like that, which would be to handle arbitrary state changes based on emitted events.
+12. Display a code dynamic created debug hud on the game UI
+13. Show the total bounces as they updated on the debug hud
