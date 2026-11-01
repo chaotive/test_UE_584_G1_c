@@ -10,6 +10,12 @@ class FTrainingBallSpawner
 {
 public:
 
+	DECLARE_EVENT_OneParam(FTrainingBallSpawner, FBallCreatedEvent, ATrainingBall&);
+
+	// Announces new pool entries so listeners can subscribe once before their first activation.
+	// The native multicast event passes the new actor by reference; only FTrainingBallSpawner can broadcast it.
+	FBallCreatedEvent OnBallCreated;
+
 	// Activates one pooled ball or creates a new ball when none are available.
 	// World is a mutable reference, Location is read-only, and the returned raw pointer refers to a world-owned actor.
 	ATrainingBall* Spawn(UWorld& World, const FVector& Location);

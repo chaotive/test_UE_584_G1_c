@@ -12,6 +12,7 @@ sandbox to try different coding patterns and features.
 5. Commits: commits should give a brief but useful description of changes.
 6. Avoid too many one liners, when possible, separate in functions that act as groupers to have a better top down understanding of code.
 7. Above every function declaration and class property, add two separate one-line comments: first describe its functional purpose; second explain the types, pointer/reference semantics, ownership, and why any wrapper (such as TArray or TWeakObjectPtr) is used. For functions without pointers or references, say so in the technical line.
+8. On every change, review and update the relevant READMEs so their explanations, examples, flows, and performance considerations stay aligned with the current implementation.
 
 ## TASKS
 
@@ -28,8 +29,9 @@ sandbox to try different coding patterns and features.
 9. Avoid recalling GetStaticMeshComponent and just do once, while keeping references to it
 10. Add a centralized game state on its own independent class and keep tracking of the total bounces made by any and all balls
 
+11. Decouple the dependency of trainingball to the state and make it emit events so another new class can subscribe to them and the state updated. This class could be a gamestate controller or something like that, which would be to handle arbitrary state changes based on emitted events.
+
 ### TO DO
 
-11. Decouple the dependency of trainingball to the state and make it emit events so another new class can subscribe to them and the state updated. This class could be a gamestate controller or something like that, which would be to handle arbitrary state changes based on emitted events.
 12. Display a code dynamic created debug hud on the game UI
 13. Show the total bounces as they updated on the debug hud

@@ -56,6 +56,8 @@ ATrainingBall* FTrainingBallSpawner::CreateBall(UWorld& World, const FVector& Lo
 	ATrainingBall* Ball = World.SpawnActor<ATrainingBall>(Location, FRotator::ZeroRotator, SpawnParameters);
 	Ball->SetActorLabel(BallName);
 	SpawnedBalls.Add(Ball);
+	// Notify listeners once per actor creation, before Spawn activates it; pool reuse skips CreateBall.
+	OnBallCreated.Broadcast(*Ball);
 
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBallSpawner [%s]: Pool grew to %d balls"), *Ball->GetName(), SpawnedBalls.Num());
 	return Ball;

@@ -7,6 +7,8 @@
 #include "Features/TrainingBallSpawner.h"
 #include "training_UE_584_G2_cGameMode.generated.h"
 
+class UTrainingGameStateController;
+
 /**
  *  Simple GameMode for a third person game
  */
@@ -52,6 +54,11 @@ protected:
 	FVector TrainingBallSpawnMax = FVector(500.0f, 700.0f, 700.0f);
 
 private:
+
+	// Translates ball events into shared game state changes for this game session.
+	// UPROPERTY keeps this game-mode-owned UObject alive through its strong TObjectPtr reference.
+	UPROPERTY()
+	TObjectPtr<UTrainingGameStateController> TrainingGameStateController;
 
 	// Creates training balls and tracks them throughout this game mode's lifetime.
 	// FTrainingBallSpawner is stored by value so its list belongs to this game mode instance without a pointer or separate allocation.

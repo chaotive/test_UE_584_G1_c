@@ -1,9 +1,7 @@
 #include "TrainingBall.h"
-#include "TrainingGameState.h"
 #include "training_UE_584_G2_c.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
-#include "Engine/World.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -31,7 +29,6 @@ void ATrainingBall::BeginPlay()
 {
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
-	TrainingGameState = GetWorld()->GetGameState<ATrainingGameState>();
 	BallMesh->OnComponentHit.AddDynamic(this, &ATrainingBall::OnBallHit);
 }
 
@@ -87,7 +84,8 @@ void ATrainingBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 	}
 
 	++BounceCount;
-	TrainingGameState->RecordBounce();
+	// Broadcast calls subscribed handlers immediately; the ball does not know which listeners update state.
+	OnBounced.Broadcast(*this);
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Bounce %d/2"), *GetName(), BounceCount);
 
 	if (BounceCount == 2)

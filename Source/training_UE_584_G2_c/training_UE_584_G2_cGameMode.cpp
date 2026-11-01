@@ -3,6 +3,7 @@
 #include "training_UE_584_G2_cGameMode.h"
 #include "training_UE_584_G2_c.h"
 #include "Features/TrainingGameState.h"
+#include "Features/TrainingGameStateController.h"
 
 Atraining_UE_584_G2_cGameMode::Atraining_UE_584_G2_cGameMode()
 {
@@ -23,6 +24,15 @@ void Atraining_UE_584_G2_cGameMode::InitGameState()
 {
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("GameMode [%s]: InitGameState"), *GetName());
 	Super::InitGameState();
+
+	// The base game mode has already spawned the game state before calling this hook.
+	// NewObject creates the controller with this game mode as its Outer; our UPROPERTY keeps it alive.
+	TrainingGameStateController = NewObject<UTrainingGameStateController>(this);
+	// Give the controller the existing shared state; it does not create another game state actor.
+	TrainingGameStateController->Initialize(*GetGameState<ATrainingGameState>());
+	// Subscribe before BeginPlay spawns balls; each new pool entry will be passed to ObserveBall.
+	// AddUObject binds the method to this controller using a weak UObject reference.
+	TrainingBallSpawner.OnBallCreated.AddUObject(TrainingGameStateController.Get(), &UTrainingGameStateController::ObserveBall);
 }
 
 void Atraining_UE_584_G2_cGameMode::PostInitializeComponents()
