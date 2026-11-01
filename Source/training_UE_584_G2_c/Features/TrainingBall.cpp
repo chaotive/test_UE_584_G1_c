@@ -2,11 +2,13 @@
 #include "training_UE_584_G2_c.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
 
 ATrainingBall::ATrainingBall()
 {
 	ConfigureBall();
+	ConfigureBouncing();
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Constructor (base setup complete)"), *GetName());
 }
 
@@ -25,7 +27,39 @@ void ATrainingBall::BeginPlay()
 {
 	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
+	GetStaticMeshComponent()->OnComponentHit.AddDynamic(this, &ATrainingBall::OnBallHit);
 	StartRandomMovement();
+}
+
+void ATrainingBall::ConfigureBouncing()
+{
+	BounceMaterial = CreateDefaultSubobject<UPhysicalMaterial>(TEXT("BounceMaterial"));
+	BounceMaterial->Restitution = 0.8f;
+	BounceMaterial->bOverrideRestitutionCombineMode = true;
+	BounceMaterial->RestitutionCombineMode = EFrictionCombineMode::Max;
+
+	UStaticMeshComponent* BallMesh = GetStaticMeshComponent();
+	BallMesh->SetPhysMaterialOverride(BounceMaterial);
+	BallMesh->SetNotifyRigidBodyCollision(true);
+}
+
+void ATrainingBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
+{
+	// Ignore contacts with no physical impulse, which do not represent a bounce.
+	if (NormalImpulse.IsNearlyZero())
+	{
+		return;
+	}
+
+	++BounceCount;
+	UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Bounce %d/2"), *GetName(), BounceCount);
+
+	if (BounceCount == 2)
+	{
+		UE_LOG(Logtraining_UE_584_G2_c, Log, TEXT("TrainingBall [%s]: Destroying after second bounce"), *GetName());
+		Destroy();
+	}
 }
 
 void ATrainingBall::StartRandomMovement()

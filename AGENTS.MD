@@ -22,7 +22,10 @@ sandbox to try different coding patterns and features.
 3. Have the training ball start moving on a random direction, following a random trajectory.
 4. Make that the TrainingBall becomes its own simple class, so then the spawner actually spawns them as instantiated objects. The gamemode will call the spawner, and the spawner will instantiate and spawn trainingballs as needed.
 5. Spawn several random balls using the trainingball, and not just 1 anymore. Adapt the current properties for the initial spawn spot to become a range and not just an specific vector, allowing each ball to spawn within the range.
-
 6. Allow still to have spawner to spawn a single ball with just public spawn, and spawn in multiple with a second public function, that calls spawn several times. The spawned balls remain in a dynamic list and when single spawned, the name follows the list index.
 
+7. Now makes that each ball is destroyed after bouncing 2 times
+
 ### TO DO
+
+8. Implement objects pooling for the balls spawner
