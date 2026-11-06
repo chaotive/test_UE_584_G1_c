@@ -1,16 +1,16 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "TrainingDebugHUD.generated.h"
+#include "FeatureDebugHUD.generated.h"
 
 class UBorder;
 class UTextBlock;
-class UTrainingBallPanel;
-class UTrainingSaveGamePanel;
+class UFeatureBallPanel;
+class UFeatureSaveGamePanel;
 
 /** Composes specialized debug panels and manages their shared presentation. */
 UCLASS()
-class TRAININGFEATURES_API UTrainingDebugHUD : public UUserWidget
+class TESTFEATURES_API UFeatureDebugHUD : public UUserWidget
 {
 	GENERATED_BODY()
 protected:
@@ -33,9 +33,9 @@ private:
 	// Composes the ball diagnostics inside the main debug HUD.
 	// UPROPERTY retains a strong TObjectPtr to the child user widget for garbage collection.
 	UPROPERTY()
-	TObjectPtr<UTrainingBallPanel> BallPanel;
+	TObjectPtr<UFeatureBallPanel> BallPanel;
 	// Composes all save/load UI inside the main debug HUD.
 	// UPROPERTY retains a strong TObjectPtr to the child user widget for garbage collection.
 	UPROPERTY()
-	TObjectPtr<UTrainingSaveGamePanel> SavePanel;
+	TObjectPtr<UFeatureSaveGamePanel> SavePanel;
 };

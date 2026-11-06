@@ -1,28 +1,28 @@
-#include "TrainingBallPanel.h"
-#include "TrainingGameState.h"
+#include "FeatureBallPanel.h"
+#include "FeatureGameState.h"
 #include "Engine/World.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/TextBlock.h"
 #include "Styling/CoreStyle.h"
 
-void UTrainingBallPanel::NativeOnInitialized()
+void UFeatureBallPanel::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	BuildLayout();
 }
 
-void UTrainingBallPanel::NativeConstruct()
+void UFeatureBallPanel::NativeConstruct()
 {
 	Super::NativeConstruct();
-	ATrainingGameState* State = GetWorld()->GetGameState<ATrainingGameState>();
+	AFeatureGameState* State = GetWorld()->GetGameState<AFeatureGameState>();
 	ObservedState = State;
-	State->OnTotalBouncesChanged.AddUObject(this, &UTrainingBallPanel::SetTotalBounces);
+	State->OnTotalBouncesChanged.AddUObject(this, &UFeatureBallPanel::SetTotalBounces);
 	SetTotalBounces(State->GetTotalBounces());
 }
 
-void UTrainingBallPanel::NativeDestruct()
+void UFeatureBallPanel::NativeDestruct()
 {
-	if (ATrainingGameState* State = ObservedState.Get())
+	if (AFeatureGameState* State = ObservedState.Get())
 	{
 		State->OnTotalBouncesChanged.RemoveAll(this);
 	}
@@ -30,7 +30,7 @@ void UTrainingBallPanel::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UTrainingBallPanel::BuildLayout()
+void UFeatureBallPanel::BuildLayout()
 {
 	TotalBouncesText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TotalBounces"));
 	TotalBouncesText->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));
@@ -39,7 +39,7 @@ void UTrainingBallPanel::BuildLayout()
 	SetTotalBounces(0);
 }
 
-void UTrainingBallPanel::SetTotalBounces(int32 TotalBounces)
+void UFeatureBallPanel::SetTotalBounces(int32 TotalBounces)
 {
-	TotalBouncesText->SetText(FText::Format(NSLOCTEXT("TrainingDebugHUD", "TotalBounces", "Total bounces: {0}"), FText::AsNumber(TotalBounces)));
+	TotalBouncesText->SetText(FText::Format(NSLOCTEXT("FeatureDebugHUD", "TotalBounces", "Total bounces: {0}"), FText::AsNumber(TotalBounces)));
 }

@@ -1,14 +1,14 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "TrainingBallPanel.generated.h"
+#include "FeatureBallPanel.generated.h"
 
-class ATrainingGameState;
+class AFeatureGameState;
 class UTextBlock;
 
 /** Owns the ball diagnostics and their game-state observation inside the debug HUD. */
 UCLASS()
-class TRAININGFEATURES_API UTrainingBallPanel : public UUserWidget
+class TESTFEATURES_API UFeatureBallPanel : public UUserWidget
 {
 	GENERATED_BODY()
 protected:
@@ -34,5 +34,5 @@ private:
 	TObjectPtr<UTextBlock> TotalBouncesText;
 	// Observes shared bounce changes without retaining the world actor.
 	// TWeakObjectPtr detects actor destruction without extending its lifetime.
-	TWeakObjectPtr<ATrainingGameState> ObservedState;
+	TWeakObjectPtr<AFeatureGameState> ObservedState;
 };

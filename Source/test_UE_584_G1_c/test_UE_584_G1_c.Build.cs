@@ -9,7 +9,7 @@ public class test_UE_584_G1_c : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] {
-			"TrainingFeatures",
+			"TestFeatures",
 			"Core",
 			"CoreUObject",
 			"Engine",

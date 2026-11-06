@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 
 /** Stores value snapshots without depending on the live game state or HUD. */
-class TRAININGFEATURES_API FTrainingSaveGameStorage
+class TESTFEATURES_API FFeatureSaveGameStorage
 {
 public:
 

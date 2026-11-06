@@ -2,15 +2,15 @@
 
 #include "test_UE_584_G1_cGameMode.h"
 #include "test_UE_584_G1_c.h"
-#include "Features/TrainingGameState.h"
-#include "Features/TrainingGameStateController.h"
+#include "Features/FeatureGameState.h"
+#include "Features/FeatureGameStateController.h"
 
 Atest_UE_584_G1_cGameMode::Atest_UE_584_G1_cGameMode()
 {
-	// Selects TrainingGameState as the class Unreal will instantiate for this game mode.
+	// Selects FeatureGameState as the class Unreal will instantiate for this game mode.
 	// StaticClass() returns its UClass metadata pointer, not an actor instance; GameStateClass stores this as a TSubclassOf<AGameStateBase>.
 	// AGameModeBase::PreInitializeComponents() spawns this actor, registers it with the world, then calls InitGameState(), before BeginPlay().
-	GameStateClass = ATrainingGameState::StaticClass();
+	GameStateClass = AFeatureGameState::StaticClass();
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("GameMode [%s]: Constructor"), *GetName());
 }
 
@@ -27,12 +27,12 @@ void Atest_UE_584_G1_cGameMode::InitGameState()
 
 	// The base game mode has already spawned the game state before calling this hook.
 	// NewObject creates the controller with this game mode as its Outer; our UPROPERTY keeps it alive.
-	TrainingGameStateController = NewObject<UTrainingGameStateController>(this);
+	FeatureGameStateController = NewObject<UFeatureGameStateController>(this);
 	// Give the controller the existing shared state; it does not create another game state actor.
-	TrainingGameStateController->Initialize(*GetGameState<ATrainingGameState>());
+	FeatureGameStateController->Initialize(*GetGameState<AFeatureGameState>());
 	// Subscribe before BeginPlay spawns balls; each new pool entry will be passed to ObserveBall.
 	// AddUObject binds the method to this controller using a weak UObject reference.
-	TrainingBallSpawner.OnBallCreated.AddUObject(TrainingGameStateController.Get(), &UTrainingGameStateController::ObserveBall);
+	FeatureBallSpawner.OnBallCreated.AddUObject(FeatureGameStateController.Get(), &UFeatureGameStateController::ObserveBall);
 }
 
 void Atest_UE_584_G1_cGameMode::PostInitializeComponents()
@@ -52,7 +52,7 @@ void Atest_UE_584_G1_cGameMode::BeginPlay()
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("GameMode [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
 
-	TrainingBallSpawner.SpawnMultiple(*GetWorld(), TrainingBallCount, TrainingBallSpawnMin, TrainingBallSpawnMax);
+	FeatureBallSpawner.SpawnMultiple(*GetWorld(), FeatureBallCount, FeatureBallSpawnMin, FeatureBallSpawnMax);
 }
 
 void Atest_UE_584_G1_cGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)

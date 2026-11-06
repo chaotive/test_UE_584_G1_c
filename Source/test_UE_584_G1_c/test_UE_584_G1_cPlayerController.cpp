@@ -2,8 +2,8 @@
 
 
 #include "test_UE_584_G1_cPlayerController.h"
-#include "Features/TrainingDebugHUD.h"
-#include "Features_NonUE/TrainingDebugHUDSpawner.h"
+#include "Features/FeatureDebugHUD.h"
+#include "Features_NonUE/FeatureDebugHUDSpawner.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
@@ -17,7 +17,7 @@ void Atest_UE_584_G1_cPlayerController::BeginPlay()
 
 	if (IsLocalPlayerController())
 	{
-		DebugHUD = FTrainingDebugHUDSpawner::Spawn(*this);
+		DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
 	}
 
 	// only spawn touch controls on local player controllers

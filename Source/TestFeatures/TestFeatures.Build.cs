@@ -1,10 +1,10 @@
 using UnrealBuildTool;
 
-public class TrainingFeatures : ModuleRules
+public class TestFeatures : ModuleRules
 {
     // Configures the runtime features and their direct engine dependencies.
     // Target is a read-only rules reference; no native pointers or ownership are involved.
-    public TrainingFeatures(ReadOnlyTargetRules Target) : base(Target)
+    public TestFeatures(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicIncludePaths.Add(ModuleDirectory);

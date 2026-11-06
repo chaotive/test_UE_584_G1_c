@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "Features_NonUE/TrainingBallSpawner.h"
+#include "Features_NonUE/FeatureBallSpawner.h"
 #include "test_UE_584_G1_cGameMode.generated.h"
 
-class UTrainingGameStateController;
+class UFeatureGameStateController;
 
 /**
  *  Simple GameMode for a third person game
@@ -41,26 +41,26 @@ protected:
 	// Number of training balls to create when play begins.
 	// int32 stores the ball count by value; UPROPERTY(EditAnywhere) exposes it for editor configuration without pointer ownership.
 	UPROPERTY(EditAnywhere, Category="Training_Ball")
-	int32 TrainingBallCount = 5;
+	int32 FeatureBallCount = 5;
 
 	// Minimum corner of the spawn box in world centimeters; each axis must be <= the maximum corner.
 	// FVector stores three coordinates by value; UPROPERTY exposes them for editing without a pointer or separate allocation.
 	UPROPERTY(EditAnywhere, Category="Training_Ball")
-	FVector TrainingBallSpawnMin = FVector(-500.0f, -300.0f, 400.0f);
+	FVector FeatureBallSpawnMin = FVector(-500.0f, -300.0f, 400.0f);
 
 	// Maximum corner of the spawn box in world centimeters.
 	// FVector stores three coordinates by value; UPROPERTY exposes them for editing without a pointer or separate allocation.
 	UPROPERTY(EditAnywhere, Category="Training_Ball")
-	FVector TrainingBallSpawnMax = FVector(500.0f, 700.0f, 700.0f);
+	FVector FeatureBallSpawnMax = FVector(500.0f, 700.0f, 700.0f);
 
 private:
 
 	// Translates ball events into shared game state changes for this game session.
 	// UPROPERTY keeps this game-mode-owned UObject alive through its strong TObjectPtr reference.
 	UPROPERTY()
-	TObjectPtr<UTrainingGameStateController> TrainingGameStateController;
+	TObjectPtr<UFeatureGameStateController> FeatureGameStateController;
 
 	// Creates training balls and tracks them throughout this game mode's lifetime.
-	// FTrainingBallSpawner is stored by value so its list belongs to this game mode instance without a pointer or separate allocation.
-	FTrainingBallSpawner TrainingBallSpawner;
+	// FFeatureBallSpawner is stored by value so its list belongs to this game mode instance without a pointer or separate allocation.
+	FFeatureBallSpawner FeatureBallSpawner;
 };

@@ -2,11 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
-#include "TrainingSaveGame.generated.h"
+#include "FeatureSaveGame.generated.h"
 
 /** Serialized data for the training sandbox; independent of actors and widgets. */
 UCLASS()
-class TRAININGFEATURES_API UTrainingSaveGame : public USaveGame
+class TESTFEATURES_API UFeatureSaveGame : public USaveGame
 {
 	GENERATED_BODY()
 

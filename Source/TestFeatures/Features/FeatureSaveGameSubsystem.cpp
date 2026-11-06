@@ -1,20 +1,20 @@
-#include "TrainingSaveGameSubsystem.h"
-#include "Features_NonUE/TrainingSaveGameStorage.h"
+#include "FeatureSaveGameSubsystem.h"
+#include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/App.h"
-#include "TrainingFeatures.h"
+#include "TestFeatures.h"
 
-void UTrainingSaveGameSubsystem::RequestLoad()
+void UFeatureSaveGameSubsystem::RequestLoad()
 {
 	StartOperation(true, 0, false);
 }
-void UTrainingSaveGameSubsystem::RequestSave(int32 Count, bool bQuitAfter)
+void UFeatureSaveGameSubsystem::RequestSave(int32 Count, bool bQuitAfter)
 {
 	StartOperation(false, Count, bQuitAfter);
 }
-void UTrainingSaveGameSubsystem::StartOperation(bool bLoad, int32 Count, bool bQuitAfter)
+void UFeatureSaveGameSubsystem::StartOperation(bool bLoad, int32 Count, bool bQuitAfter)
 {
 	// Serialize requests; repeated clicks or close requests must not start competing writes.
 	if (bBusy)
@@ -36,18 +36,18 @@ void UTrainingSaveGameSubsystem::StartOperation(bool bLoad, int32 Count, bool bQ
 	PublishStatus(bLoad ? TEXT("Loading: preview (game paused)") : TEXT("Saving: preview (game paused)"));
 	if (!FApp::CanEverRender()) { BeginPendingIO(); }
 }
-void UTrainingSaveGameSubsystem::BeginPendingIO()
+void UFeatureSaveGameSubsystem::BeginPendingIO()
 {
 	if (!bBusy || !bWaitingForIO) { return; }
 	bWaitingForIO = false;
 	PublishStatus(bLoading ? TEXT("Loading: disk I/O (game paused)") : TEXT("Saving: disk I/O (game paused)"));
 	const uint32 RequestId = OperationId;
-	TWeakObjectPtr<UTrainingSaveGameSubsystem> WeakThis(this);
+	TWeakObjectPtr<UFeatureSaveGameSubsystem> WeakThis(this);
 	if (bLoading)
 	{
-		FTrainingSaveGameStorage::LoadAsync([WeakThis, RequestId](int32 Count, const FString& Result)
+		FFeatureSaveGameStorage::LoadAsync([WeakThis, RequestId](int32 Count, const FString& Result)
 		{
-			UTrainingSaveGameSubsystem* Self = WeakThis.Get();
+			UFeatureSaveGameSubsystem* Self = WeakThis.Get();
 			if (!Self || Self->OperationId != RequestId) { return; }
 			Self->PendingCount = Count;
 			Self->OnLoaded.Broadcast(Count);
@@ -59,9 +59,9 @@ void UTrainingSaveGameSubsystem::BeginPendingIO()
 	}
 	else
 	{
-		FTrainingSaveGameStorage::SaveAsync(PendingCount, [WeakThis, RequestId](bool bSuccess)
+		FFeatureSaveGameStorage::SaveAsync(PendingCount, [WeakThis, RequestId](bool bSuccess)
 		{
-			UTrainingSaveGameSubsystem* Self = WeakThis.Get();
+			UFeatureSaveGameSubsystem* Self = WeakThis.Get();
 			if (!Self || Self->OperationId != RequestId) { return; }
 			Self->bSucceeded = bSuccess;
 			Self->bIOComplete = true;
@@ -70,7 +70,7 @@ void UTrainingSaveGameSubsystem::BeginPendingIO()
 		});
 	}
 }
-void UTrainingSaveGameSubsystem::FinishOperation()
+void UFeatureSaveGameSubsystem::FinishOperation()
 {
 	if (!bBusy || !bIOComplete) { return; }
 	bBusy = false;
@@ -89,18 +89,18 @@ void UTrainingSaveGameSubsystem::FinishOperation()
 		UKismetSystemLibrary::QuitGame(World, World->GetFirstPlayerController(), EQuitPreference::Quit, false);
 	}
 }
-void UTrainingSaveGameSubsystem::CancelOperation()
+void UFeatureSaveGameSubsystem::CancelOperation()
 {
 	++OperationId;
 	bBusy = bWaitingForIO = bIOComplete = false;
 	OperationWorld.Reset();
 }
-void UTrainingSaveGameSubsystem::PublishStatus(const FString& Status)
+void UFeatureSaveGameSubsystem::PublishStatus(const FString& Status)
 {
 	StatusHistory.Add(Status);
-	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingSaveGameSubsystem: %s"), *Status);
+	UE_LOG(LogTestFeatures, Log, TEXT("FeatureSaveGameSubsystem: %s"), *Status);
 	OnStatusChanged.Broadcast(Status, bBusy);
 }
-const TArray<FString>& UTrainingSaveGameSubsystem::GetStatusHistory() const { return StatusHistory; }
-const FString& UTrainingSaveGameSubsystem::GetSlotName() const { return FTrainingSaveGameStorage::GetSlotName(); }
-FString UTrainingSaveGameSubsystem::GetSaveFilePath() const { return FTrainingSaveGameStorage::GetSaveFilePath(); }
+const TArray<FString>& UFeatureSaveGameSubsystem::GetStatusHistory() const { return StatusHistory; }
+const FString& UFeatureSaveGameSubsystem::GetSlotName() const { return FFeatureSaveGameStorage::GetSlotName(); }
+FString UFeatureSaveGameSubsystem::GetSaveFilePath() const { return FFeatureSaveGameStorage::GetSaveFilePath(); }

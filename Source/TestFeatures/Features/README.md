@@ -8,22 +8,22 @@ Start with the startup flow below. The later sections explain the event connecti
 
 ## Folder organization
 
-`Features` contains the Unreal-reflected actor and widget classes and the UObject-based state controller. The sibling `Features_NonUE` folder contains plain C++ helpers: `FTrainingBallSpawner` and `FTrainingDebugHUDSpawner`. These helpers still use Unreal APIs; non-UE here means they do not derive from UObject and are not UCLASS types.
+`Features` contains the Unreal-reflected actor and widget classes and the UObject-based state controller. The sibling `Features_NonUE` folder contains plain C++ helpers: `FFeatureBallSpawner` and `FFeatureDebugHUDSpawner`. These helpers still use Unreal APIs; non-UE here means they do not derive from UObject and are not UCLASS types.
 
 ## Who does what?
 
 | Class | Plain-language job | Where to read |
 | --- | --- | --- |
 | `Atest_UE_584_G1_cGameMode` | Sets up the session and connects the pieces. | [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
-| `FTrainingBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) |
-| `ATrainingBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [TrainingBall.cpp](TrainingBall.cpp) |
-| `ATrainingGameState` | Stores the shared total number of bounces. | [TrainingGameState.cpp](TrainingGameState.cpp) |
-| `UTrainingGameStateController` | Listens to ball events and updates that shared total. | [TrainingGameStateController.cpp](TrainingGameStateController.cpp) |
-| `UTrainingSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [TrainingSaveGameSubsystem.cpp](TrainingSaveGameSubsystem.cpp) |
-| `UTrainingDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [TrainingDebugHUD.cpp](TrainingDebugHUD.cpp) |
-| `UTrainingBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [TrainingBallPanel.cpp](TrainingBallPanel.cpp) |
-| `UTrainingSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [TrainingSaveGamePanel.cpp](TrainingSaveGamePanel.cpp) |
-| `FTrainingDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [TrainingDebugHUDSpawner.cpp](../Features_NonUE/TrainingDebugHUDSpawner.cpp) |
+| `FFeatureBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) |
+| `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](FeatureBall.cpp) |
+| `AFeatureGameState` | Stores the shared total number of bounces. | [FeatureGameState.cpp](FeatureGameState.cpp) |
+| `UFeatureGameStateController` | Listens to ball events and updates that shared total. | [FeatureGameStateController.cpp](FeatureGameStateController.cpp) |
+| `UFeatureSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [FeatureSaveGameSubsystem.cpp](FeatureSaveGameSubsystem.cpp) |
+| `UFeatureDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [FeatureDebugHUD.cpp](FeatureDebugHUD.cpp) |
+| `UFeatureBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [FeatureBallPanel.cpp](FeatureBallPanel.cpp) |
+| `UFeatureSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [FeatureSaveGamePanel.cpp](FeatureSaveGamePanel.cpp) |
+| `FFeatureDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [FeatureDebugHUDSpawner.cpp](../Features_NonUE/FeatureDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
 
@@ -40,7 +40,7 @@ The project selects `BP_ThirdPersonGameMode`, whose C++ base is our game mode. A
 The constructor selects the game-state **class**:
 
 ```cpp
-GameStateClass = ATrainingGameState::StaticClass();
+GameStateClass = AFeatureGameState::StaticClass();
 ```
 
 `StaticClass()` returns Unreal's description of the type, a `UClass*`. It does not create a game-state instance. `GameStateClass` stores that selection in `TSubclassOf<AGameStateBase>`, a wrapper that accepts compatible game-state classes.
@@ -50,9 +50,9 @@ During startup, Unreal's `AGameModeBase::PreInitializeComponents()` creates the 
 Our `InitGameState()` then connects the feature:
 
 ```cpp
-TrainingGameStateController = NewObject<UTrainingGameStateController>(this);
-TrainingGameStateController->Initialize(*GetGameState<ATrainingGameState>());
-TrainingBallSpawner.OnBallCreated.AddUObject(TrainingGameStateController.Get(), &UTrainingGameStateController::ObserveBall);
+FeatureGameStateController = NewObject<UFeatureGameStateController>(this);
+FeatureGameStateController->Initialize(*GetGameState<AFeatureGameState>());
+FeatureBallSpawner.OnBallCreated.AddUObject(FeatureGameStateController.Get(), &UFeatureGameStateController::ObserveBall);
 ```
 
 Read those lines as:
@@ -66,7 +66,7 @@ The game mode's `UPROPERTY` reference keeps the controller reachable by garbage 
 Finally, the game mode's `BeginPlay()` requests the initial batch:
 
 ```cpp
-TrainingBallSpawner.SpawnMultiple(*GetWorld(), TrainingBallCount, TrainingBallSpawnMin, TrainingBallSpawnMax);
+FeatureBallSpawner.SpawnMultiple(*GetWorld(), FeatureBallCount, FeatureBallSpawnMin, FeatureBallSpawnMax);
 ```
 
 The important ordering is **create state → connect controller → spawn balls**. This is a description of our startup wiring, not a promise that every actor's `BeginPlay()` runs in a particular global order.
@@ -91,7 +91,7 @@ flowchart TD
 When creating an actor, `CreateBall()` uses:
 
 ```cpp
-ATrainingBall* Ball = World.SpawnActor<ATrainingBall>(Location, FRotator::ZeroRotator, SpawnParameters);
+AFeatureBall* Ball = World.SpawnActor<AFeatureBall>(Location, FRotator::ZeroRotator, SpawnParameters);
 ```
 
 Unreal constructs the actor and its inherited mesh component. The ball constructor caches that component once, loads the built-in sphere, prepares physics, and creates its bouncy material. Initially, the ball is hidden and inactive.
@@ -102,7 +102,7 @@ The controller's `ObserveBall()` subscribes to that actor's bounce event. Reusin
 
 ## 3. Activation: make the ball move
 
-`ATrainingBall::Activate()` resets the local bounce count, marks the ball active, moves it to the requested location, shows it, and enables collision and physics. It clears spin and chooses a new launch velocity:
+`AFeatureBall::Activate()` resets the local bounce count, marks the ball active, moves it to the requested location, shows it, and enables collision and physics. It clears spin and chooses a new launch velocity:
 
 ```cpp
 const FVector Direction = FMath::VRandCone(FVector::UpVector, FMath::DegreesToRadians(60.0f));
@@ -122,7 +122,7 @@ The mesh's material uses restitution `0.8` and a `Max` restitution combine mode.
 The ball's `BeginPlay()` subscribes to its mesh's physics hit event:
 
 ```cpp
-BallMesh->OnComponentHit.AddDynamic(this, &ATrainingBall::OnBallHit);
+BallMesh->OnComponentHit.AddDynamic(this, &AFeatureBall::OnBallHit);
 ```
 
 `OnBallHit()` ignores callbacks for inactive balls and contacts with nearly zero impulse. For an accepted contact, it increments the ball's own counter and announces the bounce:
@@ -146,7 +146,7 @@ Mesh reports a hit
 The ball knows that it bounced. It does not include or hold the game-state class, and it does not decide what the shared total means. The controller translates that notification into a state change:
 
 ```cpp
-TrainingGameState->RecordBounce();
+FeatureGameState->RecordBounce();
 ```
 
 There are two counters with different lifetimes:
@@ -165,10 +165,10 @@ Here, a “bounce” means an accepted physics hit callback with a nonzero impul
 This line registers a function to call later:
 
 ```cpp
-Ball.OnBounced.AddUObject(this, &UTrainingGameStateController::HandleBallBounced);
+Ball.OnBounced.AddUObject(this, &UFeatureGameStateController::HandleBallBounced);
 ```
 
-`this` identifies the listening controller. The `&UTrainingGameStateController::HandleBallBounced` part identifies its member function. `AddUObject()` stores a weak UObject binding, so the event does not keep the controller alive. The game mode's strong property reference does that separately.
+`this` identifies the listening controller. The `&UFeatureGameStateController::HandleBallBounced` part identifies its member function. `AddUObject()` stores a weak UObject binding, so the event does not keep the controller alive. The game mode's strong property reference does that separately.
 
 `Broadcast()` invokes current listeners synchronously: the state update finishes before execution returns to `OnBallHit()`. This explains why controller and shared-total log messages can appear before the ball's own `Bounce 1/2` message. With several listeners, do not depend on their execution order.
 
@@ -188,12 +188,12 @@ There is currently **no timer that continuously requests more balls**. The game 
 
 ### Example to try: prove that an actor is reused
 
-Inside the game mode, where `TrainingBallSpawner` is accessible, this illustrates explicit release and reuse. Include `Features/TrainingBall.h` if calling actor methods from that file.
+Inside the game mode, where `FeatureBallSpawner` is accessible, this illustrates explicit release and reuse. Include `Features/FeatureBall.h` if calling actor methods from that file.
 
 ```cpp
-ATrainingBall* First = TrainingBallSpawner.Spawn(*GetWorld(), FVector(0.0f, 200.0f, 500.0f));
+AFeatureBall* First = FeatureBallSpawner.Spawn(*GetWorld(), FVector(0.0f, 200.0f, 500.0f));
 First->Deactivate();
-ATrainingBall* Reused = TrainingBallSpawner.Spawn(*GetWorld(), FVector(300.0f, 200.0f, 500.0f));
+AFeatureBall* Reused = FeatureBallSpawner.Spawn(*GetWorld(), FVector(300.0f, 200.0f, 500.0f));
 ```
 
 With no other available ball earlier in the pool, `First` and `Reused` point to the same actor. Its name stays the same, its location changes, and the log reports `Reusing pooled ball`. This example is an experiment to add temporarily, not another automatic flow already running in the game mode.
@@ -210,24 +210,24 @@ The player controller removes its debug widget in EndPlay. Interactive Save game
 
 ## 7. The debug HUD: a separate UI flow
 
-The widget layout lives in `TrainingDebugHUD.h/.cpp`, while its creation helper lives separately in `../Features_NonUE/TrainingDebugHUDSpawner.h/.cpp`. The player controller includes both headers: one for the widget instance and one for the spawning API.
+The widget layout lives in `FeatureDebugHUD.h/.cpp`, while its creation helper lives separately in `../Features_NonUE/FeatureDebugHUDSpawner.h/.cpp`. The player controller includes both headers: one for the widget instance and one for the spawning API.
 
 The Third Person player controller requests the overlay in its own `BeginPlay()`, only when `IsLocalPlayerController()` is true:
 
 ```cpp
-DebugHUD = FTrainingDebugHUDSpawner::Spawn(*this);
+DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
 ```
 
 This local-player check is meaningful: the screen belongs to a player on this machine, not to a remote player's controller. The helper has no dependency on the ball spawner, ball events, or game state.
 
-`FTrainingDebugHUDSpawner::Spawn()` calls `CreateWidget<UTrainingDebugHUD>()` with the player controller as the owning player. It then calls `AddToPlayerScreen(10)` and returns the widget. The controller stores it in a `UPROPERTY`-tracked `TObjectPtr` so it remains reachable throughout the player's session. See Epic's [AddToPlayerScreen](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/UMG/UUserWidget/AddToPlayerScreen?lang=en-US) reference for player-specific viewport placement and layering.
+`FFeatureDebugHUDSpawner::Spawn()` calls `CreateWidget<UFeatureDebugHUD>()` with the player controller as the owning player. It then calls `AddToPlayerScreen(10)` and returns the widget. The controller stores it in a `UPROPERTY`-tracked `TObjectPtr` so it remains reachable throughout the player's session. See Epic's [AddToPlayerScreen](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/UMG/UUserWidget/AddToPlayerScreen?lang=en-US) reference for player-specific viewport placement and layering.
 
 During widget creation, `NativeOnInitialized()` builds the controls once. No Widget Blueprint asset or designer layout is needed:
 
 ```text
 Player controller BeginPlay
-  -> FTrainingDebugHUDSpawner::Spawn()
-  -> CreateWidget<UTrainingDebugHUD>()
+  -> FFeatureDebugHUDSpawner::Spawn()
+  -> CreateWidget<UFeatureDebugHUD>()
   -> NativeOnInitialized() -> BuildLayout() -> BuildPanel()
   -> AddToPlayerScreen(10)
 ```
@@ -237,8 +237,8 @@ The widget tree contains a full-screen canvas, a dark border positioned at `(20,
 The HUD is a composing manager: it decides where sections go, while each child owns the meaning of its displayed data. The ball display follows this flow:
 
 ```text
-TrainingDebugHUD::BuildPanel()
-  -> CreateWidget<UTrainingBallPanel>() -> add child to rows
+FeatureDebugHUD::BuildPanel()
+  -> CreateWidget<UFeatureBallPanel>() -> add child to rows
 Ball panel NativeConstruct()
   -> subscribe to game-state OnTotalBouncesChanged
   -> read GetTotalBounces() immediately
@@ -248,11 +248,11 @@ Ball panel NativeDestruct()
   -> remove subscription and clear weak state reference
 ```
 
-Reading the current count after subscribing covers either startup order: the panel sees a previously restored total or receives the later load event. The HUD never forwards counts or binds state events on behalf of the child. Adding another ball diagnostic belongs in TrainingBallPanel; adding another feature section belongs in the HUD composition.
+Reading the current count after subscribing covers either startup order: the panel sees a previously restored total or receives the later load event. The HUD never forwards counts or binds state events on behalf of the child. Adding another ball diagnostic belongs in FeatureBallPanel; adding another feature section belongs in the HUD composition.
 
 `CreateText()` centralizes font and color setup. The HUD enables a visible mouse cursor and Game-and-UI input. Its outer widget uses SelfHitTestInvisible; diagnostic scrolling and save buttons remain usable while the game world is paused.
 
-The panel displays TRAINING DEBUG HUD, C++ feature sandbox, Total bounces: N, save controls, and live persistence diagnostics. The specialized UTrainingBallPanel child connects to `ATrainingGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
+The panel displays TRAINING DEBUG HUD, C++ feature sandbox, Total bounces: N, save controls, and live persistence diagnostics. The specialized UFeatureBallPanel child connects to `AFeatureGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
 
 ## Reading the types without getting lost
 
@@ -260,9 +260,9 @@ The panel displays TRAINING DEBUG HUD, C++ feature sandbox, Total bounces: N, sa
 | --- | --- |
 | `UWorld& World` | Work with the existing world through a reference, without copying it. |
 | `const FVector& Location` | Borrow a position for reading; this function cannot change it through that reference. |
-| `ATrainingBall* Ball` | A raw pointer to a world actor; it does not mean the caller should delete it. |
+| `AFeatureBall* Ball` | A raw pointer to a world actor; it does not mean the caller should delete it. |
 | `UPROPERTY() TObjectPtr<UStaticMeshComponent> BallMesh` | A persistent Unreal-tracked reference to the existing component. |
-| `TArray<TWeakObjectPtr<ATrainingBall>> SpawnedBalls` | A growable list that observes actors without keeping them alive through its references. |
+| `TArray<TWeakObjectPtr<AFeatureBall>> SpawnedBalls` | A growable list that observes actors without keeping them alive through its references. |
 | `const TArray<...>& GetSpawnedBalls() const` | Read the existing list without copying it or modifying the spawner through this method. |
 
 `TObjectPtr` with `UPROPERTY` participates in garbage-collection tracking. A weak pointer can become invalid when its actor is destroyed; `FindAvailableBall()` checks the result of `Get()` before using it. Inactive pooled actors remain world actors even though our list is weak. Explicit actor destruction is still possible.
@@ -302,13 +302,13 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 
 1. Use the Third Person game mode. In its Blueprint Class Defaults, find `Training_Ball` and adjust count and minimum/maximum spawn corners. Coordinates are world centimeters; minimum must not exceed maximum on any axis.
 2. Press Play and search the World Outliner for `Training_Ball_`. Runtime balls appear during Play. Inactive pooled actors can remain listed while hidden in the game view.
-3. Filter Output Log by `TrainingBallSpawner`, `TrainingBall`, `TrainingGameStateController`, or `TrainingGameState` to follow each part of the flow.
+3. Filter Output Log by `FeatureBallSpawner`, `FeatureBall`, `FeatureGameStateController`, or `FeatureGameState` to follow each part of the flow.
 4. Look for the dark `TRAINING DEBUG HUD` panel in the top-left corner. It appears during Play through the Third Person player controller; there is no widget asset to place in the level.
 5. Read the total through `GetTotalBounces()` or inspect `Total Bounces` on the game-state actor. The debug panel also displays the live total through state-change events.
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) → [FeatureBall.cpp](FeatureBall.cpp) → [FeatureGameStateController.cpp](FeatureGameStateController.cpp) → [FeatureGameState.cpp](FeatureGameState.cpp).
 
 ## In-game load/save and HUD-controlled previews (tasks 14–16)
 
@@ -316,7 +316,7 @@ The debug HUD is the only persistence UI. The former TrainingSaveGameUI subsyste
 
 At GameState BeginPlay, the state subscribes to OnLoaded and requests loading. The subsystem pauses the game world and publishes a waiting phase. The normal player HUD is constructed in the active game viewport and reads the current operation even if the request happened before its subscription. NativeConstruct installs Game-and-UI input and a visible cursor so the HUD remains operative. Physics/gameplay waits while Slate continues rendering and accepting scrolling and button input.
 
-The HUD's specialized UTrainingSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
+The HUD's specialized UFeatureSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
 
 The HUD displays current I/O state, slot TrainingSandbox, user index 0, the absolute default desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result; writes report success or failure. Custom bounce totals are not replicated over the network. The save contains only the accumulated total, not ball positions or the pool.
 
@@ -337,13 +337,13 @@ Verified on 2026-11-01 after extracting both specialized panels: Unreal Header T
 5. Try missing saves, failed reads, repeated clicks, and close requests during loading. Existing error policy and slot sharing are unchanged.
 6. Use editor Stop during loading and saving: verify the fallback and check that callbacks do not update a new level. This forced path intentionally has no in-game delay.
 
-The player controller still only creates, retains, and removes the HUD. The outer HUD composes sections and owns general input presentation; its UTrainingBallPanel child owns bounce display and state observation. Its UTrainingSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its scalar snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
+The player controller still only creates, retains, and removes the HUD. The outer HUD composes sections and owns general input presentation; its UFeatureBallPanel child owns bounce display and state observation. Its UFeatureSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its scalar snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
 
 ## UI composition and documentation captures
 
-The outer [TrainingDebugHUD](TrainingDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [TrainingBallPanel](TrainingBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [TrainingSaveGamePanel](TrainingSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UTrainingBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
+The outer [FeatureDebugHUD](FeatureDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [FeatureBallPanel](FeatureBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [FeatureSaveGamePanel](FeatureSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UFeatureBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
 
-Include cleanup follows those boundaries too: the composing HUD no longer needs Engine/World.h, while TrainingBallPanel still includes it for its GetGameState template call. TrainingGameState no longer needs the world header either; it keeps Engine/GameInstance.h for subsystem access. Removing unused dependencies can reduce compile coupling, but does not change runtime behavior or establish a measured build-speed improvement.
+Include cleanup follows those boundaries too: the composing HUD no longer needs Engine/World.h, while FeatureBallPanel still includes it for its GetGameState template call. FeatureGameState no longer needs the world header either; it keeps Engine/GameInstance.h for subsystem access. Removing unused dependencies can reduce compile coupling, but does not change runtime behavior or establish a measured build-speed improvement.
 
 This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
@@ -351,12 +351,12 @@ See the [root README](../../../README.md) for a preserved runtime loading screen
 
 ## Task 17 module boundary
 
-This folder and its sibling `Features_NonUE` now belong to the independent `TrainingFeatures` runtime module. The project game mode and player controller consume its exported API. The feature module uses only engine dependencies and its own log category, `LogTrainingFeatures`. Moved feature classes have no compatibility redirects. Storage uses Unreal AsyncLoadGameFromSlot and LoadGameFromSlot, casts to the current UTrainingSaveGame type, and falls back to zero if no usable save is returned. Historical saves and asset references need not survive the move. Saves still use Unreal asynchronous saving. The existing event, ownership, pooling, UI, and persistence flows are unchanged. Earlier runtime verification in this guide predates this extraction. No runtime performance gain is claimed from the build boundary.
+This folder and its sibling `Features_NonUE` belong to the independent `TestFeatures` runtime module. The project game mode and player controller consume its exported API. The feature module uses only engine dependencies and its own log category, `LogTestFeatures`. Serialized references to the former module package may fail to resolve. Storage uses Unreal's `AsyncLoadGameFromSlot` and `LoadGameFromSlot`, casts to the current `UFeatureSaveGame` type, and starts at zero if no usable save is returned. Saves use Unreal's asynchronous saving API.
 
 Historical task 17 verification with the former compatibility reader (2026-11-01): Unreal Header Tool, native compilation, and both runtime-module DLL links passed. A headless game smoke test loaded the pre-migration save total of 145, released gameplay, counted ball bounces, returned balls to their pool, and saved during orderly teardown. The original save bytes were restored after testing. Headless testing skips UI preview timing and does not verify rendering or button interaction. Existing physics-material CDO initialization errors remain outside this module extraction.
 
 Historical review validation with the former compatibility reader: the adjusted storage source compiled and the TrainingFeatures DLL linked successfully. A fresh headless smoke test loaded 145 total bounces, released gameplay, and returned balls to the pool. The test process was stopped without a shutdown save. Corrupt-file recovery and UI interaction were not exercised by this follow-up.
 
-Compatibility policy: old data may be discarded. The configured game mode and player controller still create the current feature classes in code, so a missing save does not prevent startup. Earlier task 17 migration tests above describe the removed compatibility reader, not the current loader.
+The configured game mode and player controller create the current feature classes in code. If the save is missing or unreadable, the bounce count starts at zero. The Task 17 migration tests above used a compatibility reader that has since been removed.
 
-Current no-redirect verification (2026-11-01): storage compilation and module linking passed. A headless run with an isolated empty UserDir reported No save found; starting at zero and Operation complete; gameplay released. Existing saves were untouched. UI interaction and old assets that explicitly reference moved feature classes were not tested in this run.
+Historical verification before the module rename (2026-11-01): storage compilation and module linking passed. A headless run with an isolated empty user directory started the bounce count at zero and released gameplay. This run used an empty save slot and did not exercise UI interaction or serialized asset references.

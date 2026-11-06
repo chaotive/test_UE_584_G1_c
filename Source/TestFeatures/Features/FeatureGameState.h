@@ -2,17 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "TrainingGameState.generated.h"
+#include "FeatureGameState.generated.h"
 
 /** Holds the accumulated training ball bounce total, restored and saved at session boundaries. */
 UCLASS()
-class TRAININGFEATURES_API ATrainingGameState : public AGameStateBase
+class TESTFEATURES_API AFeatureGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
 public:
 
-	DECLARE_EVENT_OneParam(ATrainingGameState, FTotalBouncesChangedEvent, int32);
+	DECLARE_EVENT_OneParam(AFeatureGameState, FTotalBouncesChangedEvent, int32);
 
 	// Notifies listeners whenever the shared bounce total changes.
 	// This native multicast event passes int32 by value; only the game state can broadcast it.

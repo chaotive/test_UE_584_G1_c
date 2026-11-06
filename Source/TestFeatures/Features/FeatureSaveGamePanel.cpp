@@ -1,6 +1,6 @@
-#include "TrainingSaveGamePanel.h"
-#include "TrainingGameState.h"
-#include "TrainingSaveGameSubsystem.h"
+#include "FeatureSaveGamePanel.h"
+#include "FeatureGameState.h"
+#include "FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Engine/GameViewportClient.h"
@@ -13,24 +13,24 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Styling/CoreStyle.h"
 
-void UTrainingSaveGamePanel::NativeOnInitialized()
+void UFeatureSaveGamePanel::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	BuildLayout();
 }
 
-void UTrainingSaveGamePanel::NativeConstruct()
+void UFeatureSaveGamePanel::NativeConstruct()
 {
 	Super::NativeConstruct();
-	ObservedState = GetWorld()->GetGameState<ATrainingGameState>();
-	UTrainingSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UTrainingSaveGameSubsystem>();
+	ObservedState = GetWorld()->GetGameState<AFeatureGameState>();
+	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
 	ObservedSaves = Saves;
-	Saves->OnStatusChanged.AddUObject(this, &UTrainingSaveGamePanel::RefreshSaveStatus);
+	Saves->OnStatusChanged.AddUObject(this, &UFeatureSaveGamePanel::RefreshSaveStatus);
 	RefreshSaveStatus(FString(), Saves->IsBusy());
-	GetGameInstance()->GetGameViewportClient()->OnWindowCloseRequested().BindUObject(this, &UTrainingSaveGamePanel::HandleWindowCloseRequested);
+	GetGameInstance()->GetGameViewportClient()->OnWindowCloseRequested().BindUObject(this, &UFeatureSaveGamePanel::HandleWindowCloseRequested);
 }
 
-void UTrainingSaveGamePanel::NativeDestruct()
+void UFeatureSaveGamePanel::NativeDestruct()
 {
 	FTSTicker::GetCoreTicker().RemoveTicker(PreviewTicker);
 	PreviewTicker.Reset();
@@ -38,13 +38,13 @@ void UTrainingSaveGamePanel::NativeDestruct()
 	{
 		if (Viewport->OnWindowCloseRequested().IsBoundToObject(this)) { Viewport->OnWindowCloseRequested().Unbind(); }
 	}
-	if (UTrainingSaveGameSubsystem* Saves = ObservedSaves.Get()) { Saves->OnStatusChanged.RemoveAll(this); }
+	if (UFeatureSaveGameSubsystem* Saves = ObservedSaves.Get()) { Saves->OnStatusChanged.RemoveAll(this); }
 	ObservedSaves.Reset();
 	ObservedState.Reset();
 	Super::NativeDestruct();
 }
 
-void UTrainingSaveGamePanel::BuildLayout()
+void UFeatureSaveGamePanel::BuildLayout()
 {
 	UVerticalBox* Rows = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
 	WidgetTree->RootWidget = Rows;
@@ -56,21 +56,21 @@ void UTrainingSaveGamePanel::BuildLayout()
 	Rows->AddChildToVerticalBox(Diagnostics)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 }
 
-UHorizontalBox* UTrainingSaveGamePanel::BuildActions()
+UHorizontalBox* UFeatureSaveGamePanel::BuildActions()
 {
 	UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	UButton* SaveButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
 	SaveButton->SetContent(CreateText(FText::FromString(TEXT("Save game")), 14));
-	SaveButton->OnClicked.AddDynamic(this, &UTrainingSaveGamePanel::HandleSaveClicked);
+	SaveButton->OnClicked.AddDynamic(this, &UFeatureSaveGamePanel::HandleSaveClicked);
 	Actions->AddChildToHorizontalBox(SaveButton);
 	UButton* QuitButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
 	QuitButton->SetContent(CreateText(FText::FromString(TEXT("Save and quit")), 14));
-	QuitButton->OnClicked.AddDynamic(this, &UTrainingSaveGamePanel::HandleSaveAndQuitClicked);
+	QuitButton->OnClicked.AddDynamic(this, &UFeatureSaveGamePanel::HandleSaveAndQuitClicked);
 	Actions->AddChildToHorizontalBox(QuitButton);
 	return Actions;
 }
 
-UTextBlock* UTrainingSaveGamePanel::CreateText(const FText& Text, int32 FontSize)
+UTextBlock* UFeatureSaveGamePanel::CreateText(const FText& Text, int32 FontSize)
 {
 	UTextBlock* Row = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 	Row->SetText(Text);
@@ -79,7 +79,7 @@ UTextBlock* UTrainingSaveGamePanel::CreateText(const FText& Text, int32 FontSize
 	return Row;
 }
 
-FString UTrainingSaveGamePanel::FormatSaveDiagnostics(const UTrainingSaveGameSubsystem& Saves)
+FString UFeatureSaveGamePanel::FormatSaveDiagnostics(const UFeatureSaveGameSubsystem& Saves)
 {
 	const TArray<FString>& History = Saves.GetStatusHistory();
 	const FString CurrentStatus = History.IsEmpty() ? TEXT("Idle") : History.Last();
@@ -87,20 +87,20 @@ FString UTrainingSaveGamePanel::FormatSaveDiagnostics(const UTrainingSaveGameSub
 		*CurrentStatus, *Saves.GetSlotName(), *Saves.GetSaveFilePath(), *FString::Join(History, TEXT(" -> ")));
 }
 
-void UTrainingSaveGamePanel::RefreshSaveStatus(const FString& Status, bool bBusy)
+void UFeatureSaveGamePanel::RefreshSaveStatus(const FString& Status, bool bBusy)
 {
 	SaveDiagnosticsText->SetText(FText::FromString(FormatSaveDiagnostics(*ObservedSaves.Get())));
-	UTrainingSaveGameSubsystem* Saves = ObservedSaves.Get();
+	UFeatureSaveGameSubsystem* Saves = ObservedSaves.Get();
 	if (bBusy && (Saves->IsWaitingForIO() || Saves->IsIOComplete()) && !PreviewTicker.IsValid())
 	{
-		PreviewTicker = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UTrainingSaveGamePanel::HandlePreviewElapsed), 1.0f);
+		PreviewTicker = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UFeatureSaveGamePanel::HandlePreviewElapsed), 1.0f);
 	}
 }
 
-bool UTrainingSaveGamePanel::HandlePreviewElapsed(float DeltaSeconds)
+bool UFeatureSaveGamePanel::HandlePreviewElapsed(float DeltaSeconds)
 {
 	PreviewTicker.Reset();
-	if (UTrainingSaveGameSubsystem* Saves = ObservedSaves.Get())
+	if (UFeatureSaveGameSubsystem* Saves = ObservedSaves.Get())
 	{
 		if (Saves->IsWaitingForIO()) { Saves->BeginPendingIO(); }
 		else if (Saves->IsIOComplete()) { Saves->FinishOperation(); }
@@ -108,17 +108,17 @@ bool UTrainingSaveGamePanel::HandlePreviewElapsed(float DeltaSeconds)
 	return false;
 }
 
-void UTrainingSaveGamePanel::HandleSaveClicked()
+void UFeatureSaveGamePanel::HandleSaveClicked()
 {
 	ObservedState->SaveSession(false);
 }
 
-void UTrainingSaveGamePanel::HandleSaveAndQuitClicked()
+void UFeatureSaveGamePanel::HandleSaveAndQuitClicked()
 {
 	ObservedState->SaveSession(true);
 }
 
-bool UTrainingSaveGamePanel::HandleWindowCloseRequested()
+bool UFeatureSaveGamePanel::HandleWindowCloseRequested()
 {
 	HandleSaveAndQuitClicked();
 	return false;

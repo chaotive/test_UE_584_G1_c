@@ -8,7 +8,7 @@
 
 class UInputMappingContext;
 class UUserWidget;
-class UTrainingDebugHUD;
+class UFeatureDebugHUD;
 
 /**
  *  Basic PlayerController class for a third person game
@@ -57,7 +57,7 @@ protected:
 	// Keeps the runtime debug overlay available throughout this player's session.
 	// UPROPERTY tracks a strong TObjectPtr so garbage collection retains the player-owned widget.
 	UPROPERTY()
-	TObjectPtr<UTrainingDebugHUD> DebugHUD;
+	TObjectPtr<UFeatureDebugHUD> DebugHUD;
 
 	// Registers the local player's input mapping contexts.
 	// No pointer or reference parameters or return value; configures this controller's input subsystem.

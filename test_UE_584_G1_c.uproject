@@ -5,7 +5,7 @@
 	"Description": "",
 	"Modules": [
 		{
-			"Name": "TrainingFeatures",
+			"Name": "TestFeatures",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},

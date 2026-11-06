@@ -1,16 +1,16 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "TrainingSaveGameSubsystem.generated.h"
+#include "FeatureSaveGameSubsystem.generated.h"
 
 /** Async persistence state machine; gameplay pauses while HUD-managed previews and I/O run. */
 UCLASS()
-class TRAININGFEATURES_API UTrainingSaveGameSubsystem : public UGameInstanceSubsystem
+class TESTFEATURES_API UFeatureSaveGameSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 public:
-	DECLARE_EVENT_TwoParams(UTrainingSaveGameSubsystem, FStatusChangedEvent, const FString&, bool);
-	DECLARE_EVENT_OneParam(UTrainingSaveGameSubsystem, FLoadedEvent, int32);
+	DECLARE_EVENT_TwoParams(UFeatureSaveGameSubsystem, FStatusChangedEvent, const FString&, bool);
+	DECLARE_EVENT_OneParam(UFeatureSaveGameSubsystem, FLoadedEvent, int32);
 	// Announces preview, disk activity, completion, and resume transitions.
 	// Native multicast event borrows a string and passes bool by value without owning listeners.
 	FStatusChangedEvent OnStatusChanged;

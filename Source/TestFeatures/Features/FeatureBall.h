@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
-#include "TrainingBall.generated.h"
+#include "FeatureBall.generated.h"
 
 class UPhysicalMaterial;
 class UPrimitiveComponent;
@@ -10,21 +10,21 @@ class UStaticMeshComponent;
 
 /** A reusable physics sphere that returns to its pool after two bounces. */
 UCLASS()
-class TRAININGFEATURES_API ATrainingBall : public AStaticMeshActor
+class TESTFEATURES_API AFeatureBall : public AStaticMeshActor
 {
 	GENERATED_BODY()
 
 public:
 
-	DECLARE_EVENT_OneParam(ATrainingBall, FBouncedEvent, ATrainingBall&);
+	DECLARE_EVENT_OneParam(AFeatureBall, FBouncedEvent, AFeatureBall&);
 
 	// Announces each counted bounce so independent listeners can react to it.
-	// The native multicast event passes this actor by reference; only ATrainingBall can broadcast it.
+	// The native multicast event passes this actor by reference; only AFeatureBall can broadcast it.
 	FBouncedEvent OnBounced;
 
 	// Creates a training ball with its sphere mesh and physics configured.
 	// No pointer or reference parameters; Unreal creates and owns this actor instance.
-	ATrainingBall();
+	AFeatureBall();
 
 	// Resets and launches this ball for a new use at the requested position.
 	// Location is a read-only FVector reference; no pointer ownership is transferred.

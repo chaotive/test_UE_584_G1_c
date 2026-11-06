@@ -1,8 +1,8 @@
-#include "TrainingDebugHUD.h"
-#include "TrainingSaveGamePanel.h"
-#include "TrainingBallPanel.h"
+#include "FeatureDebugHUD.h"
+#include "FeatureSaveGamePanel.h"
+#include "FeatureBallPanel.h"
 #include "GameFramework/PlayerController.h"
-#include "TrainingFeatures.h"
+#include "TestFeatures.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
@@ -12,22 +12,22 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Styling/CoreStyle.h"
 
-void UTrainingDebugHUD::NativeOnInitialized()
+void UFeatureDebugHUD::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	SetIsFocusable(false);
 	BuildLayout();
-	UE_LOG(LogTrainingFeatures, Log, TEXT("TrainingDebugHUD: Initialized"));
+	UE_LOG(LogTestFeatures, Log, TEXT("FeatureDebugHUD: Initialized"));
 }
 
-void UTrainingDebugHUD::NativeConstruct()
+void UFeatureDebugHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
 	GetOwningPlayer()->bShowMouseCursor = true;
 	GetOwningPlayer()->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
 }
 
-void UTrainingDebugHUD::BuildLayout()
+void UFeatureDebugHUD::BuildLayout()
 {
 	UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("DebugCanvas"));
 	WidgetTree->RootWidget = Canvas;
@@ -37,7 +37,7 @@ void UTrainingDebugHUD::BuildLayout()
 	PanelSlot->SetSize(FVector2D(700.0f, 290.0f));
 }
 
-UBorder* UTrainingDebugHUD::BuildPanel()
+UBorder* UFeatureDebugHUD::BuildPanel()
 {
 	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DebugPanel"));
 	Panel->SetBrushColor(FLinearColor(0.02f, 0.03f, 0.05f, 0.85f));
@@ -50,14 +50,14 @@ UBorder* UTrainingDebugHUD::BuildPanel()
 	Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.2f, 0.85f, 1.0f)));
 	Rows->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
 	Rows->AddChildToVerticalBox(CreateText(FText::FromString(TEXT("C++ feature sandbox")), 14));
-	BallPanel = CreateWidget<UTrainingBallPanel>(GetOwningPlayer(), UTrainingBallPanel::StaticClass());
+	BallPanel = CreateWidget<UFeatureBallPanel>(GetOwningPlayer(), UFeatureBallPanel::StaticClass());
 	Rows->AddChildToVerticalBox(BallPanel);
-	SavePanel = CreateWidget<UTrainingSaveGamePanel>(GetOwningPlayer(), UTrainingSaveGamePanel::StaticClass());
+	SavePanel = CreateWidget<UFeatureSaveGamePanel>(GetOwningPlayer(), UFeatureSaveGamePanel::StaticClass());
 	Rows->AddChildToVerticalBox(SavePanel)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 	return Panel;
 }
 
-UTextBlock* UTrainingDebugHUD::CreateText(const FText& Text, int32 FontSize)
+UTextBlock* UFeatureDebugHUD::CreateText(const FText& Text, int32 FontSize)
 {
 	UTextBlock* Row = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 	Row->SetText(Text);

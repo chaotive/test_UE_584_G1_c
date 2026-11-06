@@ -2,16 +2,16 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Containers/Ticker.h"
-#include "TrainingSaveGamePanel.generated.h"
+#include "FeatureSaveGamePanel.generated.h"
 
-class ATrainingGameState;
-class UTrainingSaveGameSubsystem;
+class AFeatureGameState;
+class UFeatureSaveGameSubsystem;
 class UHorizontalBox;
 class UTextBlock;
 
 /** Specialized in-game persistence UI, composed inside the debug HUD. */
 UCLASS()
-class TRAININGFEATURES_API UTrainingSaveGamePanel : public UUserWidget
+class TESTFEATURES_API UFeatureSaveGamePanel : public UUserWidget
 {
 	GENERATED_BODY()
 protected:
@@ -36,7 +36,7 @@ private:
 	UTextBlock* CreateText(const FText& Text, int32 FontSize);
 	// Formats slot, path, phase, and retained operation history.
 	// Saves is a read-only reference; the formatted string is returned by value.
-	static FString FormatSaveDiagnostics(const UTrainingSaveGameSubsystem& Saves);
+	static FString FormatSaveDiagnostics(const UFeatureSaveGameSubsystem& Saves);
 	// Refreshes diagnostics and schedules any required one-second preview.
 	// Status is read-only and busy is by value; event data is not retained by reference.
 	void RefreshSaveStatus(const FString& Status, bool bBusy);
@@ -60,10 +60,10 @@ private:
 	TObjectPtr<UTextBlock> SaveDiagnosticsText;
 	// Observes the state that supplies the save snapshot.
 	// TWeakObjectPtr observes a world-owned actor without extending its lifetime.
-	TWeakObjectPtr<ATrainingGameState> ObservedState;
+	TWeakObjectPtr<AFeatureGameState> ObservedState;
 	// Observes operation state across asynchronous persistence phases.
 	// TWeakObjectPtr does not retain the game-instance-owned subsystem.
-	TWeakObjectPtr<UTrainingSaveGameSubsystem> ObservedSaves;
+	TWeakObjectPtr<UFeatureSaveGameSubsystem> ObservedSaves;
 	// Tracks the pending pause-independent UI preview callback.
 	// FTSTicker::FDelegateHandle is a weak ticker-entry handle removed on widget teardown.
 	FTSTicker::FDelegateHandle PreviewTicker;

@@ -10,6 +10,8 @@ A third-person mini-game prototype for PC, played with mouse and keyboard. The t
 
 The current build opens directly into the level. Balls launch from randomized positions and travel along varied trajectories. The HUD shows the running bounce total, which is saved locally and restored when you return. Use **Save game** to save without leaving or **Save and quit** to end the session.
 
+The module and its reflected save class were renamed. Saves written with the old class path may start the bounce counter at zero on the next launch.
+
 ![The Third Person level and in-game HUD during loading](docs/images/in-game-loading-hud.png)
 
 *Earlier prototype capture showing the level and bounce counter while gameplay is paused during loading.*
@@ -22,8 +24,8 @@ The current build opens directly into the level. Balls launch from randomized po
 
 ## Development
 
-Core systems use C++ in Unreal Engine 5.8. Blueprint supports supplementary logic, and a small AngelScript feature is planned. The project uses standard Unreal assets and has no third-party plugin dependencies.
+Core systems use C++ in Unreal Engine 5.8. The `TestFeatures` runtime module contains the training systems and debug HUD. Blueprint supports supplementary logic, and a small AngelScript feature is planned. The project uses standard Unreal assets and has no third-party plugin dependencies.
 
-- [Gameplay systems and HUD](Source/TrainingFeatures/Features/README.md)
-- [Runtime helpers](Source/TrainingFeatures/Features_NonUE/README.md)
+- [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)
+- [Runtime helpers](Source/TestFeatures/Features_NonUE/README.md)
 - [Project objectives and technical requirements](AGENTS.MD)
