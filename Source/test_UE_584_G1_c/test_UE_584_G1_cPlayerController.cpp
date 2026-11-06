@@ -1,17 +1,17 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 
-#include "training_UE_584_G2_cPlayerController.h"
+#include "test_UE_584_G1_cPlayerController.h"
 #include "Features/TrainingDebugHUD.h"
 #include "Features_NonUE/TrainingDebugHUDSpawner.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
-#include "training_UE_584_G2_c.h"
+#include "test_UE_584_G1_c.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
-void Atraining_UE_584_G2_cPlayerController::BeginPlay()
+void Atest_UE_584_G1_cPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -33,14 +33,14 @@ void Atraining_UE_584_G2_cPlayerController::BeginPlay()
 
 		} else {
 
-			UE_LOG(Logtraining_UE_584_G2_c, Error, TEXT("Could not spawn mobile controls widget."));
+			UE_LOG(Logtest_UE_584_G1_c, Error, TEXT("Could not spawn mobile controls widget."));
 
 		}
 
 	}
 }
 
-void Atraining_UE_584_G2_cPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void Atest_UE_584_G1_cPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (IsLocalPlayerController())
 	{
@@ -49,7 +49,7 @@ void Atraining_UE_584_G2_cPlayerController::EndPlay(const EEndPlayReason::Type E
 	Super::EndPlay(EndPlayReason);
 }
 
-void Atraining_UE_584_G2_cPlayerController::SetupInputComponent()
+void Atest_UE_584_G1_cPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
@@ -76,7 +76,7 @@ void Atraining_UE_584_G2_cPlayerController::SetupInputComponent()
 	}
 }
 
-bool Atraining_UE_584_G2_cPlayerController::ShouldUseTouchControls() const
+bool Atest_UE_584_G1_cPlayerController::ShouldUseTouchControls() const
 {
 	// are we on a mobile platform? Should we force touch?
 	return SVirtualJoystick::ShouldDisplayTouchInterface() || bForceTouchControls;

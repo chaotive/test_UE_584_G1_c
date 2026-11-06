@@ -26,7 +26,7 @@ Runtime capture from the in-game loading verification. The HUD shows the pause p
 - [Performance review ideas](PERFORMANCE_IDEAS.md) — a historical source review with current-flow notes
 - [Project rules and task list](AGENTS.MD)
 
-Open `training_UE_584_G2_c.uproject` with UE 5.8, build the editor target, and play the Third Person map. Save data uses the local `TrainingSandbox` slot, user index 0. On the default desktop backend, its file is `Saved/SaveGames/TrainingSandbox.sav`.
+Open `test_UE_584_G1_c.uproject` with UE 5.8, build the editor target, and play the Third Person map. Save data uses the local `TrainingSandbox` slot, user index 0. On the default desktop backend, its file is `Saved/SaveGames/TrainingSandbox.sav`.
 
 Code checkups also remove unneeded includes from our own authored code, while retaining direct dependencies and leaving engine, generated, third-party, and unrelated template code alone. See the full scope in AGENTS.MD.
 

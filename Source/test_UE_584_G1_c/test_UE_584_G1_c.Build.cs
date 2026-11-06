@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class training_UE_584_G2_c : ModuleRules
+public class test_UE_584_G1_c : ModuleRules
 {
-	public training_UE_584_G2_c(ReadOnlyTargetRules Target) : base(Target)
+	public test_UE_584_G1_c(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -25,20 +25,20 @@ public class training_UE_584_G2_c : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] { "SlateCore" });
 
 		PublicIncludePaths.AddRange(new string[] {
-			"training_UE_584_G2_c",
-			"training_UE_584_G2_c/Variant_Platforming",
-			"training_UE_584_G2_c/Variant_Platforming/Animation",
-			"training_UE_584_G2_c/Variant_Combat",
-			"training_UE_584_G2_c/Variant_Combat/AI",
-			"training_UE_584_G2_c/Variant_Combat/Animation",
-			"training_UE_584_G2_c/Variant_Combat/Gameplay",
-			"training_UE_584_G2_c/Variant_Combat/Interfaces",
-			"training_UE_584_G2_c/Variant_Combat/UI",
-			"training_UE_584_G2_c/Variant_SideScrolling",
-			"training_UE_584_G2_c/Variant_SideScrolling/AI",
-			"training_UE_584_G2_c/Variant_SideScrolling/Gameplay",
-			"training_UE_584_G2_c/Variant_SideScrolling/Interfaces",
-			"training_UE_584_G2_c/Variant_SideScrolling/UI"
+			"test_UE_584_G1_c",
+			"test_UE_584_G1_c/Variant_Platforming",
+			"test_UE_584_G1_c/Variant_Platforming/Animation",
+			"test_UE_584_G1_c/Variant_Combat",
+			"test_UE_584_G1_c/Variant_Combat/AI",
+			"test_UE_584_G1_c/Variant_Combat/Animation",
+			"test_UE_584_G1_c/Variant_Combat/Gameplay",
+			"test_UE_584_G1_c/Variant_Combat/Interfaces",
+			"test_UE_584_G1_c/Variant_Combat/UI",
+			"test_UE_584_G1_c/Variant_SideScrolling",
+			"test_UE_584_G1_c/Variant_SideScrolling/AI",
+			"test_UE_584_G1_c/Variant_SideScrolling/Gameplay",
+			"test_UE_584_G1_c/Variant_SideScrolling/Interfaces",
+			"test_UE_584_G1_c/Variant_SideScrolling/UI"
 		});
 
 		// Uncomment if you are using Slate UI

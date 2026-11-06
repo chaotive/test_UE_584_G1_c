@@ -5,4 +5,4 @@
 #include "CoreMinimal.h"
 
 /** Main log category used across the project */
-DECLARE_LOG_CATEGORY_EXTERN(Logtraining_UE_584_G2_c, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(Logtest_UE_584_G1_c, Log, All);

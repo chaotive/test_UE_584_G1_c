@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "training_UE_584_G2_cCharacter.h"
+#include "test_UE_584_G1_cCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -10,9 +10,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "training_UE_584_G2_c.h"
+#include "test_UE_584_G1_c.h"
 
-Atraining_UE_584_G2_cCharacter::Atraining_UE_584_G2_cCharacter()
+Atest_UE_584_G1_cCharacter::Atest_UE_584_G1_cCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -50,7 +50,7 @@ Atraining_UE_584_G2_cCharacter::Atraining_UE_584_G2_cCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
-void Atraining_UE_584_G2_cCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void Atest_UE_584_G1_cCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
@@ -60,19 +60,19 @@ void Atraining_UE_584_G2_cCharacter::SetupPlayerInputComponent(UInputComponent* 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &Atraining_UE_584_G2_cCharacter::Move);
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &Atraining_UE_584_G2_cCharacter::Look);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &Atest_UE_584_G1_cCharacter::Move);
+		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &Atest_UE_584_G1_cCharacter::Look);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &Atraining_UE_584_G2_cCharacter::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &Atest_UE_584_G1_cCharacter::Look);
 	}
 	else
 	{
-		UE_LOG(Logtraining_UE_584_G2_c, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(Logtest_UE_584_G1_c, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
 
-void Atraining_UE_584_G2_cCharacter::Move(const FInputActionValue& Value)
+void Atest_UE_584_G1_cCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -81,7 +81,7 @@ void Atraining_UE_584_G2_cCharacter::Move(const FInputActionValue& Value)
 	DoMove(MovementVector.X, MovementVector.Y);
 }
 
-void Atraining_UE_584_G2_cCharacter::Look(const FInputActionValue& Value)
+void Atest_UE_584_G1_cCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
@@ -90,7 +90,7 @@ void Atraining_UE_584_G2_cCharacter::Look(const FInputActionValue& Value)
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
 }
 
-void Atraining_UE_584_G2_cCharacter::DoMove(float Right, float Forward)
+void Atest_UE_584_G1_cCharacter::DoMove(float Right, float Forward)
 {
 	if (GetController() != nullptr)
 	{
@@ -110,7 +110,7 @@ void Atraining_UE_584_G2_cCharacter::DoMove(float Right, float Forward)
 	}
 }
 
-void Atraining_UE_584_G2_cCharacter::DoLook(float Yaw, float Pitch)
+void Atest_UE_584_G1_cCharacter::DoLook(float Yaw, float Pitch)
 {
 	if (GetController() != nullptr)
 	{
@@ -120,13 +120,13 @@ void Atraining_UE_584_G2_cCharacter::DoLook(float Yaw, float Pitch)
 	}
 }
 
-void Atraining_UE_584_G2_cCharacter::DoJumpStart()
+void Atest_UE_584_G1_cCharacter::DoJumpStart()
 {
 	// signal the character to jump
 	Jump();
 }
 
-void Atraining_UE_584_G2_cCharacter::DoJumpEnd()
+void Atest_UE_584_G1_cCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();

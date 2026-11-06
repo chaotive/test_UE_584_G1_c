@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "training_UE_584_G2_cPlayerController.generated.h"
+#include "test_UE_584_G1_cPlayerController.generated.h"
 
 class UInputMappingContext;
 class UUserWidget;
@@ -15,7 +15,7 @@ class UTrainingDebugHUD;
  *  Manages input mappings and creates local player UI
  */
 UCLASS(abstract)
-class Atraining_UE_584_G2_cPlayerController : public APlayerController
+class Atest_UE_584_G1_cPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	

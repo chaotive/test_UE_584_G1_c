@@ -14,7 +14,7 @@ Start with the startup flow below. The later sections explain the event connecti
 
 | Class | Plain-language job | Where to read |
 | --- | --- | --- |
-| `Atraining_UE_584_G2_cGameMode` | Sets up the session and connects the pieces. | [GameMode.cpp](../../training_UE_584_G2_c/training_UE_584_G2_cGameMode.cpp) |
+| `Atest_UE_584_G1_cGameMode` | Sets up the session and connects the pieces. | [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
 | `FTrainingBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) |
 | `ATrainingBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [TrainingBall.cpp](TrainingBall.cpp) |
 | `ATrainingGameState` | Stores the shared total number of bounces. | [TrainingGameState.cpp](TrainingGameState.cpp) |
@@ -308,7 +308,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../../training_UE_584_G2_c/training_UE_584_G2_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [TrainingBallSpawner.cpp](../Features_NonUE/TrainingBallSpawner.cpp) → [TrainingBall.cpp](TrainingBall.cpp) → [TrainingGameStateController.cpp](TrainingGameStateController.cpp) → [TrainingGameState.cpp](TrainingGameState.cpp).
 
 ## In-game load/save and HUD-controlled previews (tasks 14–16)
 

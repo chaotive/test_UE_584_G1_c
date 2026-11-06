@@ -10,14 +10,14 @@
     <Platform Name="Win64-arm64ec" />
   </Configurations>
   <Folder Name="/Engine/">
-    <Project Path="Intermediate/ProjectFiles/UE5.vcxproj" Id="a839c9f1-f25f-3a72-b3c1-c2eeca123489">
+    <Project Path="Intermediate/ProjectFiles/UE5.vcxproj" Id="3739e479-4187-3e47-aeea-f53a2be28874">
       <BuildType Project="BuiltWithUnrealBuildTool" />
       <Platform Project="Win64" />
       <Build Project="false" />
     </Project>
   </Folder>
   <Folder Name="/Games/">
-    <Project Path="Intermediate/ProjectFiles/training_UE_584_G2_c.vcxproj" Id="c024a402-5e7c-3a91-b8d1-96e198386d41">
+    <Project Path="Intermediate/ProjectFiles/test_UE_584_G1_c.vcxproj" Id="4d87596e-0c64-3c69-97af-0da40455933f">
       <BuildType Solution="DebugGame Editor|Win64" Project="DebugGame_Editor" />
       <BuildType Solution="DebugGame Editor|Win64-arm64" Project="Win64_arm64_DebugGame_Editor" />
       <BuildType Solution="DebugGame Editor|Win64-arm64ec" Project="Win64_arm64ec_DebugGame_Editor" />
@@ -210,7 +210,7 @@
     <Project Path="../../Program Files/Epic Games/UE_5.8/Engine/Intermediate/Build/BuildRulesProjects/UE5Rules/UE5Rules.csproj">
       <BuildType Project="Development" />
     </Project>
-    <Project Path="Intermediate/Build/BuildRulesProjects/training_UE_584_G2_cModuleRules/training_UE_584_G2_cModuleRules.csproj">
+    <Project Path="Intermediate/Build/BuildRulesProjects/test_UE_584_G1_cModuleRules/test_UE_584_G1_cModuleRules.csproj">
       <BuildType Project="Development" />
     </Project>
   </Folder>

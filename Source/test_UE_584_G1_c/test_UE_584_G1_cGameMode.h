@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Features_NonUE/TrainingBallSpawner.h"
-#include "training_UE_584_G2_cGameMode.generated.h"
+#include "test_UE_584_G1_cGameMode.generated.h"
 
 class UTrainingGameStateController;
 
@@ -13,14 +13,14 @@ class UTrainingGameStateController;
  *  Simple GameMode for a third person game
  */
 UCLASS(abstract)
-class Atraining_UE_584_G2_cGameMode : public AGameModeBase
+class Atest_UE_584_G1_cGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
 	
 	// No pointer or reference parameters; Unreal creates and owns this game mode instance.
-	Atraining_UE_584_G2_cGameMode();
+	Atest_UE_584_G1_cGameMode();
 
 	// MapName and Options are read-only references; ErrorMessage is a mutable reference for reporting initialization errors.
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;

@@ -10,7 +10,7 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "training_UE_584_G2_c",
+			"Name": "test_UE_584_G1_c",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
