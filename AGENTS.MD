@@ -1,9 +1,42 @@
-## SUMMARY
+# test_UE_584_G1_c - Test Unreal Engine 5.8.4 Game 1 (C-based)
 
-This is an Unreal Engine project that we will use as
-sandbox to try different coding patterns and features.
+## Main objective
 
-## CODE STANDARDS
+Develop a small playable game prototype in Unreal Engine 5.8. You may use any AI assistance of your choice.
+
+### What we want to see
+
+A working mini-game with a third-person or first-person character that the player controls with a mouse and keyboard. The game should have a simple but complete flow:
+
+- A main menu
+- Gameplay
+- An end state
+
+Include at least a basic in-game HUD.
+
+The concept, theme, and scope are entirely up to you. Pick something that lets you show how you think about game architecture and what kinds of engineering decisions you make.
+
+### Technical requirements
+
+- Use Unreal Engine 5.8. Please avoid older 5.x versions.
+- C++ is required for core systems. Blueprint and AngelScript are allowed for supplementary logic.
+- No third-party plugins.
+- Standard assets such as Starter Content, free Fab or Marketplace assets, Megascans, and Mixamo are fine. Avoid spending time on art.
+- Visual fidelity is not evaluated.
+
+## Specific goals
+
+These goals will guide future tasks:
+
+1. Create a working mini-game with a third-person character that the player controls with a mouse and keyboard.
+2. Include a simple but complete flow with a 
+   1. main menu, 
+   2. gameplay, 
+   3. and an end state.
+3. Include at least a basic in-game HUD.
+4. Show some use of AngelScript.
+
+## Code standards
 
 1. Use as little files as possible, this is a simple project.
 2. Do not add defensive code, it is more important to give clarity to the code features understanding and reading.
@@ -19,10 +52,12 @@ sandbox to try different coding patterns and features.
 12. Keep UI construction, layout, styling, window management, and rendering synchronization in UI classes or the HUD. Handling systems publish state and operation events; they must not build or render UI. Route diagnostic information, including persistence slot, physical file path, phases, and results, to the debug HUD through observation rather than controller-side UI wiring.
 13. When implementation or testing produces useful screenshots or images, preserve them under docs (for example docs/images) and use them to enhance the root README and relevant documentation. Caption the actual verified behavior and identify historical captures when later changes affect their appearance; do not present mockups or unverified states as runtime evidence.
 14. During code checkups, review our own project-produced code for unneeded includes and remove them. Limit this cleanup to code we authored or changed; do not clean up Unreal Engine, generated, third-party, or unrelated template code. Keep direct includes required by used types and APIs rather than relying on incidental transitive includes.
+15. When reviewing changes, check the affected prose for spelling and grammar. Report any issues found and corrections made.
+16. The Main objective and Specific goals sections are user-owned. Never change them on your own. Report any suggested edits to the user.
 
-## TASKS
+## Tasks
 
-### DONE
+### Done
 
 1. Create a ball through code, which should be created at game mode start.
 2. Please add on BeginPlay() and all main lifecycle events messages to the ue log. Add main other lifecycle functions and just do the log if needed be.
@@ -39,12 +74,10 @@ sandbox to try different coding patterns and features.
 13. Show the total bounces as they updated on the debug hud
 14. Implement simple savegame, and save the state into it just before the level or the game mode stops, and load it just before it resumes, making sure the HUD shows the data correctly when loaded back
 15. Display a code generated modal loading/saving screen UI state while the I/O for the game save and load is being used. The game should not be playable until the loaded game state is in, and it should not quit until the saved game is completed.
-
 16. Please give the IO loading UI step a 1 second before and after load just to see it working on save and loads.
-
 17. Move all featured UE and non-UE code into its own independent runtime module.
 
-### TO DO
+### To do
 
 150. Mass, as a second element (a square)
 160. generalize spawner with objects pooling
