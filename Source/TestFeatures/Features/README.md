@@ -77,7 +77,7 @@ The startup and pause menus show a save summary below their buttons. An empty sl
 
 During gameplay, Escape requests `PauseMenu` from the game mode. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world and show an end menu. Main Menu reloads the level, and Exit uses the in-game save-and-quit flow. The game mode gates transitions during session saves and loads. The menu preview leaves buttons available. Menus are created on transitions and use no per-frame flow polling.
 
-Historical Task 18 captures show the [empty-slot main menu](../../../docs/images/task-18-main-menu.jpg), [New Game at zero bounces](../../../docs/images/task-18-new-game.jpg), and [Continue after restoring 10 bounces](../../../docs/images/task-18-continue.jpg).
+The [root README](../../../README.md) shows current Unreal Editor captures of the empty and populated startup menus, the arena and bounce counter, and the save and load result previews.
 
 Go deeper: [UObject Instance Creation](https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-objects-in-unreal-engine) explains `NewObject`; [Actor Lifecycle](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-actor-lifecycle) explains initialization and play callbacks.
 
@@ -336,7 +336,7 @@ The one-second preview adds approximately two seconds of paused-game time per in
 
 ### Runtime verification checklist
 
-Historical verification from 2026-11-01 after extracting both specialized panels. Unreal Header Tool, native compilation, and DLL linking passed. An offscreen run rendered both panels, restored 96 bounces, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. The [runtime capture](../../../docs/images/in-game-loading-hud.png) predates the main menu. This run covered loading and recorded existing ball physics-material initialization errors and startup shader and sky warnings.
+Historical verification from 2026-11-01 after extracting both specialized panels. Unreal Header Tool, native compilation, and DLL linking passed. An offscreen run rendered both panels, restored 96 bounces, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. This run covered loading and recorded existing ball physics-material initialization errors and startup shader and sky warnings.
 
 1. Start Play with a saved total: the in-game HUD should show Loading while the character and balls remain paused, then show the restored total before gameplay resumes.
 2. Move the mouse and scroll the debug HUD during both one-second holds. The viewport should keep rendering; no native dialog should open.
@@ -355,7 +355,7 @@ Include cleanup follows those boundaries too: the composing HUD no longer needs 
 
 This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
-See the [root README](../../../README.md) for a preserved runtime loading screenshot under docs/images. That capture is labeled with its verification context; generated test images should be incorporated into documentation when useful, rather than remaining only in ignored Saved output.
+The [save result](../../../docs/images/save-result.png) shows the preview and disk I/O in the HUD history. The [load result](../../../docs/images/continue-load-result.png) shows six restored bounces while the arena is still paused. Both captures come from Unreal Editor play sessions.
 
 ## Task 17 module boundary
 

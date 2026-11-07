@@ -1,48 +1,68 @@
-# test_UE_584_G1_c
+# Training Sandbox
 
-A third-person mini-game prototype for PC, played with mouse and keyboard. The target is a complete, short play session. Players start from a main menu, enter gameplay with a clear objective and an in-game HUD, and reach a defined end state.
+Step into a third-person training arena and watch the first volley scatter. Run, jump, and follow the ricochets as the live counter ticks up. Every round starts with a fresh mix of launch positions and trajectories, and you can save your bounce total to pick up where you left off.
 
-## Local Unreal Editor MCP
+## Jump into the arena
 
-Open `test_UE_584_G1_c.uproject` normally. The project enables Epic's built-in MCP and toolset plugins for editor targets and starts the local server automatically. To turn off automatic startup for your local editor, clear **Auto Start Server** under **Edit → Editor Preferences → Model Context Protocol**.
-
-The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:8000/mcp`. Once the editor has loaded, start a new Codex chat in this project to pick up the server.
-
-## Play the current build
+Training Sandbox is a playable PC prototype built in Unreal Engine 5.8.
 
 1. Open `test_UE_584_G1_c.uproject` in Unreal Engine 5.8 and build the editor target.
 2. Open the Third Person map and press **Play**.
 3. Choose **New Game** to start at zero, **Continue** to restore the local save, or **Exit** to close the standalone game. Continue is disabled when the save slot is empty.
 4. Use **WASD** to move, the **mouse** to look, and **Space** to jump.
 
-The startup menu opens on the gameplay map before the playable character is spawned. Its title comes from `ProjectName` in `Config/DefaultGame.ini`. During gameplay, press **Esc** to pause, then press **Esc** again or choose **Resume Game** to continue. The HUD shows the running bounce total and offers **Save game** and **Save and quit**.
+## Start fresh or pick up your count
 
-The startup and pause menus show the last saved bounce total below their buttons. An empty slot displays **No saved game.**
+The startup and pause menus show your last saved bounce total. If you're starting fresh, the menu shows **No saved game.** During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena.
 
-The game mode owns the startup, gameplay, pause, victory, and defeat states defined in [FeatureGameFlow.h](Source/TestFeatures/Features/FeatureGameFlow.h). Gameplay objectives can trigger the victory or defeat screen through `FinishSession`.
+![Startup menu with Continue disabled and an empty save slot](docs/images/startup-empty.png)
 
-The module and its reflected save class were renamed. Saves written with the old class path may start the bounce counter at zero on the next launch.
+*Unreal Editor play session with an empty slot. The menu shows “No saved game.” and disables Continue.*
 
-![Main menu with Continue disabled](docs/images/task-18-main-menu.jpg)
+![Startup menu showing six saved bounces and an enabled Continue button](docs/images/startup-saved.png)
 
-*Task 18 standalone capture of the startup menu with an empty save slot, taken before the save summary was added.*
+*After restarting the play session, the menu shows six saved bounces and enables Continue.*
 
-![New Game with training balls and a zero bounce total](docs/images/task-18-new-game.jpg)
+## Follow the ricochets
 
-*Task 18 standalone capture immediately after choosing New Game. The HUD shows zero bounces and the initial balls are in motion.*
+The first batch of training balls launches as you enter. Keep an eye on the HUD to see the shared count rise with every bounce. Each ball disappears from the arena after its second bounce.
 
-![Gameplay after Continue with 10 loaded bounces in the HUD history](docs/images/task-18-continue.jpg)
+![Third-person character, airborne training ball, and HUD showing three bounces](docs/images/arena-bounce-hud.png)
 
-*Task 18 standalone capture after Continue restored 10 saved bounces. The HUD history records the load and the live total includes new bounces.*
+*A training ball is airborne beside the player character. The debug HUD shows three total bounces.*
 
-## Planned milestones
+## Take your total with you
 
-- **Gameplay objective** — Define what players need to accomplish and show their progress in the HUD.
+Use **Save game** to keep playing after a save, or **Save and quit** to leave after the write succeeds. When you come back, **Continue** restores your bounce total before the arena resumes. The HUD shows what the game is doing while it saves or loads.
 
-## Development
+![Debug HUD confirming a successful save while gameplay is paused](docs/images/save-result.png)
 
-Core systems use C++ in Unreal Engine 5.8. The `TestFeatures` runtime module contains the training systems and debug HUD. Blueprint supports supplementary logic, and a small AngelScript feature is planned. The project uses standard Unreal assets and has no third-party plugin dependencies.
+*The save result appears in the debug HUD while the arena is paused. The history records the preview, disk I/O, and successful write.*
+
+![Debug HUD showing that Continue restored six total bounces](docs/images/continue-load-result.png)
+
+*Continue restores six total bounces. The HUD shows the restored value during the paused load result preview.*
+
+Saves written before the module and save class were renamed can fall back to zero on load.
+
+## Under the hood
+
+- **Game flow.** The game mode owns startup, gameplay, pause, victory, and defeat. The startup title comes from `ProjectName` in `Config/DefaultGame.ini`. A future gameplay objective can call `FinishSession` to show a result screen. [Game flow states](Source/TestFeatures/Features/FeatureGameFlow.h)
+- **Physics and state.** The C++ spawner launches single balls or batches inside configurable bounds and reuses pooled actors after their second bounce. Balls publish bounce events, a state controller updates the shared total, and the debug HUD observes it. The Unreal log records lifecycle events, launches, bounces, and pool returns.
+- **Persistence.** The menu reads the save preview asynchronously. Session saves and loads pause gameplay and show one-second previews before disk I/O and after the result. The debug HUD reports the slot, file path, and operation history.
+- **Module boundaries.** The `TestFeatures` runtime module houses the C++ gameplay, UI, and persistence code. The project uses standard Unreal assets and has no third-party plugin dependencies. Blueprint supports supplementary logic, and an AngelScript feature is planned.
 
 - [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)
 - [Runtime helpers](Source/TestFeatures/Features_NonUE/README.md)
 - [Project objectives and technical requirements](AGENTS.MD)
+
+### Local Unreal Editor MCP
+
+Open `test_UE_584_G1_c.uproject` normally. The project enables Epic's built-in MCP and toolset plugins for editor targets and starts the local server automatically. To turn off automatic startup for your local editor, clear **Auto Start Server** under **Edit → Editor Preferences → Model Context Protocol**.
+
+The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:8000/mcp`. Wait for the editor to finish loading and the local server to respond. If the current chat does not expose the Unreal tools, start a new Codex chat in this project with the editor still open.
+
+## How the game evolved
+
+- **Before the main menu.** The debug HUD already showed load progress and restored bounce totals. The November 1, 2026 capture shows an offscreen test that restored 96 bounces. [Historical loading HUD](docs/images/in-game-loading-hud.png)
+- **First startup menu (Task 18).** New Game and Continue gave players separate ways into the arena. The menu disabled Continue when the slot was empty. The saved-total summary shown above came later. [Historical startup menu](docs/images/task-18-main-menu.jpg)
