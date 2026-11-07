@@ -63,7 +63,7 @@ These goals will guide future tasks:
 22. Update `CHANGES.md` only when the user explicitly requests a changelog update. When requested, link relevant source and any available verified evidence. A changelog request does not authorize taking screenshots or running the editor or game unless the user also requests those actions.
 23. Never create a git commit unless the user explicitly asks to commit.
 24. Never change line breaks, indentation, whitespace, or make irrelevant formatting changes unless explicitly requested.
-25. When the user says "commit as new task", inspect both Done and To do task indexes, assign one greater than the highest index across both lists, record the completed task, and include its task number in the commit description.
+25. When the user says "commit as new task", inspect both Done and To do task indexes, calculate one greater than the highest index across both lists, and prefix that number with the literal digits "100" to distinguish these tasks. Record the completed task and include its prefixed task number in the commit description.
 
 ## Tasks
 
@@ -98,7 +98,7 @@ These goals will guide future tasks:
 40. Gameplay: Persist a chronological array of started sessions with their statistics.
 41. Gameplay: Enable player-ball blocking collisions and record their count in the active session.
 42. Gameplay: Configure per-session victory and defeat limits and pause when either is reached.
-1601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
+1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
 ### To do
 
