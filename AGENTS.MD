@@ -57,6 +57,7 @@ These goals will guide future tasks:
 16. The Main objective and Specific goals sections are user-owned. Never change them on your own. Report any suggested edits to the user.
 17. For Unreal Editor operations, use the Unreal Editor MCP when it is available. Use the appropriate local tools when no Unreal Editor MCP is exposed.
 18. Avoid lengthy or resource-intensive validation in an Unreal Editor session unless the user requests it or approves it in advance. Prefer lightweight checks by default.
+19. Move a task to Done only after the user explicitly asks to implement that task and its implementation is complete. Leave related tasks in To do even if their behavior is already implemented.
 
 ## Tasks
 
@@ -80,14 +81,14 @@ These goals will guide future tasks:
 16. Please give the IO loading UI step a 1 second before and after load just to see it working on save and loads.
 17. Move all featured UE and non-UE code into its own independent runtime module.
 18. Show the startup menu first with the game title from the project configuration and New Game, Continue, and Exit options.
-20. Continue loads the saved game when a save exists.
-22. Disable Continue when the save slot is empty.
-23. Exit closes the game.
 
 ### To do
 
 19. Main menu: New Game deletes the current save and starts a fresh session.
+20. Main menu: Continue loads the saved game when a save exists.
 21. Main menu: Add Delete Save above Exit to clear the save slot.
+22. Main menu: Disable Continue when the save slot is empty.
+23. Main menu: Exit closes the game.
 24. Main menu: Pressing "Esc" key pauses the game and shows the main menu again.
 25. Main menu: Adds a new first item option: "Resume game".
 26. Main menu: When "Esc" paused, "Resume game" option is active and allows to return and unpause the game.
