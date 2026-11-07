@@ -93,6 +93,7 @@ These goals will guide future tasks:
 32. Show the debug HUD menu only in non-Shipping builds.
 34. Package Win64 builds in Development, DebugGame, and Shipping configurations.
 35. Gameplay: Spawn a configurable collision enclosure around the level at gameplay-session start.
+36. Gameplay: Retire balls after five non-player bounces. On player contact, retire the ball and spawn a replacement.
 37. End state: End a winning session, record Victory, and show a fullscreen result with Continue returning to the initial menu.
 38. End state: End a losing session, record Defeat, and show the same result flow.
 39. Organization: Move feature code into UI, Gameplay, and GameWorkflow subfolders.
@@ -116,7 +117,6 @@ These goals will guide future tasks:
 28. Main menu: On Initial Main Menu, "Resume game" is grayed out.
 29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
 33. Add a smoke test for main easy to test features using Gauntlet.
-36. Gameplay: kill balls after 5 bounces without touching the player. If the ball touches the player, it it retired and a new one spawned 
 43. Gameplay: Allow for a level progression concept, everytime the player "wins", he goes up one "level" (initial level is 1), where the number of required player bounces increases by 1 to win, and the number of required non player bounces is diminished by 1. It is not necessary to make this "level" concepto more complex than it needs to be, we just need to keep the state of what is the current level that the player has achieved on on the gameslot, and when doing "Continue", he will keep playing the same as the last level that he lost. If doing "New game", then the level gets reset to 1 as part of the saved gameslot reset. In other words, default first level is 1 with 10 player bounces to win and 50 to lose, which then consolidates the number of initial required player bounces on level 1 to "10 + (level - 1) = 10", and required ball non-player bounces on same level to "50 - (level - 1) = 50" 
 44. Gameplay: Show a gameplay hud with the number of player bounces required to win and how many has been in the current level, and the same for non player bounces to lose.
 1500. Mass, as a second element (a square)

@@ -1,6 +1,6 @@
 # Feature Sandbox
 
-Step into a third-person arena, run and jump after the first volley, and watch the balls ricochet. Each round opens with a fresh mix of launch positions and trajectories. Balls disappear after their second bounce, and you can carry your total into your next session.
+Step into a third-person arena, run and jump after the first volley, and watch the balls ricochet. Each round opens with a fresh mix of launch positions and trajectories. Balls disappear after five non-player bounces; player contact retires a ball and launches a replacement. You can carry your total into your next session.
 
 ## Jump into the arena
 
@@ -54,7 +54,7 @@ The asset manager registers the `GameFeatureData` cook rule required by the engi
 
 ### Arena collision bounds
 
-Gameplay creates one `AFeatureLevelBounds` actor with six invisible collision faces. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls still return to the pool after two bounces.
+Gameplay creates one `AFeatureLevelBounds` actor with six invisible collision faces. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after five non-player bounces or player contact.
 
 `UFeatureGameplaySession` is a world subsystem that organizes `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. Its start workflow creates the enclosure before the initial ball volley. The game mode observes lifecycle events to spawn the player and present screens. Other features can access the session through `World.GetSubsystem<UFeatureGameplaySession>()` and subscribe to its lifecycle events.
 
@@ -95,7 +95,7 @@ Shipping builds skip the debug previews and keep gameplay paused until disk I/O 
 ### Architecture
 
 - **Game flow.** The gameplay session handles starting, pausing, resuming, and ending gameplay. The game mode observes its events and presents startup, gameplay, pause, victory, and defeat screens. The startup title comes from `ProjectName` in `Config/DefaultGame.ini`. A gameplay objective can call `FinishSession` to supply a result. [Gameplay session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.h)
-- **Physics and state.** The C++ spawner launches single balls or batches inside configurable bounds and reuses pooled actors after their second bounce. Balls publish bounce events, a state controller updates the shared total, and the debug HUD observes it. The Unreal log records lifecycle events, launches, bounces, and pool returns.
+- **Physics and state.** The C++ spawner launches single balls or batches inside configurable bounds and reuses pooled actors. Five non-player bounces retire a ball; player contact retires it and schedules a replacement. Balls publish bounce events, a state controller updates the shared total, and the debug HUD observes it. The Unreal log records lifecycle events, launches, bounces, and pool returns.
 - **Persistence.** The menu reads the save preview asynchronously. Session saves and loads pause gameplay during disk I/O. The debug HUD adds one-second previews before I/O and after the result and reports the slot, file path, and operation history.
 - **Session history.** Saves retain a chronological array of gameplay sessions with UTC start time, bounce count, player-ball blocking-hit count, and result. New Game starts a fresh history. Continue restores it and appends a session. Resume keeps the current record.
 - **Session limits.** Edit `Feature Session Limits` in the game-mode defaults. The defaults are ten player-ball contacts for victory and fifty session bounces for defeat. Reaching either limit ends gameplay and presents the fullscreen result menu. Gameplay starts with five active balls and a pool of fifteen.

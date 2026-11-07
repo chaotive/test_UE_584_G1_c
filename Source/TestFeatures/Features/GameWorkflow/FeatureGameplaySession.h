@@ -6,6 +6,8 @@
 #include "FeatureGameplaySession.generated.h"
 
 class AFeatureGameState;
+class AFeatureBall;
+class AActor;
 class UFeatureGameStateController;
 class UFeatureSaveGameSubsystem;
 struct FFeatureGameplaySessionRecord;
@@ -82,6 +84,26 @@ private:
 	// Rechecks deferred statistics once persistence releases its gameplay pause.
 	// Status is a borrowed string reference and bBusy is passed by value without ownership.
 	void HandlePersistenceStatusChanged(const FString& Status, bool bBusy);
+
+	// Subscribes the session to player contacts for each ball created by the pool.
+	// Ball is a borrowed world-owned actor reference; the event holds a weak UObject binding.
+	void ObserveBall(AFeatureBall& Ball);
+
+	// Retires player-hit balls and schedules a replacement while the session is active.
+	// Ball and OtherActor are borrowed world-owned references without ownership transfer.
+	void HandleBallContact(AFeatureBall& Ball, AActor& OtherActor);
+
+	// Launches a replacement from the session's configured spawn bounds on the next tick.
+	// No pointer or reference parameters or return value; the world owns the spawned actor.
+	void SpawnReplacementBall();
+
+	// Retains the spawn region for replacements throughout the gameplay session.
+	// FBox stores the bounds by value without pointer ownership.
+	FBox BallSpawnBounds;
+
+	// Tracks player-hit replacements until they can launch during gameplay.
+	// int32 stores the pending count by value without pointer ownership.
+	int32 PendingBallReplacements = 0;
 
 	// Observes the world's shared bounce state throughout the session.
 	// A weak UObject pointer observes the world-owned actor without retaining its lifetime.

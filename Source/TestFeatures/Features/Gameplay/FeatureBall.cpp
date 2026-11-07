@@ -88,6 +88,10 @@ void AFeatureBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
 	{
 		OnContact.Broadcast(*this, *OtherActor);
 	}
+	if (!bActive)
+	{
+		return;
+	}
 	// Character sweeps report contacts without a solver impulse.
 	if (NormalImpulse.IsNearlyZero())
 	{
@@ -97,9 +101,9 @@ void AFeatureBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
 	++BounceCount;
 	// Broadcast calls subscribed handlers immediately; the ball does not know which listeners update state.
 	OnBounced.Broadcast(*this);
-	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: Bounce %d/2"), *GetName(), BounceCount);
+	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: Bounce %d/5"), *GetName(), BounceCount);
 
-	if (BounceCount == 2)
+	if (BounceCount == 5)
 	{
 		Deactivate();
 	}

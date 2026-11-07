@@ -8,7 +8,7 @@ class UPhysicalMaterial;
 class UPrimitiveComponent;
 class UStaticMeshComponent;
 
-/** A reusable physics sphere that returns to its pool after two bounces. */
+/** A reusable physics sphere that returns to its pool after five bounces. */
 UCLASS()
 class TESTFEATURES_API AFeatureBall : public AStaticMeshActor
 {
@@ -67,7 +67,7 @@ private:
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 
-	// Reports contacts, counts impulse-based bounces, and returns the ball to the pool after two.
+	// Reports contacts, counts impulse-based bounces, and returns the ball to the pool after five.
 	// Component and actor pointers are non-owning event inputs, NormalImpulse is by value, and Hit is a read-only reference.
 	UFUNCTION()
 	void OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,

@@ -151,7 +151,7 @@ The ball's `BeginPlay()` subscribes to its mesh's physics hit event:
 BallMesh->OnComponentHit.AddDynamic(this, &AFeatureBall::OnBallHit);
 ```
 
-`OnBallHit()` ignores callbacks for inactive balls and contacts with nearly zero impulse. For an accepted contact, it increments the ball's own counter and announces the bounce:
+`OnBallHit()` reports contacts first. Player contact retires the ball and schedules a replacement; inactive balls and contacts with nearly zero impulse do not count as bounces. For another accepted contact, it increments the ball's own counter and announces the bounce:
 
 ```cpp
 ++BounceCount;
@@ -179,12 +179,12 @@ There are two counters with different lifetimes:
 
 | Counter | Meaning | When it resets |
 | --- | --- | --- |
-| `BounceCount` on each ball | Bounces during this activation; two means return to the pool. | Every `Activate()` call. |
+| `BounceCount` on each ball | Non-player bounces during this activation; five means return to the pool. | Every `Activate()` call. |
 | `Progress.TotalBounces` on the game state | Bounces reported across the saved game's sessions. | Starts at zero on New Game and is restored on Continue. Pool reuse preserves the total. |
 
-For example, starting from a saved total of zero, ball 0 bouncing twice and ball 1 bouncing once produces a shared total of three. If ball 0 is reused, its local count returns to zero while the shared total stays three. With an existing saved total, those same bounces add three to that total.
+For example, starting from a saved total of zero, ball 0 bouncing five times and ball 1 bouncing once produces a shared total of six. If ball 0 is reused, its local count returns to zero while the shared total stays six. With an existing saved total, those same bounces add six to that total.
 
-Here, a “bounce” means an accepted physics hit callback with a nonzero impulse. Wall and ball impacts can count too. If two training balls collide and both report a hit, each ball can add one to the total. We are counting ball responses, not unique pairs of colliding objects or only floor contacts.
+Here, a “bounce” means an accepted non-player physics hit callback with a nonzero impulse. Wall and ball impacts can count too. If two training balls collide and both report a hit, each ball can add one to the total. We are counting ball responses, not unique pairs of colliding objects or only floor contacts.
 
 ### What does subscribing mean?
 
@@ -196,21 +196,21 @@ Ball.OnBounced.AddUObject(this, &UFeatureGameStateController::HandleBallBounced)
 
 `this` identifies the listening controller. The `&UFeatureGameStateController::HandleBallBounced` part identifies its member function. `AddUObject()` stores a weak UObject binding. The session's strong property reference retains the controller.
 
-`Broadcast()` invokes current listeners synchronously: the state update finishes before execution returns to `OnBallHit()`. This explains why controller and shared-total log messages can appear before the ball's own `Bounce 1/2` message. With several listeners, do not depend on their execution order.
+`Broadcast()` invokes current listeners synchronously: the state update finishes before execution returns to `OnBallHit()`. This explains why controller and shared-total log messages can appear before the ball's own `Bounce 1/5` message. With several listeners, do not depend on their execution order.
 
 Our `DECLARE_EVENT_OneParam` declarations restrict broadcasting to the declaring class. Other classes can subscribe. These are native C++ events; the physics hit notification instead uses a reflected dynamic delegate and an `OnBallHit()` marked `UFUNCTION()`.
 
 Go deeper: [Multicast Delegates](https://dev.epicgames.com/documentation/en-us/unreal-engine/multicast-delegates-in-unreal-engine) covers subscription methods, weak UObject bindings, and broadcasting.
 
-## 5. The second bounce: return to the pool
+## 5. Retirement: return to the pool
 
-After broadcasting the second bounce, the ball calls `Deactivate()`. It becomes inactive, clears linear and angular velocity, disables physics and collision, and hides itself.
+After broadcasting the fifth non-player bounce, the ball calls `Deactivate()`. A player contact also deactivates the ball, and the session schedules a replacement for the next tick while gameplay remains active. Deactivation clears linear and angular velocity, disables physics and collision, and hides the ball.
 
 It still exists in the world and in the pool. Task 8 replaced task 7's earlier `Destroy()` behavior with this return-for-reuse behavior. `EndPlay()` is not called just because a ball is deactivated.
 
 A later `Spawn()` request finds that inactive actor and calls `Activate()` again. No new actor, material, or event subscription is needed for that reuse.
 
-The session prewarms three pool entries per initial ball, then requests the initial batch once. After those balls return, they wait until code calls `Spawn()` or `SpawnMultiple()` again.
+The session prewarms three pool entries per initial ball, then requests the initial batch once. A ball retired by player contact triggers a replacement; a ball retired after five non-player bounces waits in the pool until a later spawn request.
 
 ### Example to try: prove that an actor is reused
 
@@ -315,7 +315,7 @@ The debug overlay builds its widget tree once per local player controller. It ha
 
 Logs are intentionally detailed for learning. A bounce formats several messages across the ball, controller, and state. With many active balls, string formatting and log output may be more noticeable than the counter increment or delegate call. Before increasing counts substantially, consider reducing log frequency and measuring again.
 
-Random positions are sampled independently, and `AlwaysSpawn` allows overlapping starts. A small spawn box with many balls can produce dense contacts, more physics work, and immediate hit callbacks. The callback-based bounce counter can also consume its two hits quickly in crowded contact situations; it does not separately detect a visually completed rebound.
+Random positions are sampled independently, and `AlwaysSpawn` allows overlapping starts. A small spawn box with many balls can produce dense contacts, more physics work, and immediate hit callbacks. The callback-based bounce counter can also consume its five hits quickly in crowded contact situations; it does not separately detect a visually completed rebound.
 
 Each actor creates its own `UPhysicalMaterial` subobject. Pool reuse retains it, but creating a larger pool creates more material objects. A shared material asset and a free-list of available balls are possible later changes if measurements justify them. They would introduce asset management or additional bookkeeping that this example currently avoids.
 
@@ -380,15 +380,15 @@ The November 7, 2026 Unreal Editor captures show ten bounces written to `Feature
 
 `AFeatureGameState::Progress` owns the saved game's aggregate bounce total and chronological `Sessions` array. Each record stores `StartedAtUtc`, `TotalBounces`, `PlayerBallCollisions`, and `Result`. The result is `InProgress`, `Victory`, or `Defeat`. New Game resets progress; Continue restores it before adding the active session. Pause and resume use the existing record.
 
-Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
+Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. The gameplay session retires a player-hit ball and schedules a replacement without counting that contact as a bounce. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
 
-The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Defaults are ten player-ball hit callbacks for victory and fifty bounces for defeat. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, and publishes `OnEnded`. The game mode presents the fullscreen Victory or Defeat menu. Its Continue button reloads the level into the initial menu, and the existing teardown save persists the result. Victory takes priority when a player contact reaches both targets. Persistence completion and manual resume recheck deferred statistics.
+The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Defaults are ten player-ball hit callbacks for victory and fifty non-player bounces for defeat. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, and publishes `OnEnded`. The game mode presents the fullscreen Victory or Defeat menu. Its Continue button reloads the level into the initial menu, and the existing teardown save persists the result. Persistence completion and manual resume recheck deferred statistics.
 
 ## Runtime arena bounds
 
 The gameplay session spawns one `AFeatureLevelBounds` before launching its balls. The actor builds six `UBoxComponent` faces around an empty interior. Adjacent faces overlap at their edges. Each face blocks the `PhysicsBody` collision channel.
 
-The game mode exposes `FeatureLevelBoundsCenter` and `FeatureLevelBoundsHalfExtent` under `Feature Bounds`. Defaults place the center at `(0, 0, 2000)` cm with interior half-extents of `(6000, 6000, 3000)` cm. The actor also exposes its half-extents and wall thickness for inspection and editing. Six collision components add physics shapes without a per-frame update loop. Ball retirement still occurs after two bounces.
+The game mode exposes `FeatureLevelBoundsCenter` and `FeatureLevelBoundsHalfExtent` under `Feature Bounds`. Defaults place the center at `(0, 0, 2000)` cm with interior half-extents of `(6000, 6000, 3000)` cm. The actor also exposes its half-extents and wall thickness for inspection and editing. Six collision components add physics shapes without a per-frame update loop.
 
 ![Runtime enclosure with collision visualization enabled](../../../docs/images/feature-level-bounds.png)
 
