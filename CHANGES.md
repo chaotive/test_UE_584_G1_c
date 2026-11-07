@@ -1,48 +1,46 @@
 # Feature Sandbox changes
 
-This index follows the task numbers in [AGENTS.MD](AGENTS.MD). The November 7, 2026 captures come from Unreal Engine play sessions and can illustrate several related tasks. The source links document implementation details that a still image cannot establish.
+This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source links document implementation details that screenshots cannot establish. These captures were taken in the current Unreal Editor play session on November 7, 2026.
+
+## Current game captures
+
+![Startup menu with a saved level and total](docs/images/current-startup.png)
+
+*The startup menu offers New Game, Continue on level 1, Delete Save, and Exit, and displays the saved bounce total.*
+
+![Gameplay showing balls and both HUDs](docs/images/current-gameplay.png)
+
+*Continue restored the saved total; gameplay shows the current level, both objective counters, and airborne balls.*
 
 ## Completed tasks
 
-| Task | Change | Capture and evidence |
+| Task | Change | Source |
 | --- | --- | --- |
-| 1 | Spawn a ball when gameplay starts | ![Arena and debug HUD](docs/images/feature-debug-hud.png) |
-| 2 | Log game-mode lifecycle events | ![Arena after startup](docs/images/feature-debug-hud.png) · [Lifecycle hooks](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
-| 3 | Randomize the launch trajectory | ![Launch velocity in the Output Log](docs/images/feature-output-log.png) · [Launch logic](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) |
-| 4 | Give each ball its own actor class | ![Arena and debug HUD](docs/images/feature-debug-hud.png) · [Ball actor](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) |
-| 5 | Launch several balls within configurable bounds | ![Multiple airborne balls after Continue](docs/images/feature-continue.png) · [Batch spawner](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) |
-| 6 | Support single and batch spawning with indexed names | ![Indexed ball names in the Output Log](docs/images/feature-output-log.png) · [Spawner and pool indices](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) |
-| 7 | Return a ball to the pool after its second bounce | ![Arena and debug HUD](docs/images/feature-debug-hud.png) · [Bounce handling](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) |
-| 8 | Reuse inactive balls | ![Pool growth in the Output Log](docs/images/feature-output-log.png) · [Pool implementation](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) |
-| 9 | Cache the ball mesh component | ![Arena and debug HUD](docs/images/feature-debug-hud.png) · [Mesh reference](Source/TestFeatures/Features/Gameplay/FeatureBall.h) |
-| 10 | Track the shared bounce total in game state | ![Game-state total increasing in the Output Log](docs/images/feature-output-log.png) · [Game state](Source/TestFeatures/Features/Gameplay/FeatureGameState.cpp) |
-| 11 | Forward ball events through a game-state controller | ![Controller receiving bounce events](docs/images/feature-output-log.png) · [Event bridge](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp) |
-| 12 | Create the debug HUD in C++ | ![Debug HUD](docs/images/feature-debug-hud.png) · [Widget layout](Source/TestFeatures/Features/UI/FeatureDebugHUD.cpp) |
-| 13 | Display live bounces in the HUD | ![Zero at launch](docs/images/feature-debug-hud.png) · ![Ten after the volley](docs/images/feature-save-result.png) |
-| 14 | Save and restore the bounce total | ![Successful save](docs/images/feature-save-result.png) · ![Restored total](docs/images/feature-continue.png) |
-| 15 | Pause gameplay during save and load | ![Paused phases in the save history](docs/images/feature-save-result.png) · [Pause and quit policy](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) |
-| 16 | Hold the debug previews for one second before and after I/O | ![Preview phases in the load history](docs/images/feature-continue.png) · [Preview timer](Source/TestFeatures/Features/UI/FeatureSaveGamePanel.cpp) |
-| 17 | Extract the independent TestFeatures runtime module | ![Module log category](docs/images/feature-output-log.png) · [Module definition](Source/TestFeatures/TestFeatures.Build.cs) |
-| 18 | Show the configured title and startup actions | ![Feature Sandbox startup menu](docs/images/feature-startup.png) |
-| 30 | Show the saved total or the empty-slot message | ![Empty slot](docs/images/feature-startup.png) · ![Saved total](docs/images/feature-startup-saved.png) |
-| 31 | Add the non-Shipping `Feature.NewGame` command | ![Arena after entering the command in the Output Log](docs/images/feature-debug-hud.png) · [Command registration](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp) |
-| 32 | Show the debug HUD in non-Shipping builds | ![Development HUD](docs/images/feature-debug-hud.png) · [Shipping gate in source](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp) |
-| 34 | Package Win64 builds in Development, DebugGame, and Shipping configurations | [Packaging instructions](README.md#package-for-win64) · [Cook settings](Config/DefaultGame.ini) |
-| 35 | Spawn one configurable collision enclosure when gameplay starts | ![Runtime collision capture](docs/images/feature-level-bounds.png) · [Bounds actor](Source/TestFeatures/Features/Gameplay/FeatureLevelBounds.cpp) · [Gameplay session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
-| 37 | End winning sessions, record Victory, and show a fullscreen result | ![Victory result screen](docs/images/feature-result-victory.png) · [Result screen handling](Source/TestFeatures/Features/UI/FeatureMainMenu.cpp) · [Session outcome](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
-| 38 | End losing sessions, record Defeat, and show the same result flow | ![Defeat result screen](docs/images/feature-result-defeat.png) · [Result screen handling](Source/TestFeatures/Features/UI/FeatureMainMenu.cpp) · [Session outcome](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
-| 39 | Organize feature classes into UI, Gameplay, and GameWorkflow folders | ![Gameplay after the move](docs/images/feature-organized-gameplay.png) · [Folder responsibilities](Source/TestFeatures/Features/README.md#folder-organization) |
-| 40 | Persist a chronological array of started sessions with their statistics | [Session struct](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h) · [Persistence handling](Source/TestFeatures/Features/Gameplay/FeatureGameState.cpp) |
-| 41 | Enable player-ball blocking collisions and record their count | [Character collision settings](Source/test_UE_584_G1_c/test_UE_584_G1_cCharacter.cpp) · [Hit event handling](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) |
-| 42 | End and pause sessions when configured victory or defeat limits are reached | ![Victory result at the session limit](docs/images/feature-result-victory.png) · ![Defeat result at the session limit](docs/images/feature-result-defeat.png) · [Limit evaluations](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [Game mode defaults](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.h) |
-| 1001601 | Automate three-configuration Win64 packaging with reusable archive ID | [Build script](Build-Win64.ps1) · [Packaging instructions](README.md#package-for-win64) |
+| 1–6 | Spawn indexed balls in batches at random locations and trajectories; log lifecycle events. | [Game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [Spawner](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) · [Ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) |
+| 7–9 | Retire and reuse balls and cache their mesh component. Task 36 later changes the bounce limit. | [Ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [Pool](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) |
+| 10–11 | Track shared bounces and bridge ball events to game state. | [State](Source/TestFeatures/Features/Gameplay/FeatureGameState.cpp) · [Event controller](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp) |
+| 12–13 | Build a native debug HUD and display the changing bounce total. | [Debug HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureDebugHUD.cpp) · [Ball panel](Source/TestFeatures/Features/UI/Widgets/FeatureBallPanel.cpp) |
+| 14–16 | Save and restore progress; pause during I/O with non-Shipping preview holds. | [Persistence subsystem](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) · [Save panel](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp) |
+| 17 | Put the feature systems in an independent runtime module. | [Module definition](Source/TestFeatures/TestFeatures.Build.cs) |
+| 18–19 | Show the startup menu and start fresh after clearing the save. | [Menu views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [Game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
+| 21–24 | Delete saves, disable Continue for an empty slot, exit, and pause with Escape. | [Menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [Game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
+| 29–30 | Exit from the initial menu with Escape; display saved totals or an empty-slot message. | [Menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) |
+| 31–32 | Provide `Feature.NewGame` and limit the debug HUD to non-Shipping builds. | [Console command](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp) · [Player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp) |
+| 34–35 | Package Win64 configurations and create a configurable collision enclosure. | [Packaging guide](README.md#package-for-win64) · [Level bounds](Source/TestFeatures/Features/Gameplay/FeatureLevelBounds.cpp) |
+| 36 | Retire balls after five non-player bounces; player contact retires the ball and schedules a replacement. | [Ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
+| 37–38 | Record Victory or Defeat and show the corresponding result screen. | [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [Menu views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) |
+| 39 | Organize features into Gameplay, GameWorkflow, and UI. | [Feature guide](Source/TestFeatures/Features/README.md#folder-organization) |
+| 40–42 | Persist session history, count player contacts, and end sessions at configurable limits. | [Save data](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
+| 43–44 | Persist level progression and show the current session's objective counters. | [Game state](Source/TestFeatures/Features/Gameplay/FeatureGameState.cpp) · [Gameplay HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) |
+| 45 | Start with five active balls and prewarm a pool three times that size. | [Game mode defaults](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.h) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
+| 46–47 | Offer Retry after defeat and save progress when either result is reached. | [Menu views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
+| 49–50 | Declare menu views in code and organize UI archetypes and panel widgets. | [Views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [Archetypes](Source/TestFeatures/Features/UI/Archetypes) · [Widgets](Source/TestFeatures/Features/UI/Widgets) |
+| 1001601 | Automate three-configuration Win64 packaging with a reusable archive ID. | [Build script](Build-Win64.ps1) · [Packaging guide](README.md#package-for-win64) |
 
-The result images show the screens; session statistics, collision counts, and threshold evaluation are documented by the source links above.
+## Game evolution
 
-The gameplay refinement introduces `UFeatureGameplaySession`, a world subsystem with start, resume, pause, and end workflows. The game mode observes its lifecycle events to manage the player and screens. The collision capture verifies the enclosure geometry. Ball retirement still occurs after two bounces.
+![Earlier defeat result](docs/images/feature-result-defeat.png)
 
-Verification on November 7, 2026 passed the Unreal 5.8 Development editor build and a standalone lifecycle check through startup, gameplay, pause, resume, and victory. The lifecycle process exited with code zero.
+*Historical capture from November 7, 2026, before task 46: the defeat screen offered Continue. The current defeat screen offers Retry and Exit.*
 
-## To do
-
-The remaining tasks are tracked in [the backlog](AGENTS.MD#to-do). Their completion captures will be added as the tasks are implemented.
+The remaining work is tracked in [the backlog](AGENTS.MD#to-do).

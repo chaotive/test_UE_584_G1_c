@@ -66,6 +66,7 @@ These goals will guide future tasks:
 25. When the user says "commit as new task", inspect both Done and To do task indexes, calculate one greater than the highest index across both lists, and prefix that number with the literal digits "100" to distinguish these tasks. Record the completed task and include its prefixed task number in the commit description.
 26. In CHANGES.md, display screenshot evidence directly as inline images rather than linking to them.
 27. For related UI views, keep shared construction, styling, and behavior in common UI code, and express each view's differences declaratively in code. Use another data format only when it provides a clear benefit.
+28. Documentation updates and requested screenshot sessions may use, replace, or delete the game's save slot without preserving its previous contents.
 
 ## Tasks
 
@@ -119,5 +120,6 @@ These goals will guide future tasks:
 ### To do
 
 33. Add a smoke test for main easy to test features using Gauntlet.
+51. Documentation: Create infographics showing gameplay, UI, and game workflow system flows and connections.
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling

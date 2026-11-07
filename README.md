@@ -1,22 +1,34 @@
 # Feature Sandbox
 
-Step into a third-person arena, run and jump after the first volley, and watch the balls ricochet. Each round opens with a fresh mix of launch positions and trajectories. Balls disappear after five non-player bounces; player contact retires a ball and launches a replacement. You can carry your total into your next session.
+Feature Sandbox is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round starts with five balls launched from random positions in random directions.
 
 ## Jump into the arena
 
-Choose **New Game** to start at zero or **Continue** to restore your saved bounce total. Use **WASD** to move, the **mouse** to look, and **Space** to jump.
+Choose **New Game** for a fresh level-one game or **Continue on level N** to play your saved level. Use **WASD** to move, the **mouse** to look, and **Space** to jump. Run into a ball to score a player contact: that ball is retired and another launches into the arena.
 
-![Third-person character on the arena launch platform](docs/images/feature-arena.png)
+![Gameplay with the player, balls, and objective HUD](docs/images/current-gameplay.png)
 
-*The player character stands on the arena's central platform.*
+*A November 7, 2026 play session shows the player, airborne balls, the current level, and both objective counters. The debug HUD shows the restored aggregate total.*
 
 ## Start fresh or pick up your count
 
 The startup and pause menus show your last saved bounce total. On the startup menu, **Esc** exits. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
 
+![Startup menu with a saved game](docs/images/current-startup.png)
+
+*The November 7, 2026 play session shows the saved total and the level offered by Continue, alongside New Game, Delete Save, and Exit.*
+
 During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena. Choose **Exit** from the pause menu to save and quit. **Continue** restores your total the next time you play.
 
-Level 1 requires ten player-ball contacts before fifty non-player bounces. Each victory advances the saved level, adding one contact to win and removing one bounce to lose (minimum one). The gameplay HUD shows the current level, both counts, and their session limits; the debug HUD and startup menu also display the saved level. The round ends with a fullscreen **Victory** or **Defeat** screen and saves the outcome. After victory, choose **Continue** to return to the initial menu; after defeat, choose **Retry** to restart the current arena. **Continue on level N** starts the saved level; defeat keeps that level, and **New Game** clears the save and resets it to 1.
+## Rules and progression
+
+- **Win:** make the required number of player-ball contacts in the current session. Level 1 requires 10.
+- **Lose:** reach the session's non-player bounce limit. Level 1 allows 50; floor, wall, and ball impacts with a physics impulse count. A player contact counts separately.
+- **Ball lifetime:** a ball retires after five non-player bounces. Touching the player retires it immediately and schedules a replacement; a ball that reaches five bounces is not automatically replaced.
+- **Read the HUD:** the gameplay HUD shows your level, contacts toward the win target, and non-player bounces toward the loss limit. The debug HUD also shows the saved aggregate bounce total in non-Shipping builds.
+- **Advance:** a victory saves the next level. Each level adds one player contact to the win target and subtracts one non-player bounce from the loss limit, down to a minimum loss limit of one. For example, level 2 requires 11 contacts and has a limit of 49 bounces.
+
+The game pauses and saves the outcome on either result screen. After victory, **Continue** returns to the initial menu, where **Continue on level N** starts the newly unlocked level. After defeat, **Retry** starts another session at the same level. **New Game** deletes the existing save and resets the level and history; **Delete Save** clears the slot without starting a game. The save keeps the aggregate bounce count and a chronological history of sessions and results.
 
 ## Development
 
@@ -50,33 +62,13 @@ Gameplay creates one `AFeatureLevelBounds` actor with six invisible collision fa
 
 `UFeatureGameplaySession` is a world subsystem that organizes `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. Its start workflow creates the enclosure before the initial ball volley. The game mode observes lifecycle events to spawn the player and present screens. Other features can access the session through `World.GetSubsystem<UFeatureGameplaySession>()` and subscribe to its lifecycle events.
 
-![Collision visualization of the runtime enclosure surrounding the arena](docs/images/feature-level-bounds.png)
-
-*A standalone collision-view capture shows the enclosure around the existing map. The camera was moved outside the enclosure to inspect its faces.*
-
 ### Session results
 
 A victory or defeat pauses gameplay, saves the session, and presents the matching fullscreen result. **Continue** returns to the startup menu after victory. **Retry** reloads the arena and starts a new session after defeat.
 
-![Victory result screen](docs/images/feature-result-victory.png)
-
-*The session reaches Victory and offers Continue or Exit.*
-
 ### Debug HUD and save diagnostics
 
 The non-Shipping debug HUD shows the live bounce count, the save slot and file path, and the I/O history. Its **Save game** button writes a snapshot while keeping the session open. **Save and quit** exits after a successful write.
-
-![Standalone gameplay and debug HUD after reorganizing the feature code](docs/images/feature-organized-gameplay.png)
-
-*After the folder reorganization, `Feature.NewGame` starts gameplay and displays the debug HUD with the FeatureSandbox save slot and an initial bounce total of zero.*
-
-![Debug HUD showing ten bounces and a successful save in the I/O history](docs/images/feature-save-result.png)
-
-*After Save game writes ten bounces, the history shows the preview, disk I/O, successful write, and return to gameplay.*
-
-![Debug HUD showing that Continue restored ten total bounces](docs/images/feature-continue.png)
-
-*Continue restores ten bounces. The history shows the paused load and the return to gameplay.*
 
 Shipping builds skip the debug previews and keep gameplay paused until disk I/O finishes.
 
