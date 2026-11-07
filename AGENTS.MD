@@ -55,11 +55,12 @@ These goals will guide future tasks:
 14. During code checkups, review our own project-produced code for unneeded includes and remove them. Limit this cleanup to code we authored or changed; do not clean up Unreal Engine, generated, third-party, or unrelated template code. Keep direct includes required by used types and APIs rather than relying on incidental transitive includes.
 15. When reviewing changes, check the affected prose for spelling and grammar. Report any issues found and corrections made.
 16. The Main objective and Specific goals sections are user-owned. Never change them on your own. Report any suggested edits to the user.
-17. Use Unreal Editor MCP for editor operations. This project starts the MCP server automatically when Unreal Editor opens. Wait for the editor to finish starting and for its MCP endpoint to respond before attempting editor operations. If the current chat still does not expose the tools, start a new Codex chat in this project after the server is ready.
+17. Use Unreal Editor MCP for editor operations. If the MCP endpoint is unavailable and Unreal Editor is closed, launch this project's `.uproject` so the editor can start the server automatically. If the editor is already starting, wait for it rather than opening another instance. Wait for startup to finish and for the MCP endpoint to respond before attempting editor operations. If the current chat still does not expose the tools after the server is ready, start a new Codex chat in this project.
 18. Avoid lengthy or resource-intensive validation in an Unreal Editor session unless the user requests it or approves it in advance. Prefer lightweight checks by default.
 19. Move a task to Done only after the user explicitly asks to implement that task and its implementation is complete. Leave related tasks in To do even if their behavior is already implemented.
 20. Use `Feature` in the project display name and as the prefix for feature class names, source files, and console commands.
 21. Preserve or migrate old save games only when the user explicitly requests save compatibility.
+22. Update `CHANGES.md` with each completed task and link its newly captured evidence. For implementation details that a screenshot cannot establish, link the relevant source and explain what the capture shows.
 
 ## Tasks
 
@@ -100,5 +101,7 @@ These goals will guide future tasks:
 27. Main menu: Pressing "Esc" key while "Esc" paused, is the same as pressing "Resume game".
 28. Main menu: On Initial Main Menu, "Resume game" is grayed out.
 29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
+33. Add a smoke test for main easy to test features using Gauntlet.
+34. Make a development+test+shipping package for Win64.
 1500. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling

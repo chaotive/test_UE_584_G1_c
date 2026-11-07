@@ -79,7 +79,7 @@ The startup and pause menus show a save summary below their buttons. An empty sl
 
 During gameplay, Escape requests `PauseMenu` from the game mode. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world and show an end menu. Main Menu reloads the level, and Exit uses the in-game save-and-quit flow. The game mode gates transitions during session saves and loads. The menu preview leaves buttons available. Menus are created on transitions and use no per-frame flow polling.
 
-The [root README](../../../README.md) shows verified Unreal Editor captures of the empty and populated startup menus, the arena and bounce counter, and the save and load result previews. The startup captures predate the rename to Feature Sandbox.
+The [root README](../../../README.md) shows verified Unreal Editor captures of the empty and populated Feature Sandbox startup menus, the arena, and the debug HUD's bounce count and persistence history.
 
 Go deeper: [UObject Instance Creation](https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-objects-in-unreal-engine) explains `NewObject`; [Actor Lifecycle](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-actor-lifecycle) explains initialization and play callbacks.
 
@@ -328,7 +328,7 @@ At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue sta
 
 The HUD's specialized UFeatureSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
 
-The HUD displays current I/O state, slot `FeatureSandbox`, user index 0, the absolute default desktop save-file path, and operation history. The save and load result captures below predate the slot rename. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result; writes report success or failure. Custom bounce totals are not replicated over the network. The save contains only the accumulated total, not ball positions or the pool.
+The HUD displays current I/O state, slot `FeatureSandbox`, user index 0, the absolute desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result. Writes report success or failure. The save contains the accumulated total, and the total stays local to the session.
 
 Use **Save game** to save while staying in the current level. Use **Save and quit** for an orderly exit: snapshot the total, keep the world paused during preview and asynchronous saving, show the result, then quit only if the write succeeded. A failed save keeps the game open. The active HUD also intercepts a normal native game-window close and requests this path. Repeated save/close clicks do not launch competing writes; a quit request received during load is queued until a following save can complete.
 
@@ -357,7 +357,7 @@ Include cleanup follows those boundaries too: the composing HUD no longer needs 
 
 This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
-The [save result](../../../docs/images/save-result.png) shows the preview and disk I/O in the HUD history. The [load result](../../../docs/images/continue-load-result.png) shows six restored bounces while the arena is still paused. Both captures come from Unreal Editor play sessions.
+The November 7, 2026 Unreal Editor captures show ten bounces written to `FeatureSandbox` and then restored through Continue. The HUD history records the preview, disk I/O, and return to gameplay. [Save capture](../../../docs/images/feature-save-result.png) · [Continue capture](../../../docs/images/feature-continue.png)
 
 ## Task 17 module boundary
 
