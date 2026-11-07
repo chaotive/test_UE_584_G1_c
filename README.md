@@ -2,13 +2,13 @@
 
 Feature Sandbox is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round starts with five balls launched from random positions in random directions.
 
+![Illustration of a player approaching bouncing balls in a training arena](docs/images/feature-rules-illustration.png)
+
+*AI-generated illustration of the game's premise. This is concept art, not an in-game capture.*
+
 ## Jump into the arena
 
 Choose **New Game** for a fresh level-one game or **Continue on level N** to play your saved level. Use **WASD** to move, the **mouse** to look, and **Space** to jump. Run into a ball to score a player contact: that ball is retired and another launches into the arena.
-
-![Gameplay with the player, balls, and objective HUD](docs/images/current-gameplay.png)
-
-*A November 7, 2026 play session shows the player, airborne balls, the current level, and both objective counters. The debug HUD shows the restored aggregate total.*
 
 ## Start fresh or pick up your count
 
@@ -18,17 +18,48 @@ The startup and pause menus show your last saved bounce total. On the startup me
 
 *The November 7, 2026 play session shows the saved total and the level offered by Continue, alongside New Game, Delete Save, and Exit.*
 
-During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena. Choose **Exit** from the pause menu to save and quit. **Continue** restores your total the next time you play.
+## How to play
 
-## Rules and progression
+Each session is a race between two counters:
 
-- **Win:** make the required number of player-ball contacts in the current session. Level 1 requires 10.
-- **Lose:** reach the session's non-player bounce limit. Level 1 allows 50; floor, wall, and ball impacts with a physics impulse count. A player contact counts separately.
-- **Ball lifetime:** a ball retires after five non-player bounces. Touching the player retires it immediately and schedules a replacement; a ball that reaches five bounces is not automatically replaced.
-- **Read the HUD:** the gameplay HUD shows your level, contacts toward the win target, and non-player bounces toward the loss limit. The debug HUD also shows the saved aggregate bounce total in non-Shipping builds.
-- **Advance:** a victory saves the next level. Each level adds one player contact to the win target and subtracts one non-player bounce from the loss limit, down to a minimum loss limit of one. For example, level 2 requires 11 contacts and has a limit of 49 bounces.
+1. **Make player contacts.** Move or jump into the balls. Each registered player-ball contact increases your win counter. The ball disappears and another is launched, giving you another chance to score.
+2. **Keep an eye on other bounces.** When a ball hits the floor, a wall, or another ball with enough physical impulse to register a bounce, the loss counter rises. Player contacts are counted separately. Two balls hitting each other can each register a bounce.
+3. **Reach the win target first.** Reaching the player-contact target ends the session in Victory. Reaching the non-player bounce limit ends it in Defeat. The top-right HUD shows the current level and both counts against their limits.
 
-The game pauses and saves the outcome on either result screen. After victory, **Continue** returns to the initial menu, where **Continue on level N** starts the newly unlocked level. After defeat, **Retry** starts another session at the same level. **New Game** deletes the existing save and resets the level and history; **Delete Save** clears the slot without starting a game. The save keeps the aggregate bounce count and a chronological history of sessions and results.
+Each ball also has its own lifetime: after five non-player bounces it disappears and returns to the pool. A ball that expires this way is **not** automatically replaced. A ball that touches the player is retired immediately and a replacement is scheduled while the session is active. This means the number of balls still in play can fall as the round continues.
+
+```mermaid
+flowchart LR
+    Ball(("Ball in play")) -->|"Touches the player"| Contact["+1 player contact<br/>toward Victory"]
+    Contact --> Replace["Ball retires;<br/>replacement launches"]
+    Ball -->|"Hits the arena or another ball"| Bounce["+1 non-player bounce<br/>toward Defeat"]
+    Bounce -->|"This ball reaches 5"| Retire["Ball retires;<br/>no automatic replacement"]
+```
+
+![Gameplay with the player's level and both objective counters](docs/images/current-gameplay.png)
+
+*Verified play capture, November 7, 2026: level 1 requires 10 player contacts to win and ends at 50 non-player bounces. The left panel is the non-Shipping debug HUD; the top-right panel is the gameplay HUD.*
+
+### Levels and results
+
+Every new game begins at level 1. Winning advances the saved level by one; losing keeps the same level. Each new session resets its two objective counters, while the saved aggregate bounce total and session history continue across sessions.
+
+| Level | Player contacts to win | Non-player bounces to lose |
+| --- | ---: | ---: |
+| 1 | 10 | 50 |
+| 2 | 11 | 49 |
+| 3 | 12 | 48 |
+| 50 | 59 | 1 |
+
+The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (level - 1))` for the loss limit. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to return to the initial menu, then **Continue on level N** to play the new level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
+
+### Menus, pause, and saves
+
+**New Game** deletes the current save and begins level 1 with a fresh history. **Continue on level N** loads a readable save and starts its saved level. **Delete Save** removes the slot without starting a session; when there is no save, Continue is disabled and the menu displays **No saved game.** **Exit** closes the game, and **Esc** on the initial menu does the same.
+
+During a session, **Esc** opens the pause menu. Choose **Resume Game** or press **Esc** again to continue the same session; **Main Menu** returns to the startup screen, and **Exit** saves and quits. Saving or loading pauses play during I/O. In non-Shipping builds, the debug panel also offers **Save game** and **Save and quit** and shows save diagnostics.
+
+The save contains the current level, aggregate non-player bounce total, and a chronological session history with start times, counters, and results. The gameplay HUD's counters are for the current session; the debug HUD's total includes the saved history. A result screen requests a save automatically.
 
 ## Development
 
@@ -78,12 +109,155 @@ Shipping builds skip the debug previews and keep gameplay paused until disk I/O 
 
 ### Architecture
 
-- **Game flow.** The gameplay session handles starting, pausing, resuming, and ending gameplay. The game mode observes its events and presents startup, gameplay, pause, victory, and defeat screens. The startup title comes from `ProjectName` in `Config/DefaultGame.ini`. A gameplay objective can call `FinishSession` to supply a result. [Gameplay session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.h)
-- **Physics and state.** The C++ spawner launches single balls or batches inside configurable bounds and reuses pooled actors. Five non-player bounces retire a ball; player contact retires it and schedules a replacement. Balls publish bounce events, a state controller updates the shared total, and the debug HUD observes it. The Unreal log records lifecycle events, launches, bounces, and pool returns.
-- **Persistence.** The menu reads the save preview asynchronously. Session saves and loads pause gameplay during disk I/O. The debug HUD adds one-second previews before I/O and after the result and reports the slot, file path, and operation history.
-- **Session history.** Saves retain a chronological array of gameplay sessions with UTC start time, bounce count, player-ball blocking-hit count, and result. New Game starts a fresh history. Continue restores it and appends a session. Resume keeps the current record.
-- **Session limits.** Edit `Feature Session Limits` in the game-mode defaults. The level-one defaults are ten player-ball contacts for victory and fifty session bounces for defeat. Reaching either limit ends gameplay and presents the fullscreen result menu. Gameplay starts with five active balls and a pool of fifteen.
-- **Module boundaries.** The `TestFeatures` runtime module houses the C++ gameplay, UI, and persistence code. The project uses standard Unreal assets and has no third-party plugin dependencies. Blueprint supports supplementary logic. AngelScript use remains a project goal.
+The diagrams below show the actual project types and their Unreal Engine integration. **Extends** means C++ inheritance; **event** means a native delegate broadcast. Other arrows are calls, ownership, or data flow as labeled. Blue nodes are Unreal Engine systems; green nodes are project systems.
+
+#### Gameplay systems
+
+```mermaid
+flowchart LR
+    subgraph UE["Unreal Engine"]
+        World["UWorld"]
+        StaticActor["AStaticMeshActor"]
+        StateBase["AGameStateBase"]
+        ActorBase["AActor"]
+        WorldSub["UWorldSubsystem"]
+        Pawn["ACharacter / player pawn"]
+        Physics["UStaticMeshComponent<br/>Chaos physics and hit callbacks"]
+    end
+    subgraph Game["TestFeatures gameplay"]
+        Session["UFeatureGameplaySession"]
+        Pool["FFeatureBallSpawner<br/>pool and spawn"]
+        Ball["AFeatureBall"]
+        Bounds["AFeatureLevelBounds<br/>six UBoxComponents"]
+        Bridge["UFeatureGameStateController<br/>UObject event bridge"]
+        State["AFeatureGameState"]
+    end
+    WorldSub -->|"base class"| Session
+    StaticActor -->|"base class"| Ball
+    StateBase -->|"base class"| State
+    ActorBase -->|"base class"| Bounds
+    World -->|"owns actors and subsystem"| Session
+    Session -->|"prewarm / spawn"| Pool
+    Session -->|"spawn"| Bounds
+    Pool -->|"SpawnActor / reuse"| Ball
+    Ball -->|"cached component"| Physics
+    Physics -->|"OnComponentHit"| Ball
+    Pawn -->|"blocking contact"| Physics
+    Ball -->|"OnBounced / OnContact events"| Bridge
+    Bridge -->|"record bounce or player contact"| State
+    Ball -->|"OnContact event"| Session
+    Session -->|"retire and schedule replacement"| Pool
+    State -->|"OnSessionStatsChanged event"| Session
+    classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef feature fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class World,StaticActor,StateBase,ActorBase,WorldSub,Pawn,Physics engine
+    class Session,Pool,Ball,Bounds,Bridge,State feature
+```
+
+The spawner is a plain C++ value owned by the world subsystem; actors remain world-owned and are observed through weak pointers. Ball callbacks publish events rather than directly updating the game state. The session listens to state changes to evaluate limits and handles replacement after a player contact. See [ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp), [spawner](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp), [state controller](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp), and [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp).
+
+#### UI systems
+
+```mermaid
+flowchart LR
+    subgraph UE["Unreal Engine"]
+        PCBase["APlayerController"]
+        WidgetBase["UUserWidget / UMG"]
+        Input["InputComponent and Slate input"]
+        Viewport["Player viewport"]
+    end
+    subgraph FeatureUI["Project UI and bindings"]
+        PC["Project player controller"]
+        Mode["Project game mode"]
+        Views["FFeatureMenuViews<br/>four declarative views"]
+        Menu["UFeatureMainMenu"]
+        HUD["UFeatureGameplayHUD"]
+        Debug["UFeatureDebugHUD<br/>non-Shipping"]
+        BallPanel["UFeatureBallPanel"]
+        SavePanel["UFeatureSaveGamePanel"]
+    end
+    State["AFeatureGameState"]
+    Saves["UFeatureSaveGameSubsystem"]
+    Session["UFeatureGameplaySession"]
+    PCBase -->|"base class"| PC
+    WidgetBase -->|"base class"| Menu
+    WidgetBase -->|"base class"| HUD
+    WidgetBase -->|"base class"| Debug
+    WidgetBase -->|"base class"| BallPanel
+    WidgetBase -->|"base class"| SavePanel
+    Input -->|"Escape / UI input"| PC
+    Input -->|"menu key preview"| Menu
+    PC -->|"create / remove"| HUD
+    PC -->|"create / remove"| Debug
+    Mode -->|"present / dismiss"| Menu
+    Views -->|"view data"| Menu
+    Menu -->|"action event"| Mode
+    Menu -->|"add to viewport"| Viewport
+    HUD -->|"add to player screen"| Viewport
+    Debug -->|"owns"| BallPanel
+    Debug -->|"owns"| SavePanel
+    State -->|"stats / level events"| HUD
+    State -->|"total / level events"| BallPanel
+    Session -->|"read current limits"| HUD
+    Saves -->|"status events"| SavePanel
+    SavePanel -->|"save request / preview timing"| Saves
+    classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef feature fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class PCBase,WidgetBase,Input,Viewport engine
+    class PC,Mode,Views,Menu,HUD,Debug,BallPanel,SavePanel,State,Saves,Session feature
+```
+
+The menu and HUDs derive from `UUserWidget` and build their widget trees in C++. The player controller creates and removes HUDs; each widget owns its own state subscriptions and initial synchronization. The debug save panel observes persistence status and drives its preview timers. See [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), [gameplay HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp), and [save panel](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
+
+#### Game workflow and persistence
+
+```mermaid
+flowchart LR
+    subgraph UE["Unreal Engine"]
+        World["UWorld"]
+        ModeBase["AGameModeBase"]
+        WorldSub["UWorldSubsystem"]
+        InstanceSub["UGameInstanceSubsystem"]
+        SaveBase["USaveGame"]
+        Statics["UGameplayStatics<br/>pause, async save/load, level travel"]
+    end
+    subgraph FeatureFlow["Project workflow"]
+        Mode["Project game mode<br/>menu and player lifecycle"]
+        Session["UFeatureGameplaySession<br/>start / pause / resume / end"]
+        State["AFeatureGameState<br/>progress and session history"]
+        Saves["UFeatureSaveGameSubsystem<br/>I/O gate and status"]
+        Storage["FFeatureSaveGameStorage"]
+        Snapshot["UFeatureSaveGame<br/>progress snapshot"]
+        Menu["UFeatureMainMenu"]
+    end
+    Slot[("FeatureSandbox save slot")]
+    ModeBase -->|"base class"| Mode
+    WorldSub -->|"base class"| Session
+    InstanceSub -->|"base class"| Saves
+    SaveBase -->|"base class"| Snapshot
+    World -->|"world and actor lifecycle"| Mode
+    Mode -->|"start / pause / resume"| Session
+    Session -->|"lifecycle events"| Mode
+    Mode -->|"present / dismiss"| Menu
+    Menu -->|"action event"| Mode
+    Session -->|"start / record result"| State
+    State -->|"stats event"| Session
+    State -->|"save / load request"| Saves
+    Saves -->|"snapshot I/O"| Storage
+    Storage -->|"create / read"| Snapshot
+    Storage -->|"async save / load"| Statics
+    Statics <-->|"read / write"| Slot
+    Session -->|"pause / resume"| Statics
+    Mode -->|"return to menu / retry"| Statics
+    classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef feature fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class World,ModeBase,WorldSub,InstanceSub,SaveBase,Statics engine
+    class Mode,Session,State,Saves,Storage,Snapshot,Menu,Slot feature
+```
+
+`AGameModeBase` presents the current flow and responds to session events. The world subsystem starts and ends sessions; the game-instance subsystem serializes save/load requests and keeps the world paused during I/O. `USaveGame` holds the level, aggregate count, and chronological session records. See [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp), [save subsystem](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp), and [save data](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
+
+The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript remains a project goal.
 
 Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. Plain C++ spawning and storage helpers live in the sibling `Features_NonUE` folder.
 
@@ -101,5 +275,10 @@ The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:800
 
 ### Game evolution
 
-- **Before the main menu.** The debug HUD already showed load progress and restored bounce totals. The November 1, 2026 capture shows an offscreen test that restored 96 bounces. [Historical loading HUD](docs/images/in-game-loading-hud.png)
-- **First startup menu (Task 18).** New Game and Continue gave players separate ways into the arena. The menu disabled Continue when the slot was empty. The saved-total summary shown above came later. [Historical startup menu](docs/images/task-18-main-menu.jpg)
+![Historical loading HUD](docs/images/in-game-loading-hud.png)
+
+*November 1, 2026, before the main menu: an offscreen test showed load progress and a restored total of 96 bounces.*
+
+![First startup menu](docs/images/task-18-main-menu.jpg)
+
+*Task 18, November 7, 2026: the first startup menu offered New Game and Continue; the saved-total summary and Delete Save action came later.*
