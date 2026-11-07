@@ -34,22 +34,19 @@ During gameplay, press **Esc** to pause. Press it again or choose **Resume Game*
 
 ### Package for Win64
 
-From the repository root, run Unreal AutomationTool with the desired configuration. Set `$EngineRoot` to your Unreal Engine 5.8 installation directory.
+[Build-Win64.ps1](Build-Win64.ps1) generates project files, then packages Development, DebugGame, and Shipping together. It discovers the project's Unreal Engine version through the Windows installation registry, falling back to `D:\Program Files\Epic Games\UE_<version>`. Project and archive paths are relative to the script. Project-file generation must succeed before packaging starts.
 
 ```powershell
-$Project = (Resolve-Path .\test_UE_584_G1_c.uproject).Path
-$Configuration = 'Development'
-$Archive = Join-Path (Get-Location).Path "Saved\Packages\Win64\$Configuration"
-$UatOptions = @(
-    'BuildCookRun', "-project=$Project", '-target=test_UE_584_G1_c'
-    '-platform=Win64', "-clientconfig=$Configuration", '-build', '-cook'
-    '-stage', '-package', '-pak', '-iostore', '-archive', "-archivedirectory=$Archive"
-    '-map=/Game/ThirdPerson/Lvl_ThirdPerson', '-unattended', '-nop4'
-)
-& "$EngineRoot\Engine\Build\BatchFiles\RunUAT.bat" @UatOptions
+.\Build-Win64.ps1
 ```
 
-Repeat with `DebugGame` to debug project C++ or `Shipping` for the player build. Each archive contains a `Windows` directory. Launch the executable in that directory and keep its staged files together.
+The default archive ID is `Dev`, so repeated calls reuse `Builds\Dev`. Supply an ID to use a different archive directory:
+
+```powershell
+.\Build-Win64.ps1 -Id '1'
+```
+
+DebugGame supports debugging project C++. Each archive contains a `Windows` directory with configuration-specific launchers. Keep the staged files together when launching any of the three builds.
 
 The asset manager registers the `GameFeatureData` cook rule required by the engine's Game Features subsystem. [Project settings](Config/DefaultGame.ini)
 
