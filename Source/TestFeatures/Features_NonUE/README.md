@@ -2,7 +2,7 @@
 
 This folder holds classes that are not Unreal-reflected `UCLASS` types and do not derive from `UObject`. They still use Unreal APIs and types.
 
-- [FFeatureBallSpawner](FeatureBallSpawner.h) creates and pools the world-owned balls defined in [FeatureBall.h](../Features/FeatureBall.h).
+- [FFeatureBallSpawner](FeatureBallSpawner.h) creates and pools the world-owned balls defined in [FeatureBall.h](../Features/FeatureBall.h). The gameplay session retains this helper and requests the initial volley.
 - [FFeatureDebugHUDSpawner](FeatureDebugHUDSpawner.h) creates the native debug widget defined in [FeatureDebugHUD.h](../Features/FeatureDebugHUD.h) and adds it to a local player's screen. The player controller calls it only in non-Shipping builds.
 
 Include these helpers through `Features_NonUE/FeatureBallSpawner.h` or `Features_NonUE/FeatureDebugHUDSpawner.h` from a consumer with a `TestFeatures` module dependency.

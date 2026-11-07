@@ -3,10 +3,11 @@
 #include "test_UE_584_G1_cGameMode.h"
 #include "test_UE_584_G1_c.h"
 #include "Features/FeatureGameState.h"
-#include "Features/FeatureGameStateController.h"
+#include "Features/FeatureGameplaySession.h"
 #include "Features/FeatureMainMenu.h"
 #include "Features/FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -30,14 +31,12 @@ void Atest_UE_584_G1_cGameMode::InitGameState()
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("GameMode [%s]: InitGameState"), *GetName());
 	Super::InitGameState();
 
-	// The base game mode has already spawned the game state before calling this hook.
-	// NewObject creates the controller with this game mode as its Outer; our UPROPERTY keeps it alive.
-	FeatureGameStateController = NewObject<UFeatureGameStateController>(this);
-	// Give the controller the existing shared state; it does not create another game state actor.
-	FeatureGameStateController->Initialize(*GetGameState<AFeatureGameState>());
-	// Subscribe before a session spawns balls; each new pool entry will be passed to ObserveBall.
-	// AddUObject binds the method to this controller using a weak UObject reference.
-	FeatureBallSpawner.OnBallCreated.AddUObject(FeatureGameStateController.Get(), &UFeatureGameStateController::ObserveBall);
+	GameplaySession = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
+	GameplaySession->BindGameState(*GetGameState<AFeatureGameState>());
+	GameplaySession->OnStarted.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionStarted);
+	GameplaySession->OnResumed.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionResumed);
+	GameplaySession->OnPaused.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionPaused);
+	GameplaySession->OnEnded.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionEnded);
 }
 
 void Atest_UE_584_G1_cGameMode::PostInitializeComponents()
@@ -59,12 +58,10 @@ void Atest_UE_584_G1_cGameMode::BeginPlay()
 	Super::BeginPlay();
 }
 
-void Atest_UE_584_G1_cGameMode::StartSession(bool bContinue)
+void Atest_UE_584_G1_cGameMode::HandleGameplaySessionStarted()
 {
 	SetFlow(EFeatureGameFlow::Gameplay);
 	RestartPlayer(GetGameInstance()->GetFirstLocalPlayerController());
-	GetGameState<AFeatureGameState>()->StartSession(bContinue);
-	FeatureBallSpawner.SpawnMultiple(*GetWorld(), FeatureBallCount, FeatureBallSpawnMin, FeatureBallSpawnMax);
 }
 
 void Atest_UE_584_G1_cGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
@@ -80,26 +77,29 @@ EFeatureGameFlow Atest_UE_584_G1_cGameMode::GetFlowState() const
 	return FlowState;
 }
 
-bool Atest_UE_584_G1_cGameMode::CanLeaveGameplay() const
-{
-	return FlowState == EFeatureGameFlow::Gameplay
-		&& !GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->IsBusy();
-}
-
 void Atest_UE_584_G1_cGameMode::PauseSession()
 {
-	if (CanLeaveGameplay() && UGameplayStatics::SetGamePaused(this, true))
-	{
-		SetFlow(EFeatureGameFlow::PauseMenu);
-	}
+	GameplaySession->OnGameplaySessionPaused();
 }
 
 void Atest_UE_584_G1_cGameMode::FinishSession(bool bVictory)
 {
-	if (CanLeaveGameplay() && UGameplayStatics::SetGamePaused(this, true))
-	{
-		SetFlow(bVictory ? EFeatureGameFlow::Victory : EFeatureGameFlow::Lose);
-	}
+	GameplaySession->OnGameplaySessionEnded(bVictory);
+}
+
+void Atest_UE_584_G1_cGameMode::HandleGameplaySessionResumed()
+{
+	SetFlow(EFeatureGameFlow::Gameplay);
+}
+
+void Atest_UE_584_G1_cGameMode::HandleGameplaySessionPaused()
+{
+	SetFlow(EFeatureGameFlow::PauseMenu);
+}
+
+void Atest_UE_584_G1_cGameMode::HandleGameplaySessionEnded(bool bVictory)
+{
+	SetFlow(bVictory ? EFeatureGameFlow::Victory : EFeatureGameFlow::Lose);
 }
 
 void Atest_UE_584_G1_cGameMode::SetFlow(EFeatureGameFlow NewFlow)
@@ -131,11 +131,12 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 	{
 	case EFeatureMenuAction::NewGame:
 	case EFeatureMenuAction::Continue:
-		StartSession(Action == EFeatureMenuAction::Continue);
+		GameplaySession->OnGameplaySessionStart(Action == EFeatureMenuAction::Continue, FeatureBallCount,
+			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
+			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
 		break;
 	case EFeatureMenuAction::Resume:
-		UGameplayStatics::SetGamePaused(this, false);
-		SetFlow(EFeatureGameFlow::Gameplay);
+		GameplaySession->OnGameplaySessionResume();
 		break;
 	case EFeatureMenuAction::ReturnToMenu:
 		UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)));
@@ -155,6 +156,10 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 
 void Atest_UE_584_G1_cGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	GameplaySession->OnStarted.RemoveAll(this);
+	GameplaySession->OnResumed.RemoveAll(this);
+	GameplaySession->OnPaused.RemoveAll(this);
+	GameplaySession->OnEnded.RemoveAll(this);
 	if (FlowMenu)
 	{
 		FlowMenu->OnAction.RemoveAll(this);

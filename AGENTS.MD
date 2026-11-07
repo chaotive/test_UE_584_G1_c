@@ -90,6 +90,7 @@ These goals will guide future tasks:
 31. Add the non-Shipping console command `Feature.NewGame` to start a new game immediately from the startup menu.
 32. Show the debug HUD menu only in non-Shipping builds.
 34. Package Win64 builds in Development, DebugGame, and Shipping configurations.
+35. Gameplay: Spawn a configurable collision enclosure around the level at gameplay-session start.
 
 ### To do
 

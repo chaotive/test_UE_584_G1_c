@@ -28,7 +28,12 @@ This index follows the task numbers in [AGENTS.MD](AGENTS.MD). The November 7, 2
 | 31 | Add the non-Shipping `Feature.NewGame` command | [Arena after entering the command in the Output Log](docs/images/feature-debug-hud.png) · [Command registration](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp) |
 | 32 | Show the debug HUD in non-Shipping builds | [Development HUD](docs/images/feature-debug-hud.png) · [Shipping gate in source](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp) |
 | 34 | Package Win64 builds in Development, DebugGame, and Shipping configurations | [Packaging instructions](README.md#package-for-win64) · [Cook settings](Config/DefaultGame.ini) |
+| 35 | Spawn one configurable collision enclosure when gameplay starts | [Runtime collision capture](docs/images/feature-level-bounds.png) · [Bounds actor](Source/TestFeatures/Features/FeatureLevelBounds.cpp) · [Gameplay session](Source/TestFeatures/Features/FeatureGameplaySession.cpp) |
+
+The gameplay refinement introduces `UFeatureGameplaySession`, a world subsystem with start, resume, pause, and end workflows. The game mode observes its lifecycle events to manage the player and screens. The collision capture verifies the enclosure geometry. Ball retirement still occurs after two bounces.
+
+Verification on November 7, 2026 passed the Unreal 5.8 Development editor build and a standalone lifecycle check through startup, gameplay, pause, resume, and victory. The lifecycle process exited with code zero.
 
 ## To do
 
-Tasks 19–29, 1500, and 1600 remain in [the backlog](AGENTS.MD#to-do). Their completion captures will be added as the tasks are implemented.
+The remaining tasks are tracked in [the backlog](AGENTS.MD#to-do). Their completion captures will be added as the tasks are implemented.

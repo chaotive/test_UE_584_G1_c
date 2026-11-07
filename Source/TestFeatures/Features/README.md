@@ -14,9 +14,11 @@ Start with the startup flow below. The later sections explain the event connecti
 
 | Class | Plain-language job | Where to read |
 | --- | --- | --- |
-| `Atest_UE_584_G1_cGameMode` | Sets up the session and connects the pieces. | [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
+| `Atest_UE_584_G1_cGameMode` | Creates the session and observes its events to manage screens and player spawning. | [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
+| `UFeatureGameplaySession` | Owns gameplay lifecycle, ball spawning, bounds creation, and the state-event bridge. | [FeatureGameplaySession.cpp](FeatureGameplaySession.cpp) |
 | `FFeatureBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) |
 | `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](FeatureBall.cpp) |
+| `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](FeatureLevelBounds.cpp) |
 | `AFeatureGameState` | Stores the shared total number of bounces. | [FeatureGameState.cpp](FeatureGameState.cpp) |
 | `UFeatureGameStateController` | Listens to ball events and updates that shared total. | [FeatureGameStateController.cpp](FeatureGameStateController.cpp) |
 | `UFeatureSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [FeatureSaveGameSubsystem.cpp](FeatureSaveGameSubsystem.cpp) |
@@ -27,7 +29,7 @@ Start with the startup flow below. The later sections explain the event connecti
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
 
-The `U` controller is an ordinary Unreal object, not a world actor or a player controller. It needs no position or physics. The `F` spawner is a plain C++ helper stored directly inside the game mode.
+The state controller and gameplay session are Unreal objects with no position or physics. The `F` spawner is a plain C++ helper stored directly inside the gameplay session.
 
 We keep dependency knowledge close to the relationship that needs it. Balls publish events without knowing the shared state; the game-state controller translates those events into state changes. The HUD owns its own state subscription, while the player controller only manages the HUD's presence on screen. This is the general decoupling rule in `AGENTS.MD`: avoid spreading one feature's relationships into unrelated classes, without adding abstraction solely for its own sake.
 
@@ -47,37 +49,39 @@ GameStateClass = AFeatureGameState::StaticClass();
 
 During startup, Unreal's `AGameModeBase::PreInitializeComponents()` creates the game-state actor, registers it with the world, and calls `InitGameState()`. This happens before our game mode's `BeginPlay()`. This exact creation point is also visible in the installed engine's `Engine/Source/Runtime/Engine/Private/GameModeBase.cpp`.
 
-Our `InitGameState()` then connects the feature:
+Unreal creates `UFeatureGameplaySession` as a world subsystem. Our `InitGameState()` retrieves it and calls `BindGameState(State)` to connect the feature:
 
 ```cpp
-FeatureGameStateController = NewObject<UFeatureGameStateController>(this);
-FeatureGameStateController->Initialize(*GetGameState<AFeatureGameState>());
-FeatureBallSpawner.OnBallCreated.AddUObject(FeatureGameStateController.Get(), &UFeatureGameStateController::ObserveBall);
+GameStateController = NewObject<UFeatureGameStateController>(this);
+GameStateController->Initialize(State);
+BallSpawner.OnBallCreated.AddUObject(GameStateController.Get(), &UFeatureGameStateController::ObserveBall);
 ```
 
 Read those lines as:
 
-1. Create a controller object, using the game mode as its **Outer**: its containing Unreal object.
+1. Create a controller object, using the gameplay session as its **Outer**, its containing Unreal object.
 2. Give it the existing game state to update.
 3. Tell the spawner to notify that controller whenever it creates a ball.
 
-The game mode's `UPROPERTY` reference keeps the controller reachable by garbage collection. The Outer relationship alone is not our keep-alive mechanism.
+The world owns the session subsystem, and the session retains its controller through `UPROPERTY`. Other features retrieve the session with `World.GetSubsystem<UFeatureGameplaySession>()` to subscribe without depending on the game-mode class.
 
 The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](FeatureGameFlow.h). It starts in `StartupMenu` and asks [FeatureMainMenu](FeatureMainMenu.cpp) to present a game-instance-owned widget. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
 
-On New Game or Continue, the game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The game mode initializes the state at zero or requests an asynchronous restore, then creates the initial batch. Continue keeps the world paused through both I/O previews.
+The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. It publishes `OnStarted`, `OnResumed`, `OnPaused`, and `OnEnded(bVictory)`. The game mode subscribes during initialization and removes its bindings during `EndPlay`. New Game and Continue start the session. Resume returns from the pause menu. A successful `PauseSession()` request publishes the pause event. `FinishSession(bVictory)` publishes the result when a gameplay objective supplies an outcome.
+
+On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then creates the initial batch. Continue keeps the world paused through both I/O previews.
 
 In non-Shipping builds, `FFeatureConsoleCommands` registers `Feature.NewGame` and routes it to the same action as the New Game button when the command's world is at the startup menu. It starts at zero and leaves the existing slot available until the session saves. [Command registration and handler](../../test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
 ```cpp
-FeatureBallSpawner.SpawnMultiple(*GetWorld(), FeatureBallCount, FeatureBallSpawnMin, FeatureBallSpawnMax);
+BallSpawner.SpawnMultiple(World, BallCount, SpawnBounds.Min, SpawnBounds.Max);
 ```
 
-The startup order is **create state → connect state controller → present menu → spawn pawn and HUD → initialize session and spawn balls**.
+The startup order is **create state → bind session and state controller → present menu → create enclosure → spawn pawn and HUD → initialize progress and spawn balls**.
 
 The startup and pause menus show a save summary below their buttons. An empty slot displays **No saved game.** When the slot contains a save, the menu reads it asynchronously once per opening. The menu shows the saved bounce total, including zero, or reports that the save could not be read. The preview leaves the live session state alone. Continue uses the regular session load.
 
-During gameplay, Escape requests `PauseMenu` from the game mode. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world and show an end menu. Main Menu reloads the level, and Exit uses the in-game save-and-quit flow. The game mode gates transitions during session saves and loads. The menu preview leaves buttons available. Menus are created on transitions and use no per-frame flow polling.
+During gameplay, Escape forwards a pause request through the game mode to the session. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world and show an end menu. Main Menu reloads the level, and Exit uses the in-game save-and-quit flow. The session gates pause, resume, and result transitions during persistence operations, while the game mode gates menu actions. The menu preview leaves buttons available. Menus are created on transitions and use no per-frame flow polling.
 
 The [root README](../../../README.md) shows verified Unreal Editor captures of the empty and populated Feature Sandbox startup menus, the arena, and the debug HUD's bounce count and persistence history.
 
@@ -178,7 +182,7 @@ This line registers a function to call later:
 Ball.OnBounced.AddUObject(this, &UFeatureGameStateController::HandleBallBounced);
 ```
 
-`this` identifies the listening controller. The `&UFeatureGameStateController::HandleBallBounced` part identifies its member function. `AddUObject()` stores a weak UObject binding, so the event does not keep the controller alive. The game mode's strong property reference does that separately.
+`this` identifies the listening controller. The `&UFeatureGameStateController::HandleBallBounced` part identifies its member function. `AddUObject()` stores a weak UObject binding. The session's strong property reference retains the controller.
 
 `Broadcast()` invokes current listeners synchronously: the state update finishes before execution returns to `OnBallHit()`. This explains why controller and shared-total log messages can appear before the ball's own `Bounce 1/2` message. With several listeners, do not depend on their execution order.
 
@@ -194,19 +198,20 @@ It still exists in the world and in the pool. Task 8 replaced task 7's earlier `
 
 A later `Spawn()` request finds that inactive actor and calls `Activate()` again. No new actor, material, or event subscription is needed for that reuse.
 
-There is currently **no timer that continuously requests more balls**. The game mode requests the initial batch once. After those balls return, they wait until code calls `Spawn()` or `SpawnMultiple()` again.
+The session requests the initial batch once. After those balls return, they wait until code calls `Spawn()` or `SpawnMultiple()` again.
 
 ### Example to try: prove that an actor is reused
 
-Inside the game mode, where `FeatureBallSpawner` is accessible, this illustrates explicit release and reuse. Include `Features/FeatureBall.h` if calling actor methods from that file.
+Inside a gameplay-session method, the following experiment exercises explicit release and reuse. Add a direct include for `FeatureBall.h` when trying it.
 
 ```cpp
-AFeatureBall* First = FeatureBallSpawner.Spawn(*GetWorld(), FVector(0.0f, 200.0f, 500.0f));
+UWorld& World = *GameState->GetWorld();
+AFeatureBall* First = BallSpawner.Spawn(World, FVector(0.0f, 200.0f, 500.0f));
 First->Deactivate();
-AFeatureBall* Reused = FeatureBallSpawner.Spawn(*GetWorld(), FVector(300.0f, 200.0f, 500.0f));
+AFeatureBall* Reused = BallSpawner.Spawn(World, FVector(300.0f, 200.0f, 500.0f));
 ```
 
-With no other available ball earlier in the pool, `First` and `Reused` point to the same actor. Its name stays the same, its location changes, and the log reports `Reusing pooled ball`. This example is an experiment to add temporarily, not another automatic flow already running in the game mode.
+With no other available ball earlier in the pool, `First` and `Reused` point to the same actor. Its name stays the same, its location changes, and the log reports `Reusing pooled ball`. This is a temporary experiment.
 
 ## 6. Stopping Play
 
@@ -318,7 +323,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) → [FeatureBall.cpp](FeatureBall.cpp) → [FeatureGameStateController.cpp](FeatureGameStateController.cpp) → [FeatureGameState.cpp](FeatureGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](FeatureGameplaySession.cpp) → [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) → [FeatureBall.cpp](FeatureBall.cpp) → [FeatureGameStateController.cpp](FeatureGameStateController.cpp) → [FeatureGameState.cpp](FeatureGameState.cpp).
 
 ## In-game load/save and HUD-controlled previews (tasks 14–16)
 
@@ -358,6 +363,16 @@ Include cleanup follows those boundaries too: the composing HUD no longer needs 
 This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
 The November 7, 2026 Unreal Editor captures show ten bounces written to `FeatureSandbox` and then restored through Continue. The HUD history records the preview, disk I/O, and return to gameplay. [Save capture](../../../docs/images/feature-save-result.png) · [Continue capture](../../../docs/images/feature-continue.png)
+
+## Runtime arena bounds
+
+The gameplay session spawns one `AFeatureLevelBounds` before launching its balls. The actor builds six `UBoxComponent` faces around an empty interior. Adjacent faces overlap at their edges. Each face blocks the `PhysicsBody` collision channel.
+
+The game mode exposes `FeatureLevelBoundsCenter` and `FeatureLevelBoundsHalfExtent` under `Feature Bounds`. Defaults place the center at `(0, 0, 2000)` cm with interior half-extents of `(6000, 6000, 3000)` cm. The actor also exposes its half-extents and wall thickness for inspection and editing. Six collision components add physics shapes without a per-frame update loop. Ball retirement still occurs after two bounces.
+
+![Runtime enclosure with collision visualization enabled](../../../docs/images/feature-level-bounds.png)
+
+*The November 7, 2026 standalone capture shows the enclosure around the existing arena from an external inspection camera. The runtime log confirms one bounds actor and six face components with the configured dimensions.*
 
 ## Task 17 module boundary
 

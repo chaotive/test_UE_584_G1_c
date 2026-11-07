@@ -5,10 +5,9 @@
 #include "CoreMinimal.h"
 #include "Features/FeatureGameFlow.h"
 #include "GameFramework/GameModeBase.h"
-#include "Features_NonUE/FeatureBallSpawner.h"
 #include "test_UE_584_G1_cGameMode.generated.h"
 
-class UFeatureGameStateController;
+class UFeatureGameplaySession;
 class UFeatureMainMenu;
 enum class EFeatureMenuAction : uint8;
 
@@ -76,6 +75,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Training_Ball")
 	FVector FeatureBallSpawnMax = FVector(500.0f, 700.0f, 700.0f);
 
+	// Positions the collision enclosure around the arena.
+	// FVector is stored by value and exposed for game-mode editing in world centimeters.
+	UPROPERTY(EditAnywhere, Category="Feature Bounds")
+	FVector FeatureLevelBoundsCenter = FVector(0.0f, 0.0f, 2000.0f);
+
+	// Defines the interior half-size of the session's collision enclosure.
+	// FVector is stored by value; editor metadata exposes positive dimensions in centimeters.
+	UPROPERTY(EditAnywhere, Category="Feature Bounds", meta=(ClampMin="1"))
+	FVector FeatureLevelBoundsHalfExtent = FVector(6000.0f, 6000.0f, 3000.0f);
+
 private:
 
 #if !UE_BUILD_SHIPPING
@@ -91,9 +100,21 @@ private:
 	UPROPERTY()
 	TObjectPtr<UFeatureMainMenu> FlowMenu;
 
-	// Starts a new or continued session and creates the initial actors.
-	// bContinue is passed by value without pointer or reference ownership.
-	void StartSession(bool bContinue);
+	// Creates the player and presents gameplay when the session starts.
+	// No pointer or reference parameters or return value; responds to a session event.
+	void HandleGameplaySessionStarted();
+
+	// Presents gameplay when the session resumes.
+	// No pointer or reference parameters or return value; responds to a session event.
+	void HandleGameplaySessionResumed();
+
+	// Presents the pause workflow after a gameplay pause request succeeds.
+	// No pointer or reference parameters or return value; updates this game mode's flow.
+	void HandleGameplaySessionPaused();
+
+	// Presents the result workflow after a gameplay objective ends the session.
+	// bVictory is passed by value without pointer or reference ownership.
+	void HandleGameplaySessionEnded(bool bVictory);
 
 	// Updates flow and asks the menu class to present or dismiss its screen.
 	// NewFlow is passed by value without pointer or reference ownership.
@@ -103,16 +124,8 @@ private:
 	// Action is passed by value without pointer or reference ownership.
 	void HandleMenuAction(EFeatureMenuAction Action);
 
-	// Reports whether a pause or result can interrupt the current gameplay phase.
-	// Returns bool by value without pointer or reference ownership.
-	bool CanLeaveGameplay() const;
-
-	// Translates ball events into shared game state changes for this game session.
-	// UPROPERTY keeps this game-mode-owned UObject alive through its strong TObjectPtr reference.
+	// Retains the gameplay session whose lifecycle events drive player spawning and screens.
+	// UPROPERTY tracks a strong TObjectPtr to the world-owned subsystem.
 	UPROPERTY()
-	TObjectPtr<UFeatureGameStateController> FeatureGameStateController;
-
-	// Creates training balls and tracks them throughout this game mode's lifetime.
-	// FFeatureBallSpawner is stored by value so its list belongs to this game mode instance without a pointer or separate allocation.
-	FFeatureBallSpawner FeatureBallSpawner;
+	TObjectPtr<UFeatureGameplaySession> GameplaySession;
 };
