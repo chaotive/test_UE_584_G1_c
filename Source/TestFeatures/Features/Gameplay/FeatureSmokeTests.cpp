@@ -50,7 +50,7 @@ bool FFeatureSessionSmokeTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AFeatureGameState* State = World->SpawnActor<AFeatureGameState>();
-	State->StartSession(false);
+	State->StartSession(false, 1);
 	State->RecordBounce();
 	State->RecordPlayerBallCollision();
 
@@ -67,7 +67,7 @@ bool FFeatureSessionSmokeTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Victory is recorded"), State->GetGameplaySessions().Last().Result == EFeatureGameplaySessionResult::Victory);
 
 	AFeatureGameState* DefeatState = World->SpawnActor<AFeatureGameState>();
-	DefeatState->StartSession(false);
+	DefeatState->StartSession(false, 1);
 	DefeatState->RecordSessionResult(false);
 	TestEqual(TEXT("Defeat retains the level"), DefeatState->GetCurrentLevel(), 1);
 	TestTrue(TEXT("Defeat is recorded"), DefeatState->GetGameplaySessions().Last().Result == EFeatureGameplaySessionResult::Defeat);

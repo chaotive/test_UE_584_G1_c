@@ -64,7 +64,7 @@ GameStateClass = AFeatureGameState::StaticClass();
 
 During startup, Unreal's `AGameModeBase::PreInitializeComponents()` creates the game-state actor, registers it with the world, and calls `InitGameState()`. This happens before our game mode's `BeginPlay()`. This exact creation point is also visible in the installed engine's `Engine/Source/Runtime/Engine/Private/GameModeBase.cpp`.
 
-Unreal creates `UFeatureGameplaySession` as a world subsystem. Our `InitGameState()` retrieves it and calls `BindGameState(State, ContactsToWin, BouncesToLose)` to connect the feature and configure its limits:
+Unreal creates `UFeatureGameplaySession` as a world subsystem. Our `InitGameState()` retrieves it and calls `BindGameState(State, ContactsToWin, BouncesToLose, ContactsIncrease, BouncesDecrease)` to connect the feature and configure its limits:
 
 ```cpp
 GameStateController = NewObject<UFeatureGameStateController>(this);
@@ -135,12 +135,12 @@ The controller's `ObserveBall()` subscribes to that actor's bounce event. Reusin
 
 ```cpp
 const FVector Direction = FMath::VRandCone(FVector::UpVector, FMath::DegreesToRadians(60.0f));
-const float Speed = FMath::FRandRange(500.0f, 900.0f);
+const float Speed = FMath::FRandRange(500.0f, 900.0f) * LaunchSpeedMultiplier;
 const FVector Velocity = Direction * Speed;
 BallMesh->SetPhysicsLinearVelocity(Velocity);
 ```
 
-The direction is inside a cone pointing upward, with a 60-degree half-angle. Speed is between 500 and 900 centimeters per second. Gravity and collisions determine the path after launch; the code does not keep steering it randomly.
+The direction is inside a cone pointing upward, with a 60-degree half-angle. The default launch speed is between 500 and 900 centimeters per second, scaled by the game-mode multiplier. Gravity and collisions determine the path after launch; the code does not keep steering it randomly.
 
 The mesh's material uses restitution `0.8` and a `Max` restitution combine mode. This gives the ball a bouncy surface; it is not a fixed bounce height. See [Physical Materials Reference](https://dev.epicgames.com/documentation/en-us/unreal-engine/physical-materials-reference-for-unreal-engine) for restitution and surface interaction settings.
 
@@ -213,7 +213,7 @@ It still exists in the world and in the pool. Task 8 replaced task 7's earlier `
 
 A later `Spawn()` request finds that inactive actor and calls `Activate()` again. No new actor, material, or event subscription is needed for that reuse.
 
-The session prewarms three pool entries per initial ball, then requests the initial batch once. A ball retired by player contact triggers a replacement; a ball retired after five non-player bounces waits in the pool until a later spawn request.
+The session prewarms one pool entry per initial ball, then requests the initial batch once. A ball retired by player contact triggers a replacement; a ball retired after five non-player bounces waits in the pool until a later spawn request.
 
 ### Example to try: prove that an actor is reused
 
@@ -393,7 +393,7 @@ This refactor changes ownership boundaries and function size, not the intended p
 
 Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. The gameplay session retires a player-hit ball and schedules a replacement without counting that contact as a bounce. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
 
-The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Level-one defaults are ten player-ball hit callbacks for victory and fifty non-player bounces for defeat. The saved `CurrentLevel` starts at 1 and advances once on victory; defeat and Retry keep it unchanged. The limits are the configured base plus `level - 1` for victory and minus `level - 1` for defeat, with a minimum defeat limit of one. New Game deletes the slot and initializes fresh level-one progress. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, publishes `OnEnded`, and requests a save. The game mode presents the fullscreen Victory or Defeat menu. Victory's Continue reloads the level into the initial menu; defeat's Retry reloads it and starts a continued session. Persistence completion and manual resume recheck deferred statistics.
+The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Level-one defaults are ten player-ball hit callbacks for victory and fifty non-player bounces for defeat. The saved `CurrentLevel` starts at the game-mode initial level (1 by default) and advances once on victory; defeat and Retry keep it unchanged. The limits use the configured per-level increase and decrease multiplied by `level - 1`, with a minimum defeat limit of one. New Game deletes the slot and initializes fresh progress. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, publishes `OnEnded`, and requests a save. The game mode presents the fullscreen Victory or Defeat menu. Victory's Continue reloads the level into the initial menu; defeat's Retry reloads it and starts a continued session. Persistence completion and manual resume recheck deferred statistics.
 
 ## Runtime arena bounds
 

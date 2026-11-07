@@ -11,12 +11,14 @@
 #include "TimerManager.h"
 #include "TestFeatures.h"
 
-void UFeatureGameplaySession::BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose)
+void UFeatureGameplaySession::BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose, int32 ContactsIncrease, int32 BouncesDecrease)
 {
 	GameState = &State;
 	SaveSubsystem = State.GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
 	PlayerContactsToWin = ContactsToWin;
 	SessionBouncesToLose = BouncesToLose;
+	ContactsIncreasePerLevel = ContactsIncrease;
+	BouncesDecreasePerLevel = BouncesDecrease;
 	State.OnSessionStatsChanged.AddUObject(this, &UFeatureGameplaySession::EvaluateSessionLimits);
 	SaveSubsystem->OnStatusChanged.AddUObject(this, &UFeatureGameplaySession::HandlePersistenceStatusChanged);
 	GameStateController = NewObject<UFeatureGameStateController>(this);
@@ -63,6 +65,7 @@ void UFeatureGameplaySession::HandlePersistenceStatusChanged(const FString&, boo
 
 void UFeatureGameplaySession::ObserveBall(AFeatureBall& Ball)
 {
+	Ball.Configure(BallSize, BallSpeedMultiplier);
 	Ball.OnContact.AddUObject(this, &UFeatureGameplaySession::HandleBallContact);
 }
 
@@ -89,7 +92,7 @@ void UFeatureGameplaySession::SpawnReplacementBall()
 	}
 }
 
-void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 BallCount, const FBox& SpawnBounds, const FBox& LevelBounds)
+void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 InitialLevel, int32 BallCount, float InBallSize, float InBallSpeedMultiplier, const FBox& SpawnBounds, const FBox& LevelBounds)
 {
 	if (SessionState != ESessionState::Ready || IsPersistenceBusy())
 	{
@@ -98,13 +101,15 @@ void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 BallC
 
 	SessionState = ESessionState::Playing;
 	BallSpawnBounds = SpawnBounds;
+	BallSize = InBallSize;
+	BallSpeedMultiplier = InBallSpeedMultiplier;
 	AFeatureGameState& State = *GameState.Get();
 	UWorld& World = *State.GetWorld();
 	AFeatureLevelBounds* Bounds = World.SpawnActor<AFeatureLevelBounds>(LevelBounds.GetCenter(), FRotator::ZeroRotator);
 	Bounds->SetHalfExtent(LevelBounds.GetExtent());
 	OnStarted.Broadcast();
-	State.StartSession(bContinue);
-	BallSpawner.Prewarm(World, BallCount * 3);
+	State.StartSession(bContinue, InitialLevel);
+	BallSpawner.Prewarm(World, BallCount);
 	BallSpawner.SpawnMultiple(World, BallCount, SpawnBounds.Min, SpawnBounds.Max);
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: Started with bounds center %s, half-extent %s"),
 		*LevelBounds.GetCenter().ToString(), *LevelBounds.GetExtent().ToString());
@@ -154,12 +159,12 @@ bool UFeatureGameplaySession::IsPersistenceBusy() const
 
 int32 UFeatureGameplaySession::GetPlayerContactsToWin() const
 {
-	return PlayerContactsToWin + (GameState->GetCurrentLevel() - 1);
+	return PlayerContactsToWin + ContactsIncreasePerLevel * (GameState->GetCurrentLevel() - 1);
 }
 
 int32 UFeatureGameplaySession::GetSessionBouncesToLose() const
 {
-	return FMath::Max(1, SessionBouncesToLose - (GameState->GetCurrentLevel() - 1));
+	return FMath::Max(1, SessionBouncesToLose - BouncesDecreasePerLevel * (GameState->GetCurrentLevel() - 1));
 }
 
 bool UFeatureGameplaySession::CanLeaveGameplay() const

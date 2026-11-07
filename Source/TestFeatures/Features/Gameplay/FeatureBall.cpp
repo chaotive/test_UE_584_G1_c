@@ -34,6 +34,12 @@ void AFeatureBall::BeginPlay()
 	BallMesh->OnComponentHit.AddDynamic(this, &AFeatureBall::OnBallHit);
 }
 
+void AFeatureBall::Configure(float Size, float SpeedMultiplier)
+{
+	SetActorScale3D(FVector(Size));
+	LaunchSpeedMultiplier = SpeedMultiplier;
+}
+
 void AFeatureBall::Activate(const FVector& Location)
 {
 	BounceCount = 0;
@@ -113,7 +119,7 @@ void AFeatureBall::StartRandomMovement()
 {
 	// Launch upward with a random spread; gravity and collisions shape the trajectory.
 	const FVector Direction = FMath::VRandCone(FVector::UpVector, FMath::DegreesToRadians(60.0f));
-	const float Speed = FMath::FRandRange(500.0f, 900.0f);
+	const float Speed = FMath::FRandRange(500.0f, 900.0f) * LaunchSpeedMultiplier;
 	const FVector Velocity = Direction * Speed;
 	BallMesh->SetPhysicsLinearVelocity(Velocity);
 

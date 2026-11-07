@@ -67,7 +67,7 @@ void AFeatureGameState::InitializeProgress(FFeatureGameProgress& Snapshot)
 	OnCurrentLevelChanged.Broadcast(Progress.CurrentLevel);
 }
 
-void AFeatureGameState::StartSession(bool bContinue)
+void AFeatureGameState::StartSession(bool bContinue, int32 InitialLevel)
 {
 	if (bContinue)
 	{
@@ -76,6 +76,7 @@ void AFeatureGameState::StartSession(bool bContinue)
 	else
 	{
 		FFeatureGameProgress FreshProgress;
+		FreshProgress.CurrentLevel = InitialLevel;
 		InitializeProgress(FreshProgress);
 	}
 }

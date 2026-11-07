@@ -31,6 +31,10 @@ public:
 	// No pointer or reference parameters; Unreal creates and owns this actor instance.
 	AFeatureBall();
 
+	// Configures this pooled ball's uniform size and launch speed.
+	// Both floats are passed by value without pointer or reference ownership.
+	void Configure(float Size, float SpeedMultiplier);
+
 	// Resets and launches this ball for a new use at the requested position.
 	// Location is a read-only FVector reference; no pointer ownership is transferred.
 	void Activate(const FVector& Location);
@@ -77,6 +81,10 @@ private:
 	// UPROPERTY tracks this strong TObjectPtr through Unreal object duplication and garbage collection; the actor owns the component.
 	UPROPERTY()
 	TObjectPtr<UStaticMeshComponent> BallMesh;
+
+	// Scales the initial random launch speed for each activation.
+	// float stores the multiplier by value without object ownership.
+	float LaunchSpeedMultiplier = 1.0f;
 
 	// Tracks how many times this ball has bounced during its current activation.
 	// int32 stores a per-instance counter by value without pointer ownership or a wrapper.

@@ -12,7 +12,7 @@ Crazy balls is a third-person ball-contact game. Move around the arena and inter
 
 ## Jump into the arena
 
-Choose **New Game** for a fresh level-one game or **Continue on level N** to play your saved level. Use **WASD** to move, the **mouse** to look, and **Space** to jump. Run into a ball to score a player contact: that ball is retired and another launches into the arena.
+Choose **New Game** for a fresh game at the configured initial level (level 1 by default) or **Continue on level N** to play your saved level. Use **WASD** to move, the **mouse** to look, and **Space** to jump. Run into a ball to score a player contact: that ball is retired and another launches into the arena.
 
 ## Start fresh or pick up your count
 
@@ -42,7 +42,7 @@ flowchart LR
 
 ### Levels and results
 
-Every new game begins at level 1. Winning advances the saved level by one; losing keeps the same level. Each new session resets its two objective counters, while the saved aggregate bounce total and session history continue across sessions.
+By default, every new game begins at level 1; the initial level is configurable in the game mode. Winning advances the saved level by one; losing keeps the same level. Each new session resets its two objective counters, while the saved aggregate bounce total and session history continue across sessions.
 
 | Level | Player contacts to win | Non-player bounces to lose |
 | --- | ---: | ---: |
@@ -51,11 +51,11 @@ Every new game begins at level 1. Winning advances the saved level by one; losin
 | 3 | 12 | 48 |
 | 50 | 59 | 1 |
 
-The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (level - 1))` for the loss limit. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to return to the initial menu, then **Continue on level N** to play the new level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
+The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (level - 1))` for the loss limit. The game mode can change the base limits and per-level adjustments. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to return to the initial menu, then **Continue on level N** to play the new level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
 
 ### Menus, pause, and saves
 
-**New Game** deletes the current save and begins level 1 with a fresh history. **Continue on level N** loads a readable save and starts its saved level. **Delete Save** removes the slot without starting a session; when there is no save, Continue is disabled and the menu displays **No saved game.** **Exit** closes the game, and **Esc** on the initial menu does the same.
+**New Game** deletes the current save and begins at the configured initial level with a fresh history. **Continue on level N** loads a readable save and starts its saved level. **Delete Save** removes the slot without starting a session; when there is no save, Continue is disabled and the menu displays **No saved game.** **Exit** closes the game, and **Esc** on the initial menu does the same.
 
 During a session, **Esc** opens the pause menu. Choose **Resume Game** or press **Esc** again to continue the same session; **Main Menu** returns to the startup screen, and **Exit** saves and quits. Saving or loading pauses play during I/O. In non-Shipping builds, the debug panel also offers **Save game** and **Save and quit** and shows save diagnostics.
 
@@ -98,6 +98,8 @@ DebugGame supports debugging project C++. Each archive contains a `Windows` dire
 The asset manager registers the `GameFeatureData` cook rule required by the engine's Game Features subsystem. [Project settings](Config/DefaultGame.ini)
 
 ### Arena collision bounds
+
+The game-mode defaults also expose the initial level, initial ball count, per-level objective adjustments, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; its default size and the initial ball count are both five. A size or speed multiplier of 1 preserves the default ball size or launch speed.
 
 Gameplay creates one `AFeatureLevelBounds` actor with six invisible collision faces. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after five non-player bounces or player contact.
 

@@ -39,16 +39,16 @@ public:
 	FSessionEndedEvent OnEnded;
 
 	// Connects gameplay events and configures the level-one victory and defeat limits.
-	// State is borrowed; both limits are positive int32 values without object ownership.
-	void BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose);
+	// State is borrowed; limits and per-level adjustments are passed by value.
+	void BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose, int32 ContactsIncrease, int32 BouncesDecrease);
 
 	// Removes this subsystem's observation when its world shuts down.
 	// No pointer or reference parameters or return value; releases weak UObject subscriptions.
 	virtual void Deinitialize() override;
 
 	// Starts the player workflow, initializes progress, and creates the enclosure and ball volley.
-	// bContinue and BallCount are values; both FBox references borrow world-space bounds.
-	void OnGameplaySessionStart(bool bContinue, int32 BallCount, const FBox& SpawnBounds, const FBox& LevelBounds);
+	// Configuration values are passed by value; both FBox references borrow world-space bounds.
+	void OnGameplaySessionStart(bool bContinue, int32 InitialLevel, int32 BallCount, float BallSize, float BallSpeedMultiplier, const FBox& SpawnBounds, const FBox& LevelBounds);
 
 	// Unpauses the active session and announces its return to gameplay.
 	// No pointer or reference parameters or return value; updates the observed state's world.
@@ -77,13 +77,29 @@ private:
 	// Stores the private enum by value without pointer or reference ownership.
 	ESessionState SessionState = ESessionState::Ready;
 
-	// Sets the level-one player contact limit, increased by one for each subsequent level.
+	// Sets the level-one player contact limit, increased by the configured amount for each subsequent level.
 	// int32 stores the configured positive threshold by value without object ownership.
 	int32 PlayerContactsToWin = 10;
 
 	// Sets the level-one bounce limit, decreased per level with a minimum of one.
 	// int32 stores the configured positive threshold by value without object ownership.
 	int32 SessionBouncesToLose = 50;
+
+	// Sets the per-level increase in required player contacts.
+	// int32 stores the increment by value.
+	int32 ContactsIncreasePerLevel = 1;
+
+	// Sets the per-level decrease in allowed non-player bounces.
+	// int32 stores the decrement by value.
+	int32 BouncesDecreasePerLevel = 1;
+
+	// Stores the uniform scale for newly created pooled balls.
+	// float stores the scale by value.
+	float BallSize = 1.0f;
+
+	// Stores the launch speed multiplier for newly created pooled balls.
+	// float stores the multiplier by value.
+	float BallSpeedMultiplier = 1.0f;
 
 	// Ends the current session once it reaches its victory or defeat limit.
 	// Stats borrows a read-only state-owned session record without transferring ownership.

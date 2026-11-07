@@ -62,8 +62,23 @@ protected:
 
 	// Number of training balls to create when play begins.
 	// int32 stores the ball count by value; UPROPERTY(EditAnywhere) exposes it for editor configuration without pointer ownership.
-	UPROPERTY(EditAnywhere, Category="Training_Ball")
+	UPROPERTY(EditAnywhere, Category="Training_Ball", meta=(ClampMin="1"))
 	int32 FeatureBallCount = 5;
+
+	// Sets the level used when starting a new game.
+	// int32 stores the positive starting level by value.
+	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
+	int32 FeatureInitialLevel = 1;
+
+	// Sets the uniform size of balls relative to the default sphere.
+	// float stores the positive scale by value without object ownership.
+	UPROPERTY(EditAnywhere, Category="Training_Ball", meta=(ClampMin="0.01"))
+	float FeatureBallSize = 1.0f;
+
+	// Multiplies each ball's initial launch speed.
+	// float stores the non-negative multiplier by value without object ownership.
+	UPROPERTY(EditAnywhere, Category="Training_Ball", meta=(ClampMin="0"))
+	float FeatureBallSpeedMultiplier = 1.0f;
 
 	// Sets how many player-ball blocking contacts win level one.
 	// int32 stores a positive threshold by value and exposes it in game-mode defaults.
@@ -74,6 +89,16 @@ protected:
 	// int32 stores a positive threshold by value and exposes it in game-mode defaults.
 	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
 	int32 FeatureSessionBouncesToLose = 50;
+
+	// Adds this many required player contacts for each level above level one.
+	// int32 stores the non-negative increment by value.
+	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="0"))
+	int32 FeatureContactsIncreasePerLevel = 1;
+
+	// Subtracts this many allowed non-player bounces for each level above level one.
+	// int32 stores the non-negative decrement by value.
+	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="0"))
+	int32 FeatureBouncesDecreasePerLevel = 1;
 
 	// Minimum corner of the spawn box in world centimeters; each axis must be <= the maximum corner.
 	// FVector stores three coordinates by value; UPROPERTY exposes them for editing without a pointer or separate allocation.

@@ -62,8 +62,8 @@ public:
 	void SaveSession(bool bQuitAfter = false);
 
 	// Starts a fresh saved game or loads progress before appending the current session.
-	// bContinue is passed by value without pointer or reference ownership.
-	void StartSession(bool bContinue);
+	// bContinue and InitialLevel are passed by value without pointer or reference ownership.
+	void StartSession(bool bContinue, int32 InitialLevel);
 
 protected:
 

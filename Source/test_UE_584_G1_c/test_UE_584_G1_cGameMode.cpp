@@ -34,7 +34,8 @@ void Atest_UE_584_G1_cGameMode::InitGameState()
 	Super::InitGameState();
 
 	GameplaySession = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
-	GameplaySession->BindGameState(*GetGameState<AFeatureGameState>(), FeaturePlayerContactsToWin, FeatureSessionBouncesToLose);
+	GameplaySession->BindGameState(*GetGameState<AFeatureGameState>(), FeaturePlayerContactsToWin, FeatureSessionBouncesToLose,
+		FeatureContactsIncreasePerLevel, FeatureBouncesDecreasePerLevel);
 	GameplaySession->OnStarted.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionStarted);
 	GameplaySession->OnResumed.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionResumed);
 	GameplaySession->OnPaused.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionPaused);
@@ -146,7 +147,7 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 		{
 			break;
 		}
-		GameplaySession->OnGameplaySessionStart(false, FeatureBallCount,
+		GameplaySession->OnGameplaySessionStart(false, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier,
 			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
 			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
 		break;
@@ -155,7 +156,7 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 		{
 			break;
 		}
-		GameplaySession->OnGameplaySessionStart(true, FeatureBallCount,
+		GameplaySession->OnGameplaySessionStart(true, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier,
 			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
 			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
 		break;
