@@ -142,6 +142,7 @@ void UFeatureGameplaySession::OnGameplaySessionEnded(bool bVictory)
 		PendingBallReplacements = 0;
 		GameState->RecordSessionResult(bVictory);
 		OnEnded.Broadcast(bVictory);
+		GameState->SaveSession();
 		UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: Ended (%s)"), bVictory ? TEXT("Victory") : TEXT("Defeat"));
 	}
 }

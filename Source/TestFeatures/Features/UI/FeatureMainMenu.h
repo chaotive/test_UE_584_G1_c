@@ -15,6 +15,7 @@ enum class EFeatureMenuAction : uint8
 	Continue,
 	Resume,
 	ReturnToMenu,
+	Retry,
 	Exit
 };
 
@@ -80,6 +81,11 @@ private:
 	// No pointer or reference parameters or return value; bound to a widget-owned button.
 	UFUNCTION()
 	void HandleReturnToMenu();
+
+	// Publishes the request to retry a defeated session.
+	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	UFUNCTION()
+	void HandleRetry();
 
 	// Publishes the Exit selection.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.

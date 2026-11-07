@@ -105,6 +105,14 @@ private:
 	// Stores the enum by value without pointer or reference ownership.
 	EFeatureGameFlow FlowState = EFeatureGameFlow::StartupMenu;
 
+	// Starts a continued session automatically after a defeat retry reloads the level.
+	// bool stores the URL option by value without pointer ownership.
+	bool bRetrySession = false;
+
+	// Starts the saved session after the reloaded world has begun play.
+	// No pointer or reference parameters or return value; the game mode owns the flow transition.
+	void StartRetrySession();
+
 	// Retains the active flow screen while it is displayed.
 	// UPROPERTY tracks the strong widget pointer for garbage collection.
 	UPROPERTY()

@@ -116,6 +116,10 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 		AddAction(*Rows, LOCTEXT("Resume", "Resume Game"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleResume);
 		AddAction(*Rows, LOCTEXT("ReturnToMenu", "Main Menu"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
 	}
+	else if (Flow == EFeatureGameFlow::Lose)
+	{
+		AddAction(*Rows, LOCTEXT("Retry", "Retry"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleRetry);
+	}
 	else
 	{
 		AddAction(*Rows, LOCTEXT("Continue", "Continue"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
@@ -183,6 +187,11 @@ void UFeatureMainMenu::HandleResume()
 void UFeatureMainMenu::HandleReturnToMenu()
 {
 	OnAction.Broadcast(EFeatureMenuAction::ReturnToMenu);
+}
+
+void UFeatureMainMenu::HandleRetry()
+{
+	OnAction.Broadcast(EFeatureMenuAction::Retry);
 }
 
 void UFeatureMainMenu::HandleExit()

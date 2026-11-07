@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "TimerManager.h"
 
 Atest_UE_584_G1_cGameMode::Atest_UE_584_G1_cGameMode()
 {
@@ -24,6 +25,7 @@ void Atest_UE_584_G1_cGameMode::InitGame(const FString& MapName, const FString& 
 {
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("GameMode [%s]: InitGame (Map: %s)"), *GetName(), *MapName);
 	Super::InitGame(MapName, Options, ErrorMessage);
+	bRetrySession = UGameplayStatics::HasOption(Options, TEXT("FeatureRetry"));
 }
 
 void Atest_UE_584_G1_cGameMode::InitGameState()
@@ -50,6 +52,15 @@ void Atest_UE_584_G1_cGameMode::StartPlay()
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("GameMode [%s]: StartPlay"), *GetName());
 	Super::StartPlay();
 	SetFlow(EFeatureGameFlow::StartupMenu);
+	if (bRetrySession)
+	{
+		GetWorldTimerManager().SetTimerForNextTick(this, &Atest_UE_584_G1_cGameMode::StartRetrySession);
+	}
+}
+
+void Atest_UE_584_G1_cGameMode::StartRetrySession()
+{
+	HandleMenuAction(EFeatureMenuAction::Continue);
 }
 
 void Atest_UE_584_G1_cGameMode::BeginPlay()
@@ -140,6 +151,9 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 		break;
 	case EFeatureMenuAction::ReturnToMenu:
 		UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)));
+		break;
+	case EFeatureMenuAction::Retry:
+		UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)), true, TEXT("FeatureRetry=1"));
 		break;
 	case EFeatureMenuAction::Exit:
 		if (FlowState == EFeatureGameFlow::StartupMenu)

@@ -24,7 +24,7 @@ The startup and pause menus show your last saved bounce total. When the slot is 
 
 During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena. Choose **Exit** from the pause menu to save and quit. **Continue** restores your total the next time you play.
 
-Make ten player-ball contacts before the session reaches fifty non-player bounces. The gameplay HUD shows both counts and their current session limits. The round ends with a fullscreen **Victory** or **Defeat** screen. Choose **Continue** to return to the initial menu. Your session history records the outcome. Level progression remains a planned task.
+Make ten player-ball contacts before the session reaches fifty non-player bounces. The gameplay HUD shows both counts and their current session limits. The round ends with a fullscreen **Victory** or **Defeat** screen and saves the outcome. After victory, choose **Continue** to return to the initial menu; after defeat, choose **Retry** to restart the current arena. Level progression remains a planned task.
 
 ## Development
 
@@ -64,15 +64,11 @@ Gameplay creates one `AFeatureLevelBounds` actor with six invisible collision fa
 
 ### Session results
 
-A victory or defeat pauses gameplay and presents the matching fullscreen result. **Continue** returns to the startup menu. These runtime captures show both outcomes:
+A victory or defeat pauses gameplay, saves the session, and presents the matching fullscreen result. **Continue** returns to the startup menu after victory. **Retry** reloads the arena and starts a new session after defeat.
 
 ![Victory result screen](docs/images/feature-result-victory.png)
 
 *The session reaches Victory and offers Continue or Exit.*
-
-![Defeat result screen](docs/images/feature-result-defeat.png)
-
-*The session reaches Defeat and offers Continue or Exit.*
 
 ### Debug HUD and save diagnostics
 
