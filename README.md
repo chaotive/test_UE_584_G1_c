@@ -24,7 +24,7 @@ The startup and pause menus show your last saved bounce total. When the slot is 
 
 During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena. Choose **Exit** from the pause menu to save and quit. **Continue** restores your total the next time you play.
 
-Level 1 requires ten player-ball contacts before fifty non-player bounces. Each victory advances the saved level, adding one contact to win and removing one bounce to lose (minimum one). The gameplay HUD shows both counts and their current session limits. The round ends with a fullscreen **Victory** or **Defeat** screen and saves the outcome. After victory, choose **Continue** to return to the initial menu; after defeat, choose **Retry** to restart the current arena. **Continue on level N** starts the saved level; defeat keeps that level, and **New Game** clears the save and resets it to 1.
+Level 1 requires ten player-ball contacts before fifty non-player bounces. Each victory advances the saved level, adding one contact to win and removing one bounce to lose (minimum one). The gameplay HUD shows the current level, both counts, and their session limits; the debug HUD and startup menu also display the saved level. The round ends with a fullscreen **Victory** or **Defeat** screen and saves the outcome. After victory, choose **Continue** to return to the initial menu; after defeat, choose **Retry** to restart the current arena. **Continue on level N** starts the saved level; defeat keeps that level, and **New Game** clears the save and resets it to 1.
 
 ## Development
 

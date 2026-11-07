@@ -37,6 +37,15 @@ private:
 	// Stats is a borrowed read-only reference to state-owned value data.
 	void UpdateStats(const FFeatureGameplaySessionRecord& Stats);
 
+	// Displays the current saved level.
+	// CurrentLevel is passed by value without pointers or references.
+	void SetCurrentLevel(int32 CurrentLevel);
+
+	// Displays the current progression level above the objective counts.
+	// UPROPERTY tracks a strong TObjectPtr to the tree-owned text widget.
+	UPROPERTY()
+	TObjectPtr<UTextBlock> CurrentLevelText;
+
 	// Displays player contacts and the victory threshold.
 	// UPROPERTY tracks a strong TObjectPtr to the tree-owned text widget.
 	UPROPERTY()

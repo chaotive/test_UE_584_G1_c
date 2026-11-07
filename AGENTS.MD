@@ -109,16 +109,16 @@ These goals will guide future tasks:
 
 ### To do
 
-19. Main menu: New Game deletes the current save and starts a fresh session.
-20. Main menu: Continue loads the saved game when a save exists.
-21. Main menu: Add Delete Save above Exit to clear the save slot.
-22. Main menu: Disable Continue when the save slot is empty.
-23. Main menu: Exit closes the game.
+19. Main menu: "New Game" deletes the current save and starts a fresh session.
+20. Main menu: "Continue in level N" loads the saved game and starts game on the saved level.
+21. Main menu: Add "Delete Save" above Exit to clear the save slot.
+22. Main menu: Disable "Continue ..." when the save slot is empty.
+23. Main menu: "Exit" closes the game.
 24. Main menu: Pressing "Esc" key pauses the game and shows the main menu again.
-25. Main menu: Adds a new first item option: "Resume game".
-26. Main menu: When "Esc" paused, "Resume game" option is active and allows to return and unpause the game.
-27. Main menu: Pressing "Esc" key while "Esc" paused, is the same as pressing "Resume game".
-28. Main menu: On Initial Main Menu, "Resume game" is grayed out.
+25. Pause menu: First item option: "Resume game" and allows to return and unpause the game.
+26. Pause menu: Esc key pauses the game and shows Pause menu
+27. Pause menu: Pressing "Esc" key while paused, is the same as pressing "Resume game".
+28. UI: On Initial Main Menu, "Resume game" is grayed out.
 29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
 33. Add a smoke test for main easy to test features using Gauntlet.
 48. UI: Show the current level in the gameplay HUD and other state display UI.

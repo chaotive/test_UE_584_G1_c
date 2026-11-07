@@ -38,6 +38,7 @@ void AFeatureGameState::RecordSessionResult(bool bVictory)
 		if (bVictory)
 		{
 			++Progress.CurrentLevel;
+			OnCurrentLevelChanged.Broadcast(Progress.CurrentLevel);
 		}
 	}
 }
@@ -64,6 +65,7 @@ void AFeatureGameState::InitializeProgress(FFeatureGameProgress& Snapshot)
 	bSessionInitialized = true;
 	OnTotalBouncesChanged.Broadcast(Progress.TotalBounces);
 	OnSessionStatsChanged.Broadcast(Progress.Sessions.Last());
+	OnCurrentLevelChanged.Broadcast(Progress.CurrentLevel);
 }
 
 void AFeatureGameState::StartSession(bool bContinue)

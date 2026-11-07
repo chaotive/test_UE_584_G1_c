@@ -15,6 +15,9 @@ public:
 
 	DECLARE_EVENT_OneParam(AFeatureGameState, FTotalBouncesChangedEvent, int32);
 	DECLARE_EVENT_OneParam(AFeatureGameState, FSessionStatsChangedEvent, const FFeatureGameplaySessionRecord&);
+	// Announces a change in saved level for the HUD and startup menu.
+	// The event wrapper passes int32 by value and stores weak UObject bindings.
+	DECLARE_EVENT_OneParam(AFeatureGameState, FCurrentLevelChangedEvent, int32);
 
 	// Notifies listeners whenever the shared bounce total changes.
 	// This native multicast event passes int32 by value; only the game state can broadcast it.
@@ -23,6 +26,10 @@ public:
 	// Announces updated statistics for the current gameplay session.
 	// The native event borrows a read-only reference to the state-owned record.
 	FSessionStatsChangedEvent OnSessionStatsChanged;
+
+	// Notifies UI and gameplay observers when the saved level changes.
+	// This native multicast event passes int32 by value and stores weak UObject bindings.
+	FCurrentLevelChangedEvent OnCurrentLevelChanged;
 
 	// Adds a bounce to the saved-game total and active session record, then notifies observers.
 	// No pointer or reference parameters or return value; modifies this world-owned game state.

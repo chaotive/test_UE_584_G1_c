@@ -23,6 +23,8 @@ void UFeatureGameplayHUD::NativeConstruct()
 	ObservedState = State;
 	ObservedSession = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
 	State->OnSessionStatsChanged.AddUObject(this, &UFeatureGameplayHUD::UpdateStats);
+	State->OnCurrentLevelChanged.AddUObject(this, &UFeatureGameplayHUD::SetCurrentLevel);
+	SetCurrentLevel(State->GetCurrentLevel());
 	const TArray<FFeatureGameplaySessionRecord>& Sessions = State->GetGameplaySessions();
 	UpdateStats(Sessions.IsEmpty() ? FFeatureGameplaySessionRecord() : Sessions.Last());
 }
@@ -32,6 +34,7 @@ void UFeatureGameplayHUD::NativeDestruct()
 	if (AFeatureGameState* State = ObservedState.Get())
 	{
 		State->OnSessionStatsChanged.RemoveAll(this);
+		State->OnCurrentLevelChanged.RemoveAll(this);
 	}
 	ObservedState.Reset();
 	ObservedSession.Reset();
@@ -53,12 +56,16 @@ void UFeatureGameplayHUD::BuildLayout()
 
 	UVerticalBox* Rows = WidgetTree->ConstructWidget<UVerticalBox>();
 	Panel->SetContent(Rows);
+	CurrentLevelText = WidgetTree->ConstructWidget<UTextBlock>();
 	PlayerContactsText = WidgetTree->ConstructWidget<UTextBlock>();
 	BallBouncesText = WidgetTree->ConstructWidget<UTextBlock>();
+	CurrentLevelText->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 18));
 	PlayerContactsText->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 18));
 	BallBouncesText->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 18));
+	CurrentLevelText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 	PlayerContactsText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 	BallBouncesText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+	Rows->AddChildToVerticalBox(CurrentLevelText);
 	Rows->AddChildToVerticalBox(PlayerContactsText);
 	Rows->AddChildToVerticalBox(BallBouncesText);
 	SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -70,4 +77,10 @@ void UFeatureGameplayHUD::UpdateStats(const FFeatureGameplaySessionRecord& Stats
 		FText::AsNumber(Stats.PlayerBallCollisions), FText::AsNumber(ObservedSession->GetPlayerContactsToWin())));
 	BallBouncesText->SetText(FText::Format(NSLOCTEXT("FeatureGameplayHUD", "LossProgress", "Ball bounces: {0} / {1} to lose"),
 		FText::AsNumber(Stats.TotalBounces), FText::AsNumber(ObservedSession->GetSessionBouncesToLose())));
+}
+
+void UFeatureGameplayHUD::SetCurrentLevel(int32 CurrentLevel)
+{
+	CurrentLevelText->SetText(FText::Format(NSLOCTEXT("FeatureGameplayHUD", "CurrentLevel", "Level: {0}"),
+		FText::AsNumber(CurrentLevel)));
 }

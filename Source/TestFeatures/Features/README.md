@@ -36,6 +36,7 @@ The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and 
 | `UFeatureSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [FeatureSaveGameSubsystem.cpp](GameWorkflow/FeatureSaveGameSubsystem.cpp) |
 | `UFeatureDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [FeatureDebugHUD.cpp](UI/FeatureDebugHUD.cpp) |
 | `UFeatureBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [FeatureBallPanel.cpp](UI/FeatureBallPanel.cpp) |
+| `UFeatureGameplayHUD` | Displays the current level and live player-contact and ball-bounce limits. | [FeatureGameplayHUD.cpp](UI/FeatureGameplayHUD.cpp) |
 | `UFeatureSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [FeatureSaveGamePanel.cpp](UI/FeatureSaveGamePanel.cpp) |
 | `FFeatureDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [FeatureDebugHUDSpawner.cpp](../Features_NonUE/FeatureDebugHUDSpawner.cpp) |
 
@@ -279,7 +280,7 @@ Reading the current count after subscribing covers either startup order: the pan
 
 `CreateText()` centralizes font and color setup. The HUD enables a visible mouse cursor and Game-and-UI input. Its outer widget uses SelfHitTestInvisible; diagnostic scrolling and save buttons remain usable while the game world is paused.
 
-The panel displays TRAINING DEBUG HUD, C++ feature sandbox, Total bounces: N, save controls, and live persistence diagnostics. The specialized UFeatureBallPanel child connects to `AFeatureGameState::OnTotalBouncesChanged` in `NativeConstruct()` and immediately reads `GetTotalBounces()`, so it starts with the current count. `NativeDestruct()` removes the subscription and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session total. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when the count changes.
+The panel displays TRAINING DEBUG HUD, C++ feature sandbox, the current level, Total bounces: N, save controls, and live persistence diagnostics. The specialized UFeatureBallPanel child connects to `AFeatureGameState::OnTotalBouncesChanged` and `OnCurrentLevelChanged` in `NativeConstruct()` and immediately reads both values, so it starts synchronized. `NativeDestruct()` removes the subscriptions and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session state. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when a value changes.
 
 ## Reading the types without getting lost
 
