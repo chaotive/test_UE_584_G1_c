@@ -125,6 +125,10 @@ These goals will guide future tasks:
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
 
-#### Bugs
+## Bugs
 
-- Gauntlet's editor startup logs repeated "LogAutomationTest: Error: Condition failed" messages before the project smoke tests start. All four Feature.Smoke tests pass; the source of the startup messages is not yet identified.
+### Done
+
+### To do
+
+1. Gauntlet's editor startup logs repeated "LogAutomationTest: Error: Condition failed" messages before the project smoke tests start. All four Feature.Smoke tests pass; the source of the startup messages is not yet identified.
