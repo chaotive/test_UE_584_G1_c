@@ -42,7 +42,7 @@ Make ten player-ball contacts before the session reaches fifty bounces. The roun
 .\Build-Win64.ps1
 ```
 
-The default archive ID is `Dev`, so repeated calls reuse `Builds\Dev`. Supply an ID to use a different archive directory:
+The default archive ID is `Dev`, so repeated calls reuse `Builds\Dev`. After packaging, the script copies the latest AutomationTool `Log.txt` for this project's current run to `Build.log` in that archive, including failed packaging runs that produced a log. Reusing an ID replaces its attached log. Supply an ID to use a different archive directory:
 
 ```powershell
 .\Build-Win64.ps1 -Id '1'
