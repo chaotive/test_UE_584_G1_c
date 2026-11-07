@@ -2,8 +2,8 @@
 
 This folder holds classes that are not Unreal-reflected `UCLASS` types and do not derive from `UObject`. They still use Unreal APIs and types.
 
-- [FFeatureBallSpawner](FeatureBallSpawner.h) creates and pools the world-owned balls defined in [FeatureBall.h](../Features/FeatureBall.h). The gameplay session retains this helper and requests the initial volley.
-- [FFeatureDebugHUDSpawner](FeatureDebugHUDSpawner.h) creates the native debug widget defined in [FeatureDebugHUD.h](../Features/FeatureDebugHUD.h) and adds it to a local player's screen. The player controller calls it only in non-Shipping builds.
+- [FFeatureBallSpawner](FeatureBallSpawner.h) creates and pools the world-owned balls defined in [FeatureBall.h](../Features/Gameplay/FeatureBall.h). The gameplay session retains this helper and requests the initial volley.
+- [FFeatureDebugHUDSpawner](FeatureDebugHUDSpawner.h) creates the native debug widget defined in [FeatureDebugHUD.h](../Features/UI/FeatureDebugHUD.h) and adds it to a local player's screen. The player controller calls it only in non-Shipping builds.
 
 Include these helpers through `Features_NonUE/FeatureBallSpawner.h` or `Features_NonUE/FeatureDebugHUDSpawner.h` from a consumer with a `TestFeatures` module dependency.
 
@@ -11,7 +11,7 @@ The ball spawner assigns indexed actor names in every build. It also sets the ma
 
 The [feature guide](../Features/README.md) explains startup, spawning, pooling, event subscriptions, UI creation, ownership, and performance tradeoffs. This folder split changes code organization without changing those flows or their runtime costs.
 
-`FFeatureSaveGameStorage` loads and saves bounce totals using `Features/FeatureSaveGame.h`. It provides the local slot name, desktop file path, and load result for diagnostics. The [feature guide](../Features/README.md) covers asynchronous disk operations and the synchronous fallback during forced teardown.
+`FFeatureSaveGameStorage` loads and saves bounce totals using `Features/GameWorkflow/FeatureSaveGame.h`. It provides the local slot name, desktop file path, and load result for diagnostics. The [feature guide](../Features/README.md) covers asynchronous disk operations and the synchronous fallback during forced teardown.
 
 Task 17 moved these helpers into the runtime module alongside the Unreal-reflected classes. The module is now named `TestFeatures` and exports the helpers with `TESTFEATURES_API`.
 

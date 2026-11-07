@@ -1,5 +1,5 @@
 #include "FeatureBallSpawner.h"
-#include "Features/FeatureBall.h"
+#include "Features/Gameplay/FeatureBall.h"
 #include "TestFeatures.h"
 #include "Engine/World.h"
 

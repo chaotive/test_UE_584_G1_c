@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Features/FeatureGameFlow.h"
+#include "Features/GameWorkflow/FeatureGameFlow.h"
 #include "GameFramework/GameModeBase.h"
 #include "test_UE_584_G1_cGameMode.generated.h"
 

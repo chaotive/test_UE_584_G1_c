@@ -1,5 +1,5 @@
 #include "FeatureDebugHUDSpawner.h"
-#include "Features/FeatureDebugHUD.h"
+#include "Features/UI/FeatureDebugHUD.h"
 #include "TestFeatures.h"
 #include "GameFramework/PlayerController.h"
 

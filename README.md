@@ -67,9 +67,9 @@ Gameplay creates one `AFeatureLevelBounds` actor with six invisible collision fa
 
 The non-Shipping debug HUD shows the live bounce count, the save slot and file path, and the I/O history. Its **Save game** button writes a snapshot while keeping the session open. **Save and quit** exits after a successful write.
 
-![Third-person character, airborne ball, and the debug HUD showing zero bounces at launch](docs/images/feature-debug-hud.png)
+![Standalone gameplay and debug HUD after reorganizing the feature code](docs/images/feature-organized-gameplay.png)
 
-*`Feature.NewGame` launched the first volley. The debug HUD shows the save slot and a fresh bounce total of zero.*
+*After the folder reorganization, `Feature.NewGame` starts gameplay and displays the debug HUD with the FeatureSandbox save slot and an initial bounce total of zero.*
 
 ![Debug HUD showing ten bounces and a successful save in the I/O history](docs/images/feature-save-result.png)
 
@@ -83,10 +83,12 @@ Shipping builds skip the debug previews and keep gameplay paused until disk I/O 
 
 ### Architecture
 
-- **Game flow.** The gameplay session handles starting, pausing, resuming, and ending gameplay. The game mode observes its events and presents startup, gameplay, pause, victory, and defeat screens. The startup title comes from `ProjectName` in `Config/DefaultGame.ini`. A gameplay objective can call `FinishSession` to supply a result. [Gameplay session](Source/TestFeatures/Features/FeatureGameplaySession.h)
+- **Game flow.** The gameplay session handles starting, pausing, resuming, and ending gameplay. The game mode observes its events and presents startup, gameplay, pause, victory, and defeat screens. The startup title comes from `ProjectName` in `Config/DefaultGame.ini`. A gameplay objective can call `FinishSession` to supply a result. [Gameplay session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.h)
 - **Physics and state.** The C++ spawner launches single balls or batches inside configurable bounds and reuses pooled actors after their second bounce. Balls publish bounce events, a state controller updates the shared total, and the debug HUD observes it. The Unreal log records lifecycle events, launches, bounces, and pool returns.
 - **Persistence.** The menu reads the save preview asynchronously. Session saves and loads pause gameplay during disk I/O. The debug HUD adds one-second previews before I/O and after the result and reports the slot, file path, and operation history.
 - **Module boundaries.** The `TestFeatures` runtime module houses the C++ gameplay, UI, and persistence code. The project uses standard Unreal assets and has no third-party plugin dependencies. Blueprint supports supplementary logic, and an AngelScript feature is planned.
+
+Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. Plain C++ spawning and storage helpers live in the sibling `Features_NonUE` folder.
 
 - [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)
 - [Runtime helpers](Source/TestFeatures/Features_NonUE/README.md)
@@ -95,7 +97,7 @@ Shipping builds skip the debug previews and keep gameplay paused until disk I/O 
 
 ### Local Unreal Editor MCP
 
-Open `test_UE_584_G1_c.uproject` normally. The project enables Epic's built-in MCP and toolset plugins for editor targets and starts the local server automatically. To turn off automatic startup for your local editor, clear **Auto Start Server** under **Edit → Editor Preferences → Model Context Protocol**.
+For explicitly requested editor work, open `test_UE_584_G1_c.uproject` normally. The project enables Epic's built-in MCP and toolset plugins for editor targets and starts the local server automatically. To turn off automatic startup for your local editor, clear **Auto Start Server** under **Edit → Editor Preferences → Model Context Protocol**.
 
 The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:8000/mcp`. If the endpoint is unavailable and Unreal Editor is closed, open the project and wait for the editor to finish loading and the local server to respond. If the current chat does not expose the Unreal tools once the server responds, start a new Codex chat in this project with the editor still open.
 

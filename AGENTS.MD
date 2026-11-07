@@ -46,21 +46,21 @@ These goals will guide future tasks:
 5. Commits: commits should give a brief but useful description of changes.
 6. Avoid too many one liners, when possible, separate in functions that act as groupers to have a better top down understanding of code.
 7. Above every function declaration and class property, add two separate one-line comments: first describe its functional purpose; second explain the types, pointer/reference semantics, ownership, and why any wrapper (such as TArray or TWeakObjectPtr) is used. For functions without pointers or references, say so in the technical line.
-8. On every change, review and update the relevant READMEs so their explanations, examples, flows, and performance considerations stay aligned with the current implementation.
+8. Keep README updates limited to the concise corrections needed to match the implementation. Perform deeper documentation reviews, expanded explanations, and documentation rewrites only when the user explicitly requests them.
 9. Code separate the non UE classes from the UE classes. The non UE classes should go in Features_NonUE folder, along Features for UE classes.
 10. Design for maximum practical decoupling: minimize direct dependencies and prevent dependency knowledge from spreading into unrelated classes. Keep each relationship within the components that need it or a focused binding class; prefer events and narrow interfaces where they preserve clarity without unnecessary abstraction. For example, HUD-to-game-state subscriptions, initial synchronization, and unsubscription belong inside the HUD or a dedicated UI binding class, while the player controller only creates, retains, and removes the HUD and does not know which state events update which widget methods.
 11. For every system/class/feature, attempt to use an UE base class definition and extend from it where possible.
 12. Keep UI construction, layout, styling, window management, and rendering synchronization in UI classes or the HUD. Handling systems publish state and operation events; they must not build or render UI. Route diagnostic information, including persistence slot, physical file path, phases, and results, to the debug HUD through observation rather than controller-side UI wiring.
-13. Preserve useful runtime screenshots under `docs/images`. In the root README and feature documentation, illustrate current behavior with the latest verified captures. Use older screenshots only in a clearly separate game evolution section when they show a meaningful change. Caption each capture with the behavior it verifies and label historical captures with their milestone or date. Keep mockups and unverified states out of runtime evidence.
+13. Take or refresh screenshots only when the user explicitly requests them. Preserve requested runtime captures under `docs/images` and use the latest verified captures in the relevant documentation. Use older screenshots only in a clearly separate game evolution section when they show a meaningful change. Caption each capture with the behavior it verifies and label historical captures with their milestone or date. Keep mockups and unverified states out of runtime evidence.
 14. During code checkups, review our own project-produced code for unneeded includes and remove them. Limit this cleanup to code we authored or changed; do not clean up Unreal Engine, generated, third-party, or unrelated template code. Keep direct includes required by used types and APIs rather than relying on incidental transitive includes.
 15. When reviewing changes, check the affected prose for spelling and grammar. Report any issues found and corrections made.
 16. The Main objective and Specific goals sections are user-owned. Never change them on your own. Report any suggested edits to the user.
-17. Use Unreal Editor MCP for editor operations. If the MCP endpoint is unavailable and Unreal Editor is closed, launch this project's `.uproject` so the editor can start the server automatically. If the editor is already starting, wait for it rather than opening another instance. Wait for startup to finish and for the MCP endpoint to respond before attempting editor operations. If the current chat still does not expose the tools after the server is ready, start a new Codex chat in this project.
-18. Avoid lengthy or resource-intensive validation in an Unreal Editor session unless the user requests it or approves it in advance. Prefer lightweight checks by default.
+17. Perform editor operations only when the user explicitly requests them, and use Unreal Editor MCP for those operations. For an authorized editor task, if the MCP endpoint is unavailable and Unreal Editor is closed, launch this project's `.uproject` so the server starts automatically. If the editor is already starting, wait rather than opening another instance. Wait for startup to finish and for the MCP endpoint to respond before operating the editor. If this chat still does not expose the tools after the server is ready, start a new Codex chat in this project.
+18. Default implementation validation is compile-only. Run Unreal Editor, standalone gameplay, automation tests, or other runtime validation only when the user explicitly requests that validation. Keep requested validation focused on the relevant behavior.
 19. Move a task to Done only after the user explicitly asks to implement that task and its implementation is complete. Leave related tasks in To do even if their behavior is already implemented.
 20. Use `Feature` in the project display name and as the prefix for feature class names, source files, and console commands.
 21. Preserve or migrate old save games only when the user explicitly requests save compatibility.
-22. Update `CHANGES.md` with each completed task and link its newly captured evidence. For implementation details that a screenshot cannot establish, link the relevant source and explain what the capture shows.
+22. Update `CHANGES.md` only when the user explicitly requests a changelog update. When requested, link relevant source and any available verified evidence. A changelog request does not authorize taking screenshots or running the editor or game unless the user also requests those actions.
 23. Never create a git commit unless the user explicitly asks to commit.
 24. Never change line breaks, indentation, whitespace, or make irrelevant formatting changes unless explicitly requested.
 
@@ -91,6 +91,7 @@ These goals will guide future tasks:
 32. Show the debug HUD menu only in non-Shipping builds.
 34. Package Win64 builds in Development, DebugGame, and Shipping configurations.
 35. Gameplay: Spawn a configurable collision enclosure around the level at gameplay-session start.
+39. Organization: Move feature code into UI, Gameplay, and GameWorkflow subfolders.
 
 ### To do
 

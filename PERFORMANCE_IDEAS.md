@@ -65,7 +65,7 @@ Prewarming a pool can move creation work away from gameplay bursts, but increase
 
 ## 3. Physics and bounce meaning deserve attention before micro-optimizations
 
-Read `ConfigureBouncing()`, `Activate()`, and `OnBallHit()` in [FeatureBall.cpp](Source/TestFeatures/Features/FeatureBall.cpp).
+Read `ConfigureBouncing()`, `Activate()`, and `OnBallHit()` in [FeatureBall.cpp](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp).
 
 Active physics bodies and dense contact pairs may dominate a large-ball scenario. `AlwaysSpawn` plus independent random positions allows overlapping starts. Those overlaps can cause immediate contact resolution and hit notifications. Collision filtering, a larger spawn volume, or spaced placement could reduce unnecessary contacts if the intended behavior permits it.
 
@@ -95,7 +95,7 @@ Compare the same scene with detailed logging enabled and reduced before spending
 
 ## 6. Diagnostic history is unbounded and repeatedly reformatted
 
-Read `PublishStatus()` in [FeatureSaveGameSubsystem.cpp](Source/TestFeatures/Features/FeatureSaveGameSubsystem.cpp) and `FormatSaveDiagnostics()` in [FeatureSaveGamePanel.cpp](Source/TestFeatures/Features/FeatureSaveGamePanel.cpp).
+Read `PublishStatus()` in [FeatureSaveGameSubsystem.cpp](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) and `FormatSaveDiagnostics()` in [FeatureSaveGamePanel.cpp](Source/TestFeatures/Features/UI/FeatureSaveGamePanel.cpp).
 
 Each phase appends an FString to a game-instance-lifetime array. Every refresh joins the entire history and recomputes the desktop path. For H similarly sized entries, one rebuild is **O(H)** text work. Rebuilding after each append can accumulate **O(H squared)** work over a long session. Actual string lengths also matter.
 

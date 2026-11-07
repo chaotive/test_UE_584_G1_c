@@ -8,23 +8,35 @@ Start with the startup flow below. The later sections explain the event connecti
 
 ## Folder organization
 
-`Features` contains the Unreal-reflected actor and widget classes and the UObject-based state controller. The sibling `Features_NonUE` folder contains plain C++ helpers: `FFeatureBallSpawner` and `FFeatureDebugHUDSpawner`. These helpers still use Unreal APIs; non-UE here means they do not derive from UObject and are not UCLASS types.
+`Features` groups Unreal-reflected code by responsibility.
+
+| Folder | Classes and types |
+| --- | --- |
+| `Gameplay` | Ball, level bounds, bounce game state, and the ball-to-state event controller |
+| `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
+| `UI` | Main menu, debug HUD, bounce panel, and save panel |
+
+The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
+
+![Standalone gameplay after moving feature classes into responsibility folders](../../../docs/images/feature-organized-gameplay.png)
+
+*The November 7, 2026 standalone check loaded the existing arena, started the gameplay session, and displayed the HUD after the source move. The same run exercised pause and resume.*
 
 ## Who does what?
 
 | Class | Plain-language job | Where to read |
 | --- | --- | --- |
 | `Atest_UE_584_G1_cGameMode` | Creates the session and observes its events to manage screens and player spawning. | [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
-| `UFeatureGameplaySession` | Owns gameplay lifecycle, ball spawning, bounds creation, and the state-event bridge. | [FeatureGameplaySession.cpp](FeatureGameplaySession.cpp) |
+| `UFeatureGameplaySession` | Owns gameplay lifecycle, ball spawning, bounds creation, and the state-event bridge. | [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) |
 | `FFeatureBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) |
-| `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](FeatureBall.cpp) |
-| `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](FeatureLevelBounds.cpp) |
-| `AFeatureGameState` | Stores the shared total number of bounces. | [FeatureGameState.cpp](FeatureGameState.cpp) |
-| `UFeatureGameStateController` | Listens to ball events and updates that shared total. | [FeatureGameStateController.cpp](FeatureGameStateController.cpp) |
-| `UFeatureSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [FeatureSaveGameSubsystem.cpp](FeatureSaveGameSubsystem.cpp) |
-| `UFeatureDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [FeatureDebugHUD.cpp](FeatureDebugHUD.cpp) |
-| `UFeatureBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [FeatureBallPanel.cpp](FeatureBallPanel.cpp) |
-| `UFeatureSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [FeatureSaveGamePanel.cpp](FeatureSaveGamePanel.cpp) |
+| `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](Gameplay/FeatureBall.cpp) |
+| `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](Gameplay/FeatureLevelBounds.cpp) |
+| `AFeatureGameState` | Stores the shared total number of bounces. | [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp) |
+| `UFeatureGameStateController` | Listens to ball events and updates that shared total. | [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) |
+| `UFeatureSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [FeatureSaveGameSubsystem.cpp](GameWorkflow/FeatureSaveGameSubsystem.cpp) |
+| `UFeatureDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [FeatureDebugHUD.cpp](UI/FeatureDebugHUD.cpp) |
+| `UFeatureBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [FeatureBallPanel.cpp](UI/FeatureBallPanel.cpp) |
+| `UFeatureSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [FeatureSaveGamePanel.cpp](UI/FeatureSaveGamePanel.cpp) |
 | `FFeatureDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [FeatureDebugHUDSpawner.cpp](../Features_NonUE/FeatureDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
@@ -65,7 +77,7 @@ Read those lines as:
 
 The world owns the session subsystem, and the session retains its controller through `UPROPERTY`. Other features retrieve the session with `World.GetSubsystem<UFeatureGameplaySession>()` to subscribe without depending on the game-mode class.
 
-The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](FeatureGameFlow.h). It starts in `StartupMenu` and asks [FeatureMainMenu](FeatureMainMenu.cpp) to present a game-instance-owned widget. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
+The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](GameWorkflow/FeatureGameFlow.h). It starts in `StartupMenu` and asks [FeatureMainMenu](UI/FeatureMainMenu.cpp) to present a game-instance-owned widget. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
 
 The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. It publishes `OnStarted`, `OnResumed`, `OnPaused`, and `OnEnded(bVictory)`. The game mode subscribes during initialization and removes its bindings during `EndPlay`. New Game and Continue start the session. Resume returns from the pause menu. A successful `PauseSession()` request publishes the pause event. `FinishSession(bVictory)` publishes the result when a gameplay objective supplies an outcome.
 
@@ -202,7 +214,7 @@ The session requests the initial batch once. After those balls return, they wait
 
 ### Example to try: prove that an actor is reused
 
-Inside a gameplay-session method, the following experiment exercises explicit release and reuse. Add a direct include for `FeatureBall.h` when trying it.
+Inside a gameplay-session method, the following experiment exercises explicit release and reuse. Add a direct include for `Features/Gameplay/FeatureBall.h` when trying it.
 
 ```cpp
 UWorld& World = *GameState->GetWorld();
@@ -323,7 +335,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](FeatureGameplaySession.cpp) → [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) → [FeatureBall.cpp](FeatureBall.cpp) → [FeatureGameStateController.cpp](FeatureGameStateController.cpp) → [FeatureGameState.cpp](FeatureGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) → [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) → [FeatureBall.cpp](Gameplay/FeatureBall.cpp) → [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) → [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp).
 
 ## In-game load/save and HUD-controlled previews (tasks 14–16)
 
@@ -356,7 +368,7 @@ The player controller still only creates, retains, and removes the HUD. The oute
 
 ## UI composition and documentation captures
 
-The outer [FeatureDebugHUD](FeatureDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [FeatureBallPanel](FeatureBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [FeatureSaveGamePanel](FeatureSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UFeatureBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
+The outer [FeatureDebugHUD](UI/FeatureDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [FeatureBallPanel](UI/FeatureBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [FeatureSaveGamePanel](UI/FeatureSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UFeatureBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
 
 Include cleanup follows those boundaries too: the composing HUD no longer needs Engine/World.h, while FeatureBallPanel still includes it for its GetGameState template call. FeatureGameState no longer needs the world header either; it keeps Engine/GameInstance.h for subsystem access. Removing unused dependencies can reduce compile coupling, but does not change runtime behavior or establish a measured build-speed improvement.
 
