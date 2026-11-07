@@ -44,7 +44,7 @@ FFeatureMenuView FFeatureMenuViews::PauseMenu()
 FFeatureMenuView FFeatureMenuViews::VictoryMenu()
 {
 	return {LOCTEXT("Victory", "Victory"), false, false, false, {
-		{EFeatureMenuAction::ReturnToMenu, LOCTEXT("Continue", "Continue")}
+		{EFeatureMenuAction::Retry, LOCTEXT("Continue", "Continue")}
 	}};
 }
 

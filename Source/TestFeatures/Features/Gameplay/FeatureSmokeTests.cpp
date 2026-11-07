@@ -35,7 +35,7 @@ bool FFeatureMenuSmokeTest::RunTest(const FString& Parameters)
 		&& Initial.Items[3].Action == EFeatureMenuAction::Exit);
 	TestTrue(TEXT("Escape exits from the initial menu"), Initial.bExitOnEscape && !Initial.bPauseMenu);
 	TestTrue(TEXT("Pause menu starts with Resume"), Pause.Items[0].Action == EFeatureMenuAction::Resume && Pause.bPauseMenu);
-	TestTrue(TEXT("Victory continues to the menu"), Victory.Items[0].Action == EFeatureMenuAction::ReturnToMenu);
+	TestTrue(TEXT("Victory starts the saved next level"), Victory.Items[0].Action == EFeatureMenuAction::Retry);
 	TestTrue(TEXT("Defeat offers Retry and Exit"), Defeat.Items[0].Action == EFeatureMenuAction::Retry
 		&& Defeat.Items[1].Action == EFeatureMenuAction::Exit);
 	return true;

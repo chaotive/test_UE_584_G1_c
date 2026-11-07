@@ -51,7 +51,7 @@ By default, every new game begins at level 1; the initial level is configurable 
 | 3 | 12 | 48 |
 | 50 | 59 | 1 |
 
-The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (level - 1))` for the loss limit. The game mode can change the base limits and per-level adjustments. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to return to the initial menu, then **Continue on level N** to play the new level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
+The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (level - 1))` for the loss limit. The game mode can change the base limits and per-level adjustments. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to start the next level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
 
 ### Menus, pause, and saves
 
@@ -107,7 +107,7 @@ Gameplay creates one `AFeatureLevelBounds` actor with six wireframe collision fa
 
 ### Session results
 
-A victory or defeat pauses gameplay, saves the session, and presents the matching fullscreen result. **Continue** returns to the startup menu after victory. **Retry** reloads the arena and starts a new session after defeat.
+A victory or defeat pauses gameplay, saves the session, and presents the matching fullscreen result. **Continue** starts the next saved level after victory. **Retry** reloads the arena and starts a new session after defeat.
 
 ### Debug HUD and save diagnostics
 

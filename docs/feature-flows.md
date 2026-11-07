@@ -74,7 +74,7 @@ flowchart TD
     Play -->|"loss limit"| Defeat["Defeat<br/>retain saved level"]
     Victory --> SaveResult["Record result and request save"]
     Defeat --> SaveResult
-    SaveResult -->|"Victory: Continue"| Start
+    SaveResult -->|"Victory: Continue"| Load
     SaveResult -->|"Defeat: Retry"| Load
     SaveResult -->|"Exit: save and quit"| Exit
     classDef menu fill:#f3e8ff,stroke:#9333ea,color:#3b0764
