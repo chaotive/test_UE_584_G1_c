@@ -61,6 +61,8 @@ These goals will guide future tasks:
 20. Use `Feature` in the project display name and as the prefix for feature class names, source files, and console commands.
 21. Preserve or migrate old save games only when the user explicitly requests save compatibility.
 22. Update `CHANGES.md` with each completed task and link its newly captured evidence. For implementation details that a screenshot cannot establish, link the relevant source and explain what the capture shows.
+23. Never create a git commit unless the user explicitly asks to commit.
+24. Never change line breaks, indentation, whitespace, or make irrelevant formatting changes unless explicitly requested.
 
 ## Tasks
 
