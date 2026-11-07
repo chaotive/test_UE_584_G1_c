@@ -85,6 +85,7 @@ These goals will guide future tasks:
 18. Show the startup menu first with the game title from the project configuration and New Game, Continue, and Exit options.
 30. Show the saved bounce total below the main menu buttons, or display "No saved game." when the slot is empty.
 31. Add the non-Shipping console command `Feature.NewGame` to start a new game immediately from the startup menu.
+32. Show the debug HUD menu only in non-Shipping builds.
 
 ### To do
 

@@ -39,7 +39,12 @@ void UFeatureMainMenu::Dismiss()
 	RemoveFromParent();
 	if (APlayerController* Controller = GetGameInstance()->GetFirstLocalPlayerController())
 	{
+#if UE_BUILD_SHIPPING
+		Controller->bShowMouseCursor = false;
+		Controller->SetInputMode(FInputModeGameOnly());
+#else
 		Controller->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
+#endif
 	}
 }
 

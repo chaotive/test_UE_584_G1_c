@@ -27,7 +27,7 @@ The startup and pause menus show your last saved bounce total. If you're startin
 
 ## Follow the ricochets
 
-The first batch of training balls launches as you enter. Keep an eye on the HUD to see the shared count rise with every bounce. Each ball disappears from the arena after its second bounce.
+The first batch of training balls launches as you enter. In non-Shipping builds, the debug HUD shows the shared count rise with every bounce. Each ball disappears from the arena after its second bounce.
 
 ![Third-person character, airborne training ball, and HUD showing three bounces](docs/images/arena-bounce-hud.png)
 
@@ -35,7 +35,7 @@ The first batch of training balls launches as you enter. Keep an eye on the HUD 
 
 ## Take your total with you
 
-Use **Save game** to keep playing after a save, or **Save and quit** to leave after the write succeeds. When you come back, **Continue** restores your bounce total before the arena resumes. The HUD shows what the game is doing while it saves or loads.
+In non-Shipping builds, the debug HUD offers **Save game** and **Save and quit** and shows save and load progress. In Shipping builds, use **Exit** from the pause menu to save and quit. **Continue** restores your bounce total before the arena resumes in either build.
 
 ![Debug HUD confirming a successful save while gameplay is paused](docs/images/save-result.png)
 
@@ -51,7 +51,7 @@ Feature Sandbox uses the `FeatureSandbox` save slot. Continue is available once 
 
 - **Game flow.** The game mode owns startup, gameplay, pause, victory, and defeat. The startup title comes from `ProjectName` in `Config/DefaultGame.ini`. A future gameplay objective can call `FinishSession` to show a result screen. [Game flow states](Source/TestFeatures/Features/FeatureGameFlow.h)
 - **Physics and state.** The C++ spawner launches single balls or batches inside configurable bounds and reuses pooled actors after their second bounce. Balls publish bounce events, a state controller updates the shared total, and the debug HUD observes it. The Unreal log records lifecycle events, launches, bounces, and pool returns.
-- **Persistence.** The menu reads the save preview asynchronously. Session saves and loads pause gameplay and show one-second previews before disk I/O and after the result. The debug HUD reports the slot, file path, and operation history.
+- **Persistence.** The menu reads the save preview asynchronously. Session saves and loads pause gameplay during disk I/O. The debug HUD adds one-second previews before I/O and after the result and reports the slot, file path, and operation history.
 - **Module boundaries.** The `TestFeatures` runtime module houses the C++ gameplay, UI, and persistence code. The project uses standard Unreal assets and has no third-party plugin dependencies. Blueprint supports supplementary logic, and an AngelScript feature is planned.
 
 - [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)

@@ -4,7 +4,9 @@
 #include "test_UE_584_G1_cPlayerController.h"
 #include "test_UE_584_G1_cGameMode.h"
 #include "Features/FeatureDebugHUD.h"
+#if !UE_BUILD_SHIPPING
 #include "Features_NonUE/FeatureDebugHUDSpawner.h"
+#endif
 #include "Components/InputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -19,7 +21,7 @@ void Atest_UE_584_G1_cPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	if (IsLocalPlayerController() && !DebugHUD)
+	if (IsLocalPlayerController())
 	{
 		CreateGameplayWidgets();
 	}
@@ -32,8 +34,13 @@ void Atest_UE_584_G1_cPlayerController::RequestPause()
 
 void Atest_UE_584_G1_cPlayerController::CreateGameplayWidgets()
 {
-	DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
-	if (ShouldUseTouchControls())
+#if !UE_BUILD_SHIPPING
+	if (!DebugHUD)
+	{
+		DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
+	}
+#endif
+	if (!MobileControlsWidget && ShouldUseTouchControls())
 	{
 		// spawn the mobile controls widget
 		MobileControlsWidget = CreateWidget<UUserWidget>(this, MobileControlsWidgetClass);

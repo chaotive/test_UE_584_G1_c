@@ -322,7 +322,7 @@ For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test
 
 ## In-game load/save and HUD-controlled previews (tasks 14–16)
 
-The debug HUD is the only persistence UI. The former TrainingSaveGameUI subsystem and native modal window have been removed. The persistence subsystem contains no rendering code, sleeps, or manual Slate ticks. Storage exposes asynchronous Unreal load/save APIs and remains independent of the game state and HUD.
+The debug HUD provides persistence controls and diagnostics in non-Shipping builds. Shipping builds use **Continue** from the startup menu and **Exit** from the pause menu for interactive persistence. The persistence subsystem contains no rendering code, sleeps, or manual Slate ticks. Storage exposes asynchronous Unreal load/save APIs and remains independent of the game state and HUD.
 
 At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue starts the load after the HUD is created. The subsystem pauses the world and publishes the waiting phase. The HUD installs Game-and-UI input and shows the cursor. Physics waits while Slate renders the preview. New Game starts immediately with a zero total and writes the slot on the next save or normal gameplay shutdown.
 
@@ -334,7 +334,7 @@ Use **Save game** to save while staying in the current level. Use **Save and qui
 
 Unreal Editor Stop, console/engine-forced exit, or external process termination can bypass the HUD close request. EndPlay cannot keep a destroyed level running to show progress. A synchronous fallback saves an initialized total during forced teardown, without a UI preview; stopping during initial loading does not overwrite progress with an uninitialized zero. A successful gated quit skips this redundant fallback. Crashes and forced OS process termination cannot guarantee a save. Pending async callbacks carry a generation token so results from a torn-down level are ignored; an already-issued disk write itself cannot be cancelled by that token.
 
-The one-second preview adds approximately two seconds of paused-game time per interactive operation. The game thread is no longer deliberately slept and there are no manual renderer flushes. Unreal still serializes save data and constructs loaded objects on the game thread as part of its asynchronous API; async disk access does not make all CPU work free. Long histories still cost memory and formatting work. Headless runs skip HUD timing and directly advance the async operation.
+The one-second preview adds approximately two seconds of paused-game time per interactive operation. The game thread is no longer deliberately slept and there are no manual renderer flushes. Unreal still serializes save data and constructs loaded objects on the game thread as part of its asynchronous API; async disk access does not make all CPU work free. Long histories still cost memory and formatting work. Shipping builds and headless runs start async I/O immediately and finish when its callback arrives. In Shipping, a native window close uses the teardown save path.
 
 ### Runtime verification checklist
 
