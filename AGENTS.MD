@@ -66,7 +66,7 @@ These goals will guide future tasks:
 25. When the user says "commit as new task", inspect both Done and To do task indexes, calculate one greater than the highest index across both lists, and prefix that number with the literal digits "100" to distinguish these tasks. Record the completed task and include its prefixed task number in the commit description.
 26. In CHANGES.md, display screenshot evidence directly as inline images rather than linking to them.
 27. For related UI views, keep shared construction, styling, and behavior in common UI code, and express each view's differences declaratively in code. Use another data format only when it provides a clear benefit.
-28. Documentation updates and requested screenshot sessions may use, replace, or delete the game's save slot without preserving its previous contents.
+28. Development runs, tests, documentation updates, and requested screenshot sessions may use, replace, or delete the game's save slot without preserving player progress or asking for permission.
 
 ## Tasks
 
@@ -99,6 +99,7 @@ These goals will guide future tasks:
 30. Show the saved bounce total below the main menu buttons, or display "No saved game." when the slot is empty.
 31. Add the non-Shipping console command `Feature.NewGame` to start a new game immediately from the startup menu.
 32. Show the debug HUD menu only in non-Shipping builds.
+33. Add Gauntlet smoke checks for menu views, session state, ball pooling, and save serialization.
 34. Package Win64 builds in Development, DebugGame, and Shipping configurations.
 35. Gameplay: Spawn a configurable collision enclosure around the level at gameplay-session start.
 36. Gameplay: Retire balls after five non-player bounces. On player contact, retire the ball and spawn a replacement.
@@ -115,11 +116,14 @@ These goals will guide future tasks:
 47. End: Save the game state whenever an end state is reached.
 49. UI: Define the initial, pause, victory, and defeat menu views declaratively in UI/Views, and move the menu and HUD archetypes to UI/Archetypes.
 50. UI: Move the ball and save-game panels to UI/Widgets.
+51. Documentation: Create infographics showing gameplay, UI, and game workflow system flows and connections.
 1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
 ### To do
 
-33. Add a smoke test for main easy to test features using Gauntlet.
-51. Documentation: Create infographics showing gameplay, UI, and game workflow system flows and connections.
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
+
+#### Bugs
+
+- Gauntlet's editor startup logs repeated "LogAutomationTest: Error: Condition failed" messages before the project smoke tests start. All four Feature.Smoke tests pass; the source of the startup messages is not yet identified.

@@ -38,6 +38,10 @@ The game pauses and saves the outcome on either result screen. After victory, **
 2. Open the Third Person map and press **Play**.
 3. In a non-Shipping build, enter `Feature.NewGame` in the console at the startup menu to start immediately. In Play In Editor, use the Output Log command field. [Console command implementation](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
+### Smoke checks
+
+After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for the `Feature.Smoke` tests, which check menu definitions, session-state counters and outcomes, ball-pool reuse, and save serialization. Reports and logs are stored under `Intermediate/FeatureSmoke`. These checks do not replace a playthrough or exercise the rendered UI.
+
 ### Package for Win64
 
 [Build-Win64.ps1](Build-Win64.ps1) generates project files, then packages Development, DebugGame, and Shipping together. It discovers the project's Unreal Engine version through the Windows installation registry, falling back to `D:\Program Files\Epic Games\UE_<version>`. Project and archive paths are relative to the script. Project-file generation must succeed before packaging starts.
@@ -84,6 +88,7 @@ Shipping builds skip the debug previews and keep gameplay paused until disk I/O 
 Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. Plain C++ spawning and storage helpers live in the sibling `Features_NonUE` folder.
 
 - [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)
+- [Gameplay, UI, and workflow diagrams](docs/feature-flows.md)
 - [Runtime helpers](Source/TestFeatures/Features_NonUE/README.md)
 - [Project objectives and technical requirements](AGENTS.MD)
 - [Completed tasks and capture index](CHANGES.md)

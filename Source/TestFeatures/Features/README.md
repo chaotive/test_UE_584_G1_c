@@ -6,6 +6,8 @@ This folder is a small C++ learning example: create balls, launch them, count th
 
 Start with the startup flow below. The later sections explain the event connections, object lifetime, and performance tradeoffs. Code snippets are excerpts from this project; examples that you can try are labeled separately.
 
+[System-flow diagrams](../../../docs/feature-flows.md) show how gameplay, UI, and workflow components connect.
+
 ## Folder organization
 
 `Features` groups Unreal-reflected code by responsibility.

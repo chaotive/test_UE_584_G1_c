@@ -26,6 +26,7 @@ This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source 
 | 21–24 | Delete saves, disable Continue for an empty slot, exit, and pause with Escape. | [Menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [Game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
 | 29–30 | Exit from the initial menu with Escape; display saved totals or an empty-slot message. | [Menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) |
 | 31–32 | Provide `Feature.NewGame` and limit the debug HUD to non-Shipping builds. | [Console command](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp) · [Player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp) |
+| 33 | Add menu, session-state, pool, and save-serialization smoke checks through Gauntlet's editor automation runner. | [Smoke tests](Source/TestFeatures/Features/Gameplay/FeatureSmokeTests.cpp) · [Runner](Run-FeatureSmoke.ps1) |
 | 34–35 | Package Win64 configurations and create a configurable collision enclosure. | [Packaging guide](README.md#package-for-win64) · [Level bounds](Source/TestFeatures/Features/Gameplay/FeatureLevelBounds.cpp) |
 | 36 | Retire balls after five non-player bounces; player contact retires the ball and schedules a replacement. | [Ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
 | 37–38 | Record Victory or Defeat and show the corresponding result screen. | [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [Menu views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) |
@@ -35,6 +36,7 @@ This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source 
 | 45 | Start with five active balls and prewarm a pool three times that size. | [Game mode defaults](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.h) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
 | 46–47 | Offer Retry after defeat and save progress when either result is reached. | [Menu views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
 | 49–50 | Declare menu views in code and organize UI archetypes and panel widgets. | [Views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [Archetypes](Source/TestFeatures/Features/UI/Archetypes) · [Widgets](Source/TestFeatures/Features/UI/Widgets) |
+| 51 | Document gameplay, UI, and game workflow connections with diagrams. | [System flows](docs/feature-flows.md) |
 | 1001601 | Automate three-configuration Win64 packaging with a reusable archive ID. | [Build script](Build-Win64.ps1) · [Packaging guide](README.md#package-for-win64) |
 
 ## Game evolution
