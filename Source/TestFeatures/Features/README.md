@@ -182,7 +182,7 @@ There are two counters with different lifetimes:
 
 | Counter | Meaning | When it resets |
 | --- | --- | --- |
-| `BounceCount` on each ball | Non-player bounces during this activation; five means return to the pool. | Every `Activate()` call. |
+| `BounceCount` on each ball | Non-player bounces during this activation; the configured limit returns the ball to the pool. | Every `Activate()` call. |
 | `Progress.TotalBounces` on the game state | Bounces reported across the saved game's sessions. | Starts at zero on New Game and is restored on Continue. Pool reuse preserves the total. |
 
 For example, starting from a saved total of zero, ball 0 bouncing five times and ball 1 bouncing once produces a shared total of six. If ball 0 is reused, its local count returns to zero while the shared total stays six. With an existing saved total, those same bounces add six to that total.
@@ -207,13 +207,13 @@ Go deeper: [Multicast Delegates](https://dev.epicgames.com/documentation/en-us/u
 
 ## 5. Retirement: return to the pool
 
-After broadcasting the fifth non-player bounce, the ball calls `Deactivate()`. A player contact also deactivates the ball, and the session schedules a replacement for the next tick while gameplay remains active. Deactivation clears linear and angular velocity, disables physics and collision, and hides the ball.
+After broadcasting the configured number of non-player bounces (five by default), the ball calls `Deactivate()`. A player contact also deactivates the ball. Either retirement notifies the session, which schedules a replacement for the next tick while gameplay remains active. Deactivation clears linear and angular velocity, disables physics and collision, and hides the ball.
 
 It still exists in the world and in the pool. Task 8 replaced task 7's earlier `Destroy()` behavior with this return-for-reuse behavior. `EndPlay()` is not called just because a ball is deactivated.
 
 A later `Spawn()` request finds that inactive actor and calls `Activate()` again. No new actor, material, or event subscription is needed for that reuse.
 
-The session prewarms one pool entry per initial ball, then requests the initial batch once. A ball retired by player contact triggers a replacement; a ball retired after five non-player bounces waits in the pool until a later spawn request.
+The session prewarms one pool entry per initial ball, then requests the initial batch once. Retirement after either player contact or the rebound limit triggers a replacement while the session is active.
 
 ### Example to try: prove that an actor is reused
 
@@ -301,7 +301,7 @@ See [Object Pointers](https://dev.epicgames.com/documentation/en-us/unreal-engin
 
 ## Performance: what this design costs
 
-These are tradeoffs visible in the implementation, not benchmark results. The current defaults activate five balls from a pool of fifteen. Frame time, memory usage, and a safe maximum count have not been measured.
+These are tradeoffs visible in the implementation, not benchmark results. The current defaults activate five balls from a pool of five. Frame time, memory usage, and a safe maximum count have not been measured.
 
 | Choice | Benefit | Cost or limitation |
 | --- | --- | --- |
@@ -318,7 +318,7 @@ The debug overlay builds its widget tree once per local player controller. It ha
 
 Logs are intentionally detailed for learning. A bounce formats several messages across the ball, controller, and state. With many active balls, string formatting and log output may be more noticeable than the counter increment or delegate call. Before increasing counts substantially, consider reducing log frequency and measuring again.
 
-Random positions are sampled independently, and `AlwaysSpawn` allows overlapping starts. A small spawn box with many balls can produce dense contacts, more physics work, and immediate hit callbacks. The callback-based bounce counter can also consume its five hits quickly in crowded contact situations; it does not separately detect a visually completed rebound.
+Random positions are sampled independently, and `AlwaysSpawn` allows overlapping starts. A small spawn box with many balls can produce dense contacts, more physics work, and immediate hit callbacks. The callback-based bounce counter can also reach its configured rebound limit quickly in crowded contact situations; it does not separately detect a visually completed rebound.
 
 Each actor creates its own `UPhysicalMaterial` subobject. Pool reuse retains it, but creating a larger pool creates more material objects. A shared material asset and a free-list of available balls are possible later changes if measurements justify them. They would introduce asset management or additional bookkeeping that this example currently avoids.
 

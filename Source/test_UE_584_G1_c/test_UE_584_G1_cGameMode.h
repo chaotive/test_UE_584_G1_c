@@ -70,6 +70,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
 	int32 FeatureInitialLevel = 1;
 
+	// Sets how many non-player rebounds retire each ball.
+	// int32 stores the positive rebound limit by value.
+	UPROPERTY(EditAnywhere, Category="Training_Ball", meta=(ClampMin="1"))
+	int32 FeatureBallReboundsBeforeRetirement = 5;
+
 	// Sets the uniform size of balls relative to the default sphere.
 	// float stores the positive scale by value without object ownership.
 	UPROPERTY(EditAnywhere, Category="Training_Ball", meta=(ClampMin="0.01"))

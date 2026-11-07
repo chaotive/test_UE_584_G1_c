@@ -8,7 +8,7 @@ class UPhysicalMaterial;
 class UPrimitiveComponent;
 class UStaticMeshComponent;
 
-/** A reusable physics sphere that returns to its pool after five bounces. */
+/** A reusable physics sphere that returns to its pool after its configured bounce limit. */
 UCLASS()
 class TESTFEATURES_API AFeatureBall : public AStaticMeshActor
 {
@@ -18,6 +18,7 @@ public:
 
 	DECLARE_EVENT_OneParam(AFeatureBall, FBouncedEvent, AFeatureBall&);
 	DECLARE_EVENT_TwoParams(AFeatureBall, FContactEvent, AFeatureBall&, AActor&);
+	DECLARE_EVENT_OneParam(AFeatureBall, FRetiredEvent, AFeatureBall&);
 
 	// Announces each counted bounce so independent listeners can react to it.
 	// The native multicast event passes this actor by reference; only AFeatureBall can broadcast it.
@@ -27,13 +28,17 @@ public:
 	// The native event borrows references to this ball and the world-owned other actor.
 	FContactEvent OnContact;
 
+	// Announces when an active ball returns to the pool.
+	// The native event borrows a reference to this world-owned actor.
+	FRetiredEvent OnRetired;
+
 	// Creates a training ball with its sphere mesh and physics configured.
 	// No pointer or reference parameters; Unreal creates and owns this actor instance.
 	AFeatureBall();
 
-	// Configures this pooled ball's uniform size and launch speed.
-	// Both floats are passed by value without pointer or reference ownership.
-	void Configure(float Size, float SpeedMultiplier);
+	// Configures this pooled ball's size, launch speed, and retirement limit.
+	// All parameters are passed by value without pointer or reference ownership.
+	void Configure(float Size, float SpeedMultiplier, int32 ReboundLimit);
 
 	// Resets and launches this ball for a new use at the requested position.
 	// Location is a read-only FVector reference; no pointer ownership is transferred.
@@ -71,7 +76,7 @@ private:
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 
-	// Reports contacts, counts impulse-based bounces, and returns the ball to the pool after five.
+	// Reports contacts, counts impulse-based bounces, and returns the ball to the pool at its rebound limit.
 	// Component and actor pointers are non-owning event inputs, NormalImpulse is by value, and Hit is a read-only reference.
 	UFUNCTION()
 	void OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
@@ -85,6 +90,10 @@ private:
 	// Scales the initial random launch speed for each activation.
 	// float stores the multiplier by value without object ownership.
 	float LaunchSpeedMultiplier = 1.0f;
+
+	// Sets the number of non-player rebounds before retirement.
+	// int32 stores the positive limit by value.
+	int32 ReboundsBeforeRetirement = 5;
 
 	// Tracks how many times this ball has bounced during its current activation.
 	// int32 stores a per-instance counter by value without pointer ownership or a wrapper.

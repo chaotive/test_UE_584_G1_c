@@ -48,7 +48,7 @@ public:
 
 	// Starts the player workflow, initializes progress, and creates the enclosure and ball volley.
 	// Configuration values are passed by value; both FBox references borrow world-space bounds.
-	void OnGameplaySessionStart(bool bContinue, int32 InitialLevel, int32 BallCount, float BallSize, float BallSpeedMultiplier, const FBox& SpawnBounds, const FBox& LevelBounds);
+	void OnGameplaySessionStart(bool bContinue, int32 InitialLevel, int32 BallCount, float BallSize, float BallSpeedMultiplier, int32 ReboundLimit, const FBox& SpawnBounds, const FBox& LevelBounds);
 
 	// Unpauses the active session and announces its return to gameplay.
 	// No pointer or reference parameters or return value; updates the observed state's world.
@@ -101,6 +101,10 @@ private:
 	// float stores the multiplier by value.
 	float BallSpeedMultiplier = 1.0f;
 
+	// Stores the rebound limit for newly created pooled balls.
+	// int32 stores the positive limit by value.
+	int32 BallReboundLimit = 5;
+
 	// Ends the current session once it reaches its victory or defeat limit.
 	// Stats borrows a read-only state-owned session record without transferring ownership.
 	void EvaluateSessionLimits(const FFeatureGameplaySessionRecord& Stats);
@@ -113,9 +117,13 @@ private:
 	// Ball is a borrowed world-owned actor reference; the event holds a weak UObject binding.
 	void ObserveBall(AFeatureBall& Ball);
 
-	// Retires player-hit balls and schedules a replacement while the session is active.
+	// Retires balls that contact the player.
 	// Ball and OtherActor are borrowed world-owned references without ownership transfer.
 	void HandleBallContact(AFeatureBall& Ball, AActor& OtherActor);
+
+	// Schedules a replacement after any ball retires during gameplay.
+	// Ball is a borrowed world-owned actor reference without ownership transfer.
+	void HandleBallRetired(AFeatureBall& Ball);
 
 	// Launches a replacement from the session's configured spawn bounds on the next tick.
 	// No pointer or reference parameters or return value; the world owns the spawned actor.
@@ -125,7 +133,7 @@ private:
 	// FBox stores the bounds by value without pointer ownership.
 	FBox BallSpawnBounds;
 
-	// Tracks player-hit replacements until they can launch during gameplay.
+	// Tracks retired-ball replacements until they can launch during gameplay.
 	// int32 stores the pending count by value without pointer ownership.
 	int32 PendingBallReplacements = 0;
 

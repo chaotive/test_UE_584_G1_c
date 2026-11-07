@@ -34,10 +34,11 @@ void AFeatureBall::BeginPlay()
 	BallMesh->OnComponentHit.AddDynamic(this, &AFeatureBall::OnBallHit);
 }
 
-void AFeatureBall::Configure(float Size, float SpeedMultiplier)
+void AFeatureBall::Configure(float Size, float SpeedMultiplier, int32 ReboundLimit)
 {
 	SetActorScale3D(FVector(Size));
 	LaunchSpeedMultiplier = SpeedMultiplier;
+	ReboundsBeforeRetirement = ReboundLimit;
 }
 
 void AFeatureBall::Activate(const FVector& Location)
@@ -64,6 +65,7 @@ void AFeatureBall::Deactivate()
 	SetActorEnableCollision(false);
 	SetActorHiddenInGame(true);
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: Returned to pool"), *GetName());
+	OnRetired.Broadcast(*this);
 }
 
 bool AFeatureBall::IsActive() const
@@ -107,9 +109,9 @@ void AFeatureBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
 	++BounceCount;
 	// Broadcast calls subscribed handlers immediately; the ball does not know which listeners update state.
 	OnBounced.Broadcast(*this);
-	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: Bounce %d/5"), *GetName(), BounceCount);
+	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: Bounce %d/%d"), *GetName(), BounceCount, ReboundsBeforeRetirement);
 
-	if (BounceCount == 5)
+	if (BounceCount >= ReboundsBeforeRetirement)
 	{
 		Deactivate();
 	}

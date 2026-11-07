@@ -30,14 +30,14 @@ Each session is a race between two counters:
 2. **Keep an eye on other bounces.** When a ball hits the floor, a wall, or another ball with enough physical impulse to register a bounce, the loss counter rises. Player contacts are counted separately. Two balls hitting each other can each register a bounce.
 3. **Reach the win target first.** Reaching the player-contact target ends the session in Victory. Reaching the non-player bounce limit ends it in Defeat. The top-right HUD shows the current level and both counts against their limits.
 
-Each ball also has its own lifetime: after five non-player bounces it disappears and returns to the pool. A ball that expires this way is **not** automatically replaced. A ball that touches the player is retired immediately and a replacement is scheduled while the session is active. This means the number of balls still in play can fall as the round continues.
+Each ball has its own lifetime: after its configured number of non-player bounces (five by default), it returns to the pool. A ball that touches the player is also retired immediately. In either case, a replacement is scheduled while the session is active.
 
 ```mermaid
 flowchart LR
     Ball(("Ball in play")) -->|"Touches the player"| Contact["+1 player contact<br/>toward Victory"]
     Contact --> Replace["Ball retires;<br/>replacement launches"]
     Ball -->|"Hits the arena or another ball"| Bounce["+1 non-player bounce<br/>toward Defeat"]
-    Bounce -->|"This ball reaches 5"| Retire["Ball retires;<br/>no automatic replacement"]
+    Bounce -->|"Ball reaches its rebound limit"| Retire["Ball retires;<br/>replacement launches"]
 ```
 
 ### Levels and results
@@ -99,9 +99,9 @@ The asset manager registers the `GameFeatureData` cook rule required by the engi
 
 ### Arena collision bounds
 
-The game-mode defaults also expose the initial level, initial ball count, per-level objective adjustments, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; its default size and the initial ball count are both five. A size or speed multiplier of 1 preserves the default ball size or launch speed.
+The game-mode defaults also expose the initial level, initial ball count, per-level objective adjustments, rebounds before retirement, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; its default size and the initial ball count are both five. A size or speed multiplier of 1 preserves the default ball size or launch speed.
 
-Gameplay creates one `AFeatureLevelBounds` actor with six invisible collision faces. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after five non-player bounces or player contact.
+Gameplay creates one `AFeatureLevelBounds` actor with six wireframe collision faces visible in game. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after their configured rebound limit or player contact and are replaced while the session is active.
 
 `UFeatureGameplaySession` is a world subsystem that organizes `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. Its start workflow creates the enclosure before the initial ball volley. The game mode observes lifecycle events to spawn the player and present screens. Other features can access the session through `World.GetSubsystem<UFeatureGameplaySession>()` and subscribe to its lifecycle events.
 
@@ -153,7 +153,7 @@ flowchart LR
     Pawn -->|"blocking contact"| Physics
     Ball -->|"OnBounced / OnContact events"| Bridge
     Bridge -->|"record bounce or player contact"| State
-    Ball -->|"OnContact event"| Session
+    Ball -->|"OnContact / OnRetired events"| Session
     Session -->|"retire and schedule replacement"| Pool
     State -->|"OnSessionStatsChanged event"| Session
     classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554

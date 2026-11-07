@@ -65,8 +65,9 @@ void UFeatureGameplaySession::HandlePersistenceStatusChanged(const FString&, boo
 
 void UFeatureGameplaySession::ObserveBall(AFeatureBall& Ball)
 {
-	Ball.Configure(BallSize, BallSpeedMultiplier);
+	Ball.Configure(BallSize, BallSpeedMultiplier, BallReboundLimit);
 	Ball.OnContact.AddUObject(this, &UFeatureGameplaySession::HandleBallContact);
+	Ball.OnRetired.AddUObject(this, &UFeatureGameplaySession::HandleBallRetired);
 }
 
 void UFeatureGameplaySession::HandleBallContact(AFeatureBall& Ball, AActor& OtherActor)
@@ -75,11 +76,15 @@ void UFeatureGameplaySession::HandleBallContact(AFeatureBall& Ball, AActor& Othe
 	if (Pawn && Pawn->IsPlayerControlled())
 	{
 		Ball.Deactivate();
-		if (SessionState == ESessionState::Playing)
-		{
-			++PendingBallReplacements;
-			GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UFeatureGameplaySession::SpawnReplacementBall);
-		}
+	}
+}
+
+void UFeatureGameplaySession::HandleBallRetired(AFeatureBall& Ball)
+{
+	if (SessionState == ESessionState::Playing)
+	{
+		++PendingBallReplacements;
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UFeatureGameplaySession::SpawnReplacementBall);
 	}
 }
 
@@ -92,7 +97,7 @@ void UFeatureGameplaySession::SpawnReplacementBall()
 	}
 }
 
-void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 InitialLevel, int32 BallCount, float InBallSize, float InBallSpeedMultiplier, const FBox& SpawnBounds, const FBox& LevelBounds)
+void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 InitialLevel, int32 BallCount, float InBallSize, float InBallSpeedMultiplier, int32 ReboundLimit, const FBox& SpawnBounds, const FBox& LevelBounds)
 {
 	if (SessionState != ESessionState::Ready || IsPersistenceBusy())
 	{
@@ -103,6 +108,7 @@ void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 Initi
 	BallSpawnBounds = SpawnBounds;
 	BallSize = InBallSize;
 	BallSpeedMultiplier = InBallSpeedMultiplier;
+	BallReboundLimit = ReboundLimit;
 	AFeatureGameState& State = *GameState.Get();
 	UWorld& World = *State.GetWorld();
 	AFeatureLevelBounds* Bounds = World.SpawnActor<AFeatureLevelBounds>(LevelBounds.GetCenter(), FRotator::ZeroRotator);

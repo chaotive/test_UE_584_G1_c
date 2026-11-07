@@ -10,6 +10,7 @@ AFeatureLevelBounds::AFeatureLevelBounds()
 	{
 		UBoxComponent* Wall = CreateDefaultSubobject<UBoxComponent>(WallName);
 		Wall->SetupAttachment(RootComponent);
+		Wall->SetHiddenInGame(false);
 		Wall->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Wall->SetCollisionObjectType(ECC_WorldStatic);
 		Wall->SetCollisionResponseToAllChannels(ECR_Ignore);

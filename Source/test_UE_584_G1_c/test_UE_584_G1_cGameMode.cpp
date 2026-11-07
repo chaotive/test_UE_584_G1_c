@@ -33,6 +33,12 @@ void Atest_UE_584_G1_cGameMode::InitGameState()
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("GameMode [%s]: InitGameState"), *GetName());
 	Super::InitGameState();
 
+	// Blueprint previews have no gameplay session or game instance to bind.
+	if (!GetWorld()->IsGameWorld())
+	{
+		return;
+	}
+
 	GameplaySession = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
 	GameplaySession->BindGameState(*GetGameState<AFeatureGameState>(), FeaturePlayerContactsToWin, FeatureSessionBouncesToLose,
 		FeatureContactsIncreasePerLevel, FeatureBouncesDecreasePerLevel);
@@ -147,7 +153,7 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 		{
 			break;
 		}
-		GameplaySession->OnGameplaySessionStart(false, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier,
+		GameplaySession->OnGameplaySessionStart(false, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier, FeatureBallReboundsBeforeRetirement,
 			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
 			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
 		break;
@@ -156,7 +162,7 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 		{
 			break;
 		}
-		GameplaySession->OnGameplaySessionStart(true, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier,
+		GameplaySession->OnGameplaySessionStart(true, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier, FeatureBallReboundsBeforeRetirement,
 			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
 			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
 		break;
@@ -184,10 +190,13 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 
 void Atest_UE_584_G1_cGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	GameplaySession->OnStarted.RemoveAll(this);
-	GameplaySession->OnResumed.RemoveAll(this);
-	GameplaySession->OnPaused.RemoveAll(this);
-	GameplaySession->OnEnded.RemoveAll(this);
+	if (GameplaySession)
+	{
+		GameplaySession->OnStarted.RemoveAll(this);
+		GameplaySession->OnResumed.RemoveAll(this);
+		GameplaySession->OnPaused.RemoveAll(this);
+		GameplaySession->OnEnded.RemoveAll(this);
+	}
 	if (FlowMenu)
 	{
 		FlowMenu->OnAction.RemoveAll(this);

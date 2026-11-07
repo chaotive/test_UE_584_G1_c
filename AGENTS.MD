@@ -122,6 +122,8 @@ These goals will guide future tasks:
 
 ### To do
 
+52. When the ball rebounds on the player, it is retired and respawns
+53. 
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
 
