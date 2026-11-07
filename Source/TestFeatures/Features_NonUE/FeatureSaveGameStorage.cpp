@@ -4,9 +4,14 @@
 #include "TestFeatures.h"
 #include "Misc/Paths.h"
 
+bool FFeatureSaveGameStorage::HasSave()
+{
+	return UGameplayStatics::DoesSaveGameExist(GetSlotName(), 0);
+}
+
 void FFeatureSaveGameStorage::LoadAsync(TFunction<void(int32, const FString&)> Completion)
 {
-	const bool bExists = UGameplayStatics::DoesSaveGameExist(GetSlotName(), 0);
+	const bool bExists = HasSave();
 	UGameplayStatics::AsyncLoadGameFromSlot(GetSlotName(), 0,
 		FAsyncLoadGameFromSlotDelegate::CreateLambda([Completion = MoveTemp(Completion), bExists](const FString&, int32, USaveGame* Data)
 		{
@@ -30,7 +35,7 @@ void FFeatureSaveGameStorage::SaveAsync(int32 Count, TFunction<void(bool)> Compl
 
 int32 FFeatureSaveGameStorage::LoadTotalBounces(FString& Result)
 {
-	if (!UGameplayStatics::DoesSaveGameExist(GetSlotName(), 0))
+	if (!HasSave())
 	{
 		UE_LOG(LogTestFeatures, Log, TEXT("FeatureSaveGameStorage: No save yet; starting at zero"));
 		Result = TEXT("No save found; starting at zero");

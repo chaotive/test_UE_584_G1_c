@@ -12,7 +12,7 @@ public class TestFeatures : ModuleRules
             "Core", "CoreUObject", "Engine", "UMG"
         });
         PrivateDependencyModuleNames.AddRange(new string[] {
-            "PhysicsCore", "Slate", "SlateCore"
+            "EngineSettings", "InputCore", "PhysicsCore", "Slate", "SlateCore"
         });
     }
 }

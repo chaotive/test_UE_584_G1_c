@@ -32,9 +32,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Training_Ball")
 	void SaveSession(bool bQuitAfter = false);
 
+	// Starts a new session at zero or requests restoration of the saved total.
+	// bContinue is passed by value without pointer or reference ownership.
+	void StartSession(bool bContinue);
+
 protected:
 
-	// Starts paused in-game loading and listens for restored state.
+	// Subscribes to restored state before the player starts a session.
 	// No pointer or reference parameters or return value; operates on this world-owned game state.
 	virtual void BeginPlay() override;
 
@@ -44,13 +48,13 @@ protected:
 
 private:
 
-	// Prevents forced teardown during loading from overwriting saved progress with an uninitialized total.
-	// bool records per-level restoration state by value without pointer ownership.
-	bool bHasRestoredTotal = false;
+	// Allows teardown saving once a new or continued session has an initialized total.
+	// bool records session readiness by value without pointer ownership.
+	bool bSessionInitialized = false;
 
-	// Applies a restored total before the save subsystem releases gameplay.
+	// Initializes a new or restored total and notifies observers.
 	// Count is passed by value without pointer or reference ownership.
-	void ApplyLoadedTotal(int32 Count);
+	void InitializeTotal(int32 Count);
 
 	// Accumulates bounces from all balls, including balls reused from the pool.
 	// int32 stores the count by value; UPROPERTY exposes it for inspection and Blueprint reads without allowing edits.

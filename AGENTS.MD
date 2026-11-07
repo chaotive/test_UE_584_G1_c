@@ -38,6 +38,7 @@ These goals will guide future tasks:
 
 ## Code standards
 
+
 1. Use as little files as possible, this is a simple project.
 2. Do not add defensive code, it is more important to give clarity to the code features understanding and reading.
 3. No need to ask editor or other guards unless required to.
@@ -54,6 +55,8 @@ These goals will guide future tasks:
 14. During code checkups, review our own project-produced code for unneeded includes and remove them. Limit this cleanup to code we authored or changed; do not clean up Unreal Engine, generated, third-party, or unrelated template code. Keep direct includes required by used types and APIs rather than relying on incidental transitive includes.
 15. When reviewing changes, check the affected prose for spelling and grammar. Report any issues found and corrections made.
 16. The Main objective and Specific goals sections are user-owned. Never change them on your own. Report any suggested edits to the user.
+17. For Unreal Editor operations, use the Unreal Editor MCP when it is available. Use the appropriate local tools when no Unreal Editor MCP is exposed.
+18. Avoid lengthy or resource-intensive validation in an Unreal Editor session unless the user requests it or approves it in advance. Prefer lightweight checks by default.
 
 ## Tasks
 
@@ -76,8 +79,20 @@ These goals will guide future tasks:
 15. Display a code generated modal loading/saving screen UI state while the I/O for the game save and load is being used. The game should not be playable until the loaded game state is in, and it should not quit until the saved game is completed.
 16. Please give the IO loading UI step a 1 second before and after load just to see it working on save and loads.
 17. Move all featured UE and non-UE code into its own independent runtime module.
+18. Show the startup menu first with the game title from the project configuration and New Game, Continue, and Exit options.
+20. Continue loads the saved game when a save exists.
+22. Disable Continue when the save slot is empty.
+23. Exit closes the game.
 
 ### To do
 
-150. Mass, as a second element (a square)
-160. generalize spawner with objects pooling
+19. Main menu: New Game deletes the current save and starts a fresh session.
+21. Main menu: Add Delete Save above Exit to clear the save slot.
+24. Main menu: Pressing "Esc" key pauses the game and shows the main menu again.
+25. Main menu: Adds a new first item option: "Resume game".
+26. Main menu: When "Esc" paused, "Resume game" option is active and allows to return and unpause the game.
+27. Main menu: Pressing "Esc" key while "Esc" paused, is the same as pressing "Resume game".
+28. Main menu: On Initial Main Menu, "Resume game" is grayed out.
+29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
+1500. Mass, as a second element (a square)
+1600. generalize spawner with objects pooling

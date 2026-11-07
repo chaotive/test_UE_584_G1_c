@@ -46,11 +46,11 @@ protected:
 	UPROPERTY(EditAnywhere, Config, Category = "Input|Touch Controls")
 	bool bForceTouchControls = false;
 
-	// Creates the local debug overlay and optional mobile controls when play begins.
-	// No pointer or reference parameters or return value; initializes widgets retained by this controller.
-	virtual void BeginPlay() override;
+	// Creates the local gameplay widgets on the first pawn possession.
+	// InPawn is a borrowed engine-owned pawn pointer.
+	virtual void OnPossess(APawn* InPawn) override;
 
-	// Removes the local debug overlay when this player controller stops playing.
+	// Removes the gameplay overlay when this controller stops playing.
 	// EndPlayReason is passed by value; no pointer or reference ownership is transferred.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -59,7 +59,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UFeatureDebugHUD> DebugHUD;
 
-	// Registers the local player's input mapping contexts.
+	// Registers the local player's input mapping contexts and pause request.
 	// No pointer or reference parameters or return value; configures this controller's input subsystem.
 	virtual void SetupInputComponent() override;
 
@@ -67,4 +67,12 @@ protected:
 	// Returns bool by value without pointers or references; const keeps this query read-only.
 	bool ShouldUseTouchControls() const;
 
+private:
+	// Forwards the gameplay pause input to the game mode.
+	// No pointer or reference parameters or return value.
+	void RequestPause();
+
+	// Creates the gameplay overlay and optional mobile controls.
+	// No pointer or reference parameters or return value; this controller retains the widgets.
+	void CreateGameplayWidgets();
 };

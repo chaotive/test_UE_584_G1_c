@@ -7,6 +7,10 @@ class TESTFEATURES_API FFeatureSaveGameStorage
 {
 public:
 
+	// Reports whether the local slot has data for a Continue attempt.
+	// Returns bool by value without pointer or reference ownership.
+	static bool HasSave();
+
 	// Loads a snapshot without blocking rendering while disk data is read.
 	// Completion is an owned TFunction callback receiving the count by value and a read-only result reference.
 	static void LoadAsync(TFunction<void(int32, const FString&)> Completion);

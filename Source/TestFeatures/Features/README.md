@@ -63,13 +63,19 @@ Read those lines as:
 
 The game mode's `UPROPERTY` reference keeps the controller reachable by garbage collection. The Outer relationship alone is not our keep-alive mechanism.
 
-Finally, the game mode's `BeginPlay()` requests the initial batch:
+The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](FeatureGameFlow.h). It starts in `StartupMenu` and asks [FeatureMainMenu](FeatureMainMenu.cpp) to present a game-instance-owned widget. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
+
+On New Game or Continue, the game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The game mode initializes the state at zero or requests an asynchronous restore, then creates the initial batch. Continue keeps the world paused through both I/O previews.
 
 ```cpp
 FeatureBallSpawner.SpawnMultiple(*GetWorld(), FeatureBallCount, FeatureBallSpawnMin, FeatureBallSpawnMax);
 ```
 
-The important ordering is **create state → connect controller → spawn balls**. This is a description of our startup wiring, not a promise that every actor's `BeginPlay()` runs in a particular global order.
+The startup order is **create state → connect state controller → present menu → spawn pawn and HUD → initialize session and spawn balls**.
+
+During gameplay, Escape requests `PauseMenu` from the game mode. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world and show an end menu. Main Menu reloads the level, and Exit uses the in-game save-and-quit flow. The game mode gates menu transitions during save and load operations. Menus are created on transitions and use no per-frame flow polling.
+
+Historical Task 18 captures show the [empty-slot main menu](../../../docs/images/task-18-main-menu.jpg), [New Game at zero bounces](../../../docs/images/task-18-new-game.jpg), and [Continue after restoring 10 bounces](../../../docs/images/task-18-continue.jpg).
 
 Go deeper: [UObject Instance Creation](https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-objects-in-unreal-engine) explains `NewObject`; [Actor Lifecycle](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-actor-lifecycle) explains initialization and play callbacks.
 
@@ -154,7 +160,7 @@ There are two counters with different lifetimes:
 | Counter | Meaning | When it resets |
 | --- | --- | --- |
 | `BounceCount` on each ball | Bounces during this activation; two means return to the pool. | Every `Activate()` call. |
-| `TotalBounces` on the game state | Bounces reported by all balls in the session. | Loaded from the save on startup; pool reuse does not reset it. |
+| `TotalBounces` on the game state | Bounces reported by all balls in the session. | Starts at zero on New Game and is restored on Continue. Pool reuse preserves the total. |
 
 For example, starting from a saved total of zero, ball 0 bouncing twice and ball 1 bouncing once produces a shared total of three. If ball 0 is reused, its local count returns to zero while the shared total stays three. With an existing saved total, those same bounces add three to that total.
 
@@ -212,7 +218,7 @@ The player controller removes its debug widget in EndPlay. Interactive Save game
 
 The widget layout lives in `FeatureDebugHUD.h/.cpp`, while its creation helper lives separately in `../Features_NonUE/FeatureDebugHUDSpawner.h/.cpp`. The player controller includes both headers: one for the widget instance and one for the spawning API.
 
-The Third Person player controller requests the overlay in its own `BeginPlay()`, only when `IsLocalPlayerController()` is true:
+The local Third Person player controller requests the overlay after New Game or Continue:
 
 ```cpp
 DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
@@ -225,7 +231,7 @@ This local-player check is meaningful: the screen belongs to a player on this ma
 During widget creation, `NativeOnInitialized()` builds the controls once. No Widget Blueprint asset or designer layout is needed:
 
 ```text
-Player controller BeginPlay
+Player controller CreateGameplayWidgets
   -> FFeatureDebugHUDSpawner::Spawn()
   -> CreateWidget<UFeatureDebugHUD>()
   -> NativeOnInitialized() -> BuildLayout() -> BuildPanel()
@@ -301,7 +307,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 ## Following the feature in the editor
 
 1. Use the Third Person game mode. In its Blueprint Class Defaults, find `Training_Ball` and adjust count and minimum/maximum spawn corners. Coordinates are world centimeters; minimum must not exceed maximum on any axis.
-2. Press Play and search the World Outliner for `Training_Ball_`. Runtime balls appear during Play. Inactive pooled actors can remain listed while hidden in the game view.
+2. Press Play, choose **New Game**, and search the World Outliner for `Training_Ball_`. Inactive pooled actors can remain listed while hidden in the game view.
 3. Filter Output Log by `FeatureBallSpawner`, `FeatureBall`, `FeatureGameStateController`, or `FeatureGameState` to follow each part of the flow.
 4. Look for the dark `TRAINING DEBUG HUD` panel in the top-left corner. It appears during Play through the Third Person player controller; there is no widget asset to place in the level.
 5. Read the total through `GetTotalBounces()` or inspect `Total Bounces` on the game-state actor. The debug panel also displays the live total through state-change events.
@@ -314,7 +320,7 @@ For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test
 
 The debug HUD is the only persistence UI. The former TrainingSaveGameUI subsystem and native modal window have been removed. The persistence subsystem contains no rendering code, sleeps, or manual Slate ticks. Storage exposes asynchronous Unreal load/save APIs and remains independent of the game state and HUD.
 
-At GameState BeginPlay, the state subscribes to OnLoaded and requests loading. The subsystem pauses the game world and publishes a waiting phase. The normal player HUD is constructed in the active game viewport and reads the current operation even if the request happened before its subscription. NativeConstruct installs Game-and-UI input and a visible cursor so the HUD remains operative. Physics/gameplay waits while Slate continues rendering and accepting scrolling and button input.
+At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue starts the load after the HUD is created. The subsystem pauses the world and publishes the waiting phase. The HUD installs Game-and-UI input and shows the cursor. Physics waits while Slate renders the preview. New Game starts immediately with a zero total and writes the slot on the next save or normal gameplay shutdown.
 
 The HUD's specialized UFeatureSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
 
@@ -328,7 +334,7 @@ The one-second preview adds approximately two seconds of paused-game time per in
 
 ### Runtime verification checklist
 
-Verified on 2026-11-01 after extracting both specialized panels: Unreal Header Tool, native compilation, and DLL linking passed. An offscreen game run rendered both child panels, restored the existing total of 96, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. The startup preview can take longer than one second while the engine initializes. The root README contains the actual runtime capture. Save/quit button interaction, write failures, and forced-teardown races remain manual checks below; this loading smoke test does not establish those outcomes. Existing ball physics-material initialization errors and startup shader/sky warnings were present during the run.
+Historical verification from 2026-11-01 after extracting both specialized panels. Unreal Header Tool, native compilation, and DLL linking passed. An offscreen run rendered both panels, restored 96 bounces, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. The [runtime capture](../../../docs/images/in-game-loading-hud.png) predates the main menu. This run covered loading and recorded existing ball physics-material initialization errors and startup shader and sky warnings.
 
 1. Start Play with a saved total: the in-game HUD should show Loading while the character and balls remain paused, then show the restored total before gameplay resumes.
 2. Move the mouse and scroll the debug HUD during both one-second holds. The viewport should keep rendering; no native dialog should open.

@@ -2,26 +2,38 @@
 
 
 #include "test_UE_584_G1_cPlayerController.h"
+#include "test_UE_584_G1_cGameMode.h"
 #include "Features/FeatureDebugHUD.h"
 #include "Features_NonUE/FeatureDebugHUDSpawner.h"
+#include "Components/InputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
+#include "InputCoreTypes.h"
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
 #include "test_UE_584_G1_c.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
-void Atest_UE_584_G1_cPlayerController::BeginPlay()
+void Atest_UE_584_G1_cPlayerController::OnPossess(APawn* InPawn)
 {
-	Super::BeginPlay();
+	Super::OnPossess(InPawn);
 
-	if (IsLocalPlayerController())
+	if (IsLocalPlayerController() && !DebugHUD)
 	{
-		DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
+		CreateGameplayWidgets();
 	}
+}
 
-	// only spawn touch controls on local player controllers
-	if (IsLocalPlayerController() && ShouldUseTouchControls())
+void Atest_UE_584_G1_cPlayerController::RequestPause()
+{
+	GetWorld()->GetAuthGameMode<Atest_UE_584_G1_cGameMode>()->PauseSession();
+}
+
+void Atest_UE_584_G1_cPlayerController::CreateGameplayWidgets()
+{
+	DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
+	if (ShouldUseTouchControls())
 	{
 		// spawn the mobile controls widget
 		MobileControlsWidget = CreateWidget<UUserWidget>(this, MobileControlsWidgetClass);
@@ -42,7 +54,7 @@ void Atest_UE_584_G1_cPlayerController::BeginPlay()
 
 void Atest_UE_584_G1_cPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (IsLocalPlayerController())
+	if (DebugHUD)
 	{
 		DebugHUD->RemoveFromParent();
 	}
@@ -56,6 +68,7 @@ void Atest_UE_584_G1_cPlayerController::SetupInputComponent()
 	// only add IMCs for local player controllers
 	if (IsLocalPlayerController())
 	{
+		InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &Atest_UE_584_G1_cPlayerController::RequestPause);
 		// Add Input Mapping Contexts
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{

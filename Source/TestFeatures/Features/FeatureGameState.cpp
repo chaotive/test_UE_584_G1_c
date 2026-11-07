@@ -16,11 +16,23 @@ int32 AFeatureGameState::GetTotalBounces() const
 	return TotalBounces;
 }
 
-void AFeatureGameState::ApplyLoadedTotal(int32 Count)
+void AFeatureGameState::InitializeTotal(int32 Count)
 {
 	TotalBounces = Count;
-	bHasRestoredTotal = true;
+	bSessionInitialized = true;
 	OnTotalBouncesChanged.Broadcast(TotalBounces);
+}
+
+void AFeatureGameState::StartSession(bool bContinue)
+{
+	if (bContinue)
+	{
+		GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->RequestLoad();
+	}
+	else
+	{
+		InitializeTotal(0);
+	}
 }
 
 void AFeatureGameState::SaveSession(bool bQuitAfter)
@@ -32,8 +44,7 @@ void AFeatureGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
-	Saves->OnLoaded.AddUObject(this, &AFeatureGameState::ApplyLoadedTotal);
-	Saves->RequestLoad();
+	Saves->OnLoaded.AddUObject(this, &AFeatureGameState::InitializeTotal);
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: BeginPlay (Total bounces: %d)"), *GetName(), TotalBounces);
 }
 
@@ -43,7 +54,7 @@ void AFeatureGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Saves->OnLoaded.RemoveAll(this);
 	Saves->CancelOperation();
 	// Editor Stop/forced teardown cannot be deferred for a live HUD; retain a synchronous fallback.
-	if (bHasRestoredTotal && !Saves->HasSavedForQuit())
+	if (bSessionInitialized && !Saves->HasSavedForQuit())
 	{
 		FFeatureSaveGameStorage::SaveTotalBounces(TotalBounces);
 	}
