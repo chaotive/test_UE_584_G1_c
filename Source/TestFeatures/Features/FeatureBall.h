@@ -40,7 +40,7 @@ public:
 
 protected:
 
-	// Logs play startup and connects collision handling once for this actor's lifetime.
+	// Logs play startup, applies the bounce material, and connects collision handling.
 	// No pointer or reference parameters or return value; operates on this actor instance.
 	virtual void BeginPlay() override;
 
@@ -54,7 +54,7 @@ private:
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void ConfigureBall();
 
-	// Gives the ball a bouncy surface and enables collision notifications.
+	// Creates the bounce material and enables collision notifications.
 	// No pointer or reference parameters or return value; modifies this actor's mesh and owned material.
 	void ConfigureBouncing();
 

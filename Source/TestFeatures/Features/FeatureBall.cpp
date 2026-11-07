@@ -29,6 +29,7 @@ void AFeatureBall::BeginPlay()
 {
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: BeginPlay"), *GetName());
 	Super::BeginPlay();
+	BallMesh->SetPhysMaterialOverride(BounceMaterial);
 	BallMesh->OnComponentHit.AddDynamic(this, &AFeatureBall::OnBallHit);
 }
 
@@ -70,7 +71,6 @@ void AFeatureBall::ConfigureBouncing()
 	BounceMaterial->bOverrideRestitutionCombineMode = true;
 	BounceMaterial->RestitutionCombineMode = EFrictionCombineMode::Max;
 
-	BallMesh->SetPhysMaterialOverride(BounceMaterial);
 	BallMesh->SetNotifyRigidBodyCollision(true);
 }
 

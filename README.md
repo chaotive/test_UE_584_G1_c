@@ -32,6 +32,27 @@ During gameplay, press **Esc** to pause. Press it again or choose **Resume Game*
 2. Open the Third Person map and press **Play**.
 3. In a non-Shipping build, enter `Feature.NewGame` in the console at the startup menu to start immediately. In Play In Editor, use the Output Log command field. [Console command implementation](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
+### Package for Win64
+
+From the repository root, run Unreal AutomationTool with the desired configuration. Set `$EngineRoot` to your Unreal Engine 5.8 installation directory.
+
+```powershell
+$Project = (Resolve-Path .\test_UE_584_G1_c.uproject).Path
+$Configuration = 'Development'
+$Archive = Join-Path (Get-Location).Path "Saved\Packages\Win64\$Configuration"
+$UatOptions = @(
+    'BuildCookRun', "-project=$Project", '-target=test_UE_584_G1_c'
+    '-platform=Win64', "-clientconfig=$Configuration", '-build', '-cook'
+    '-stage', '-package', '-pak', '-iostore', '-archive', "-archivedirectory=$Archive"
+    '-map=/Game/ThirdPerson/Lvl_ThirdPerson', '-unattended', '-nop4'
+)
+& "$EngineRoot\Engine\Build\BatchFiles\RunUAT.bat" @UatOptions
+```
+
+Repeat with `DebugGame` to debug project C++ or `Shipping` for the player build. Each archive contains a `Windows` directory. Launch the executable in that directory and keep its staged files together.
+
+The asset manager registers the `GameFeatureData` cook rule required by the engine's Game Features subsystem. [Project settings](Config/DefaultGame.ini)
+
 ### Debug HUD and save diagnostics
 
 The non-Shipping debug HUD shows the live bounce count, the save slot and file path, and the I/O history. Its **Save game** button writes a snapshot while keeping the session open. **Save and quit** exits after a successful write.

@@ -87,6 +87,7 @@ These goals will guide future tasks:
 30. Show the saved bounce total below the main menu buttons, or display "No saved game." when the slot is empty.
 31. Add the non-Shipping console command `Feature.NewGame` to start a new game immediately from the startup menu.
 32. Show the debug HUD menu only in non-Shipping builds.
+34. Package Win64 builds in Development, DebugGame, and Shipping configurations.
 
 ### To do
 
@@ -102,6 +103,5 @@ These goals will guide future tasks:
 28. Main menu: On Initial Main Menu, "Resume game" is grayed out.
 29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
 33. Add a smoke test for main easy to test features using Gauntlet.
-34. Make a development+test+shipping package for Win64.
 1500. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling

@@ -104,7 +104,7 @@ When creating an actor, `CreateBall()` uses:
 AFeatureBall* Ball = World.SpawnActor<AFeatureBall>(Location, FRotator::ZeroRotator, SpawnParameters);
 ```
 
-Unreal constructs the actor and its inherited mesh component. The ball constructor caches that component once, loads the built-in sphere, prepares physics, and creates its bouncy material. Initially, the ball is hidden and inactive.
+Unreal constructs the actor and its inherited mesh component. The ball constructor caches that component once, loads the built-in sphere, prepares physics, and creates its bouncy material. The ball applies the material in `BeginPlay()`, when physics can update the mesh. Initially, the ball is hidden and inactive.
 
 The spawner assigns `Training_Ball_0`, then `Training_Ball_1`, and so on, using the pool list index. It sets both the internal object name and the editor's Outliner label. It adds the actor to `SpawnedBalls` and broadcasts `OnBallCreated` before activation.
 
@@ -363,7 +363,7 @@ The November 7, 2026 Unreal Editor captures show ten bounces written to `Feature
 
 This folder and its sibling `Features_NonUE` belong to the independent `TestFeatures` runtime module. The project game mode and player controller consume its exported API. The feature module uses only engine dependencies and its own log category, `LogTestFeatures`. Serialized references to the former module package may fail to resolve. Storage uses Unreal's `AsyncLoadGameFromSlot` and `LoadGameFromSlot`, casts to the current `UFeatureSaveGame` type, and starts at zero if no usable save is returned. Saves use Unreal's asynchronous saving API.
 
-Historical task 17 verification with the former compatibility reader (2026-11-01): Unreal Header Tool, native compilation, and both runtime-module DLL links passed. A headless game smoke test loaded the pre-migration save total of 145, released gameplay, counted ball bounces, returned balls to their pool, and saved during orderly teardown. The original save bytes were restored after testing. Headless testing skips UI preview timing and does not verify rendering or button interaction. Existing physics-material CDO initialization errors remain outside this module extraction.
+Historical task 17 verification with the former compatibility reader (2026-11-01): Unreal Header Tool, native compilation, and both runtime-module DLL links passed. A headless game smoke test loaded the pre-migration save total of 145, released gameplay, counted ball bounces, returned balls to their pool, and saved during orderly teardown. The original save bytes were restored after testing. The run skipped UI preview timing and logged physics-material initialization errors during class default object construction.
 
 Historical review validation with the former compatibility reader: the adjusted storage source compiled and the TrainingFeatures DLL linked successfully. A fresh headless smoke test loaded 145 total bounces, released gameplay, and returned balls to the pool. The test process was stopped without a shutdown save. Corrupt-file recovery and UI interaction were not exercised by this follow-up.
 

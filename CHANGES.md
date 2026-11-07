@@ -27,6 +27,7 @@ This index follows the task numbers in [AGENTS.MD](AGENTS.MD). The November 7, 2
 | 30 | Show the saved total or the empty-slot message | [Empty slot](docs/images/feature-startup.png) · [Saved total](docs/images/feature-startup-saved.png) |
 | 31 | Add the non-Shipping `Feature.NewGame` command | [Arena after entering the command in the Output Log](docs/images/feature-debug-hud.png) · [Command registration](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp) |
 | 32 | Show the debug HUD in non-Shipping builds | [Development HUD](docs/images/feature-debug-hud.png) · [Shipping gate in source](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp) |
+| 34 | Package Win64 builds in Development, DebugGame, and Shipping configurations | [Packaging instructions](README.md#package-for-win64) · [Cook settings](Config/DefaultGame.ini) |
 
 ## To do
 

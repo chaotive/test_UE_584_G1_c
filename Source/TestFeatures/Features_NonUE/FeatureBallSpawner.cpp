@@ -54,7 +54,9 @@ AFeatureBall* FFeatureBallSpawner::CreateBall(UWorld& World, const FVector& Loca
 	SpawnParameters.Name = FName(*BallName);
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	AFeatureBall* Ball = World.SpawnActor<AFeatureBall>(Location, FRotator::ZeroRotator, SpawnParameters);
+#if WITH_EDITOR
 	Ball->SetActorLabel(BallName);
+#endif
 	SpawnedBalls.Add(Ball);
 	// Notify listeners once per actor creation, before Spawn activates it; pool reuse skips CreateBall.
 	OnBallCreated.Broadcast(*Ball);

@@ -7,6 +7,8 @@ This folder holds classes that are not Unreal-reflected `UCLASS` types and do no
 
 Include these helpers through `Features_NonUE/FeatureBallSpawner.h` or `Features_NonUE/FeatureDebugHUDSpawner.h` from a consumer with a `TestFeatures` module dependency.
 
+The ball spawner assigns indexed actor names in every build. It also sets the matching World Outliner label in editor builds.
+
 The [feature guide](../Features/README.md) explains startup, spawning, pooling, event subscriptions, UI creation, ownership, and performance tradeoffs. This folder split changes code organization without changing those flows or their runtime costs.
 
 `FFeatureSaveGameStorage` loads and saves bounce totals using `Features/FeatureSaveGame.h`. It provides the local slot name, desktop file path, and load result for diagnostics. The [feature guide](../Features/README.md) covers asynchronous disk operations and the synchronous fallback during forced teardown.
