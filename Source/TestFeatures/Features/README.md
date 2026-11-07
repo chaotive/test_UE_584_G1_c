@@ -210,7 +210,7 @@ It still exists in the world and in the pool. Task 8 replaced task 7's earlier `
 
 A later `Spawn()` request finds that inactive actor and calls `Activate()` again. No new actor, material, or event subscription is needed for that reuse.
 
-The session requests the initial batch once. After those balls return, they wait until code calls `Spawn()` or `SpawnMultiple()` again.
+The session prewarms three pool entries per initial ball, then requests the initial batch once. After those balls return, they wait until code calls `Spawn()` or `SpawnMultiple()` again.
 
 ### Example to try: prove that an actor is reused
 
@@ -298,7 +298,7 @@ See [Object Pointers](https://dev.epicgames.com/documentation/en-us/unreal-engin
 
 ## Performance: what this design costs
 
-These are tradeoffs visible in the implementation, not benchmark results. The current defaults use fifty balls. Frame time, memory usage, and a safe maximum count have not been measured.
+These are tradeoffs visible in the implementation, not benchmark results. The current defaults activate five balls from a pool of fifteen. Frame time, memory usage, and a safe maximum count have not been measured.
 
 | Choice | Benefit | Cost or limitation |
 | --- | --- | --- |

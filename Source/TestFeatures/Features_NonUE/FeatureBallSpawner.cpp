@@ -3,6 +3,14 @@
 #include "TestFeatures.h"
 #include "Engine/World.h"
 
+void FFeatureBallSpawner::Prewarm(UWorld& World, int32 Count)
+{
+	while (SpawnedBalls.Num() < Count)
+	{
+		CreateBall(World, FVector::ZeroVector);
+	}
+}
+
 void FFeatureBallSpawner::SpawnMultiple(UWorld& World, int32 Count, const FVector& MinLocation, const FVector& MaxLocation)
 {
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBallSpawner: Spawning %d balls (Min: %s, Max: %s)"),

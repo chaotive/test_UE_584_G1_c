@@ -16,6 +16,10 @@ public:
 	// The native multicast event passes the new actor by reference; only FFeatureBallSpawner can broadcast it.
 	FBallCreatedEvent OnBallCreated;
 
+	// Creates inactive pool entries until the requested pool size is available.
+	// World is a mutable reference, Count is passed by value, and the world owns the created actors.
+	void Prewarm(UWorld& World, int32 Count);
+
 	// Activates one pooled ball or creates a new ball when none are available.
 	// World is a mutable reference, Location is read-only, and the returned raw pointer refers to a world-owned actor.
 	AFeatureBall* Spawn(UWorld& World, const FVector& Location);

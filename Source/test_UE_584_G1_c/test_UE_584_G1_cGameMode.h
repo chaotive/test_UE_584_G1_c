@@ -63,7 +63,7 @@ protected:
 	// Number of training balls to create when play begins.
 	// int32 stores the ball count by value; UPROPERTY(EditAnywhere) exposes it for editor configuration without pointer ownership.
 	UPROPERTY(EditAnywhere, Category="Training_Ball")
-	int32 FeatureBallCount = 50;
+	int32 FeatureBallCount = 5;
 
 	// Sets how many player-ball blocking contacts win a gameplay session.
 	// int32 stores a positive threshold by value and exposes it in game-mode defaults.

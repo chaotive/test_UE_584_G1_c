@@ -99,6 +99,7 @@ These goals will guide future tasks:
 40. Gameplay: Persist a chronological array of started sessions with their statistics.
 41. Gameplay: Enable player-ball blocking collisions and record their count in the active session.
 42. Gameplay: Configure per-session victory and defeat limits and pause when either is reached.
+45. Gameplay: Spawn five balls initially and prewarm a pool three times that size.
 1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
 ### To do

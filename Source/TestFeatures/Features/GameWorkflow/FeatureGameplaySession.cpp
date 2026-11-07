@@ -71,6 +71,7 @@ void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 BallC
 	Bounds->SetHalfExtent(LevelBounds.GetExtent());
 	OnStarted.Broadcast();
 	State.StartSession(bContinue);
+	BallSpawner.Prewarm(World, BallCount * 3);
 	BallSpawner.SpawnMultiple(World, BallCount, SpawnBounds.Min, SpawnBounds.Max);
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: Started with bounds center %s, half-extent %s"),
 		*LevelBounds.GetCenter().ToString(), *LevelBounds.GetExtent().ToString());
