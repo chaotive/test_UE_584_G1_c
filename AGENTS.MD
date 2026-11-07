@@ -100,6 +100,7 @@ These goals will guide future tasks:
 40. Gameplay: Persist a chronological array of started sessions with their statistics.
 41. Gameplay: Enable player-ball blocking collisions and record their count in the active session.
 42. Gameplay: Configure per-session victory and defeat limits and pause when either is reached.
+44. Gameplay: Show a HUD with the current player and non-player bounce counts and the respective win and loss limits.
 45. Gameplay: Spawn five balls initially and prewarm a pool three times that size.
 1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
@@ -118,6 +119,5 @@ These goals will guide future tasks:
 29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
 33. Add a smoke test for main easy to test features using Gauntlet.
 43. Gameplay: Allow for a level progression concept, everytime the player "wins", he goes up one "level" (initial level is 1), where the number of required player bounces increases by 1 to win, and the number of required non player bounces is diminished by 1. It is not necessary to make this "level" concepto more complex than it needs to be, we just need to keep the state of what is the current level that the player has achieved on on the gameslot, and when doing "Continue", he will keep playing the same as the last level that he lost. If doing "New game", then the level gets reset to 1 as part of the saved gameslot reset. In other words, default first level is 1 with 10 player bounces to win and 50 to lose, which then consolidates the number of initial required player bounces on level 1 to "10 + (level - 1) = 10", and required ball non-player bounces on same level to "50 - (level - 1) = 50" 
-44. Gameplay: Show a gameplay hud with the number of player bounces required to win and how many has been in the current level, and the same for non player bounces to lose.
 1500. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling

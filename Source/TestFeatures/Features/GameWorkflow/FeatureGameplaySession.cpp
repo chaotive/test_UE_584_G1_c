@@ -151,6 +151,16 @@ bool UFeatureGameplaySession::IsPersistenceBusy() const
 	return SaveSubsystem->IsBusy();
 }
 
+int32 UFeatureGameplaySession::GetPlayerContactsToWin() const
+{
+	return PlayerContactsToWin;
+}
+
+int32 UFeatureGameplaySession::GetSessionBouncesToLose() const
+{
+	return SessionBouncesToLose;
+}
+
 bool UFeatureGameplaySession::CanLeaveGameplay() const
 {
 	return SessionState == ESessionState::Playing && !IsPersistenceBusy();

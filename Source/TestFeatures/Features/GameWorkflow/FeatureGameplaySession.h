@@ -62,6 +62,14 @@ public:
 	// bVictory is passed by value without pointer or reference ownership.
 	void OnGameplaySessionEnded(bool bVictory);
 
+	// Reads the current session's player-contact victory threshold.
+	// Returns int32 by value without pointers or references.
+	int32 GetPlayerContactsToWin() const;
+
+	// Reads the current session's non-player bounce defeat threshold.
+	// Returns int32 by value without pointers or references.
+	int32 GetSessionBouncesToLose() const;
+
 private:
 	enum class ESessionState : uint8 { Ready, Playing, Paused, Ended };
 

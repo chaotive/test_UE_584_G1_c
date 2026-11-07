@@ -9,6 +9,7 @@
 class UInputMappingContext;
 class UUserWidget;
 class UFeatureDebugHUD;
+class UFeatureGameplayHUD;
 
 /**
  *  Basic PlayerController class for a third person game
@@ -58,6 +59,11 @@ protected:
 	// UPROPERTY tracks a strong TObjectPtr so garbage collection retains the player-owned widget.
 	UPROPERTY()
 	TObjectPtr<UFeatureDebugHUD> DebugHUD;
+
+	// Retains the gameplay objective display for this local player.
+	// UPROPERTY tracks the strong widget pointer for garbage collection.
+	UPROPERTY()
+	TObjectPtr<UFeatureGameplayHUD> GameplayHUD;
 
 	// Registers the local player's input mapping contexts and pause request.
 	// No pointer or reference parameters or return value; configures this controller's input subsystem.

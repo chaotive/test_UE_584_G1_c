@@ -4,6 +4,7 @@
 #include "test_UE_584_G1_cPlayerController.h"
 #include "test_UE_584_G1_cGameMode.h"
 #include "Features/UI/FeatureDebugHUD.h"
+#include "Features/UI/FeatureGameplayHUD.h"
 #if !UE_BUILD_SHIPPING
 #include "Features_NonUE/FeatureDebugHUDSpawner.h"
 #endif
@@ -34,6 +35,11 @@ void Atest_UE_584_G1_cPlayerController::RequestPause()
 
 void Atest_UE_584_G1_cPlayerController::CreateGameplayWidgets()
 {
+	if (!GameplayHUD)
+	{
+		GameplayHUD = CreateWidget<UFeatureGameplayHUD>(this);
+		GameplayHUD->AddToPlayerScreen(5);
+	}
 #if !UE_BUILD_SHIPPING
 	if (!DebugHUD)
 	{
@@ -61,6 +67,10 @@ void Atest_UE_584_G1_cPlayerController::CreateGameplayWidgets()
 
 void Atest_UE_584_G1_cPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (GameplayHUD)
+	{
+		GameplayHUD->RemoveFromParent();
+	}
 	if (DebugHUD)
 	{
 		DebugHUD->RemoveFromParent();

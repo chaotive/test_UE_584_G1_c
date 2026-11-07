@@ -53,6 +53,7 @@ void AFeatureGameState::InitializeProgress(FFeatureGameProgress& Snapshot)
 	Progress = Snapshot;
 	bSessionInitialized = true;
 	OnTotalBouncesChanged.Broadcast(Progress.TotalBounces);
+	OnSessionStatsChanged.Broadcast(Progress.Sessions.Last());
 }
 
 void AFeatureGameState::StartSession(bool bContinue)

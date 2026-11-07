@@ -24,7 +24,7 @@ The startup and pause menus show your last saved bounce total. When the slot is 
 
 During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena. Choose **Exit** from the pause menu to save and quit. **Continue** restores your total the next time you play.
 
-Make ten player-ball contacts before the session reaches fifty bounces. The round ends with a fullscreen **Victory** or **Defeat** screen. Choose **Continue** to return to the initial menu. Your session history records the outcome. Level progression and a gameplay HUD for per-level bounce progress remain planned tasks.
+Make ten player-ball contacts before the session reaches fifty non-player bounces. The gameplay HUD shows both counts and their current session limits. The round ends with a fullscreen **Victory** or **Defeat** screen. Choose **Continue** to return to the initial menu. Your session history records the outcome. Level progression remains a planned task.
 
 ## Development
 
