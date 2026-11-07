@@ -64,6 +64,7 @@ These goals will guide future tasks:
 23. Never create a git commit unless the user explicitly asks to commit.
 24. Never change line breaks, indentation, whitespace, or make irrelevant formatting changes unless explicitly requested.
 25. When the user says "commit as new task", inspect both Done and To do task indexes, calculate one greater than the highest index across both lists, and prefix that number with the literal digits "100" to distinguish these tasks. Record the completed task and include its prefixed task number in the commit description.
+26. In CHANGES.md, display screenshot evidence directly as inline images rather than linking to them.
 
 ## Tasks
 
@@ -117,5 +118,5 @@ These goals will guide future tasks:
 36. Gameplay: kill balls after 5 bounces without touching the player. If the ball touches the player, it it retired and a new one spawned 
 43. Gameplay: Allow for a level progression concept, everytime the player "wins", he goes up one "level" (initial level is 1), where the number of required player bounces increases by 1 to win, and the number of required non player bounces is diminished by 1. It is not necessary to make this "level" concepto more complex than it needs to be, we just need to keep the state of what is the current level that the player has achieved on on the gameslot, and when doing "Continue", he will keep playing the same as the last level that he lost. If doing "New game", then the level gets reset to 1 as part of the saved gameslot reset. In other words, default first level is 1 with 10 player bounces to win and 50 to lose, which then consolidates the number of initial required player bounces on level 1 to "10 + (level - 1) = 10", and required ball non-player bounces on same level to "50 - (level - 1) = 50" 
 44. Gameplay: Show a gameplay hud with the number of player bounces required to win and how many has been in the current level, and the same for non player bounces to lose.
-1505. Mass, as a second element (a square)
+1500. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
