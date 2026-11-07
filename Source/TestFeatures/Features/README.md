@@ -14,7 +14,7 @@ Start with the startup flow below. The later sections explain the event connecti
 | --- | --- |
 | `Gameplay` | Ball, level bounds, bounce game state, and the ball-to-state event controller |
 | `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
-| `UI` | Menu and HUD archetypes, declarative menu views, bounce panel, and save panel |
+| `UI` | Menu and HUD archetypes, declarative menu views, and panel widgets |
 
 The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
 
@@ -35,9 +35,9 @@ The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and 
 | `UFeatureGameStateController` | Listens to ball events and updates that shared total. | [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) |
 | `UFeatureSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [FeatureSaveGameSubsystem.cpp](GameWorkflow/FeatureSaveGameSubsystem.cpp) |
 | `UFeatureDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [FeatureDebugHUD.cpp](UI/Archetypes/FeatureDebugHUD.cpp) |
-| `UFeatureBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [FeatureBallPanel.cpp](UI/FeatureBallPanel.cpp) |
+| `UFeatureBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [FeatureBallPanel.cpp](UI/Widgets/FeatureBallPanel.cpp) |
 | `UFeatureGameplayHUD` | Displays the current level and live player-contact and ball-bounce limits. | [FeatureGameplayHUD.cpp](UI/Archetypes/FeatureGameplayHUD.cpp) |
-| `UFeatureSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [FeatureSaveGamePanel.cpp](UI/FeatureSaveGamePanel.cpp) |
+| `UFeatureSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [FeatureSaveGamePanel.cpp](UI/Widgets/FeatureSaveGamePanel.cpp) |
 | `FFeatureDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [FeatureDebugHUDSpawner.cpp](../Features_NonUE/FeatureDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
@@ -369,7 +369,7 @@ The player controller still only creates, retains, and removes the HUD. The oute
 
 ## UI composition and documentation captures
 
-The outer [FeatureDebugHUD](UI/Archetypes/FeatureDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [FeatureBallPanel](UI/FeatureBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [FeatureSaveGamePanel](UI/FeatureSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UFeatureBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
+The outer [FeatureDebugHUD](UI/Archetypes/FeatureDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [FeatureBallPanel](UI/Widgets/FeatureBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [FeatureSaveGamePanel](UI/Widgets/FeatureSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UFeatureBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
 
 Include cleanup follows those boundaries too: the composing HUD no longer needs Engine/World.h, while FeatureBallPanel still includes it for its GetGameState template call. FeatureGameState no longer needs the world header either; it keeps Engine/GameInstance.h for subsystem access. Removing unused dependencies can reduce compile coupling, but does not change runtime behavior or establish a measured build-speed improvement.
 

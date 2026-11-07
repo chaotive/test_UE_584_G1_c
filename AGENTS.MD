@@ -111,6 +111,7 @@ These goals will guide future tasks:
 46. End: The defeat screen shows only Retry and Exit. Retry restarts the current level.
 47. End: Save the game state whenever an end state is reached.
 49. UI: Define the initial, pause, victory, and defeat menu views declaratively in UI/Views, and move the menu and HUD archetypes to UI/Archetypes.
+50. UI: Move the ball and save-game panels to UI/Widgets.
 1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
 ### To do
@@ -121,6 +122,5 @@ These goals will guide future tasks:
 28. UI: On Initial Main Menu, "Resume game" is grayed out.
 29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
 33. Add a smoke test for main easy to test features using Gauntlet.
-48. UI: Show the current level in the gameplay HUD and other state display UI.
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling

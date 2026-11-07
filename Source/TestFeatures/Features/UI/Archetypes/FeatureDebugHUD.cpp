@@ -1,6 +1,6 @@
 #include "FeatureDebugHUD.h"
-#include "Features/UI/FeatureSaveGamePanel.h"
-#include "Features/UI/FeatureBallPanel.h"
+#include "Features/UI/Widgets/FeatureSaveGamePanel.h"
+#include "Features/UI/Widgets/FeatureBallPanel.h"
 #include "GameFramework/PlayerController.h"
 #include "TestFeatures.h"
 #include "Blueprint/WidgetTree.h"
