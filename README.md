@@ -1,15 +1,17 @@
-# Training Sandbox
+# Feature Sandbox
 
 Step into a third-person training arena and watch the first volley scatter. Run, jump, and follow the ricochets as the live counter ticks up. Every round starts with a fresh mix of launch positions and trajectories, and you can save your bounce total to pick up where you left off.
 
 ## Jump into the arena
 
-Training Sandbox is a playable PC prototype built in Unreal Engine 5.8.
+Feature Sandbox is a playable PC prototype built in Unreal Engine 5.8.
 
 1. Open `test_UE_584_G1_c.uproject` in Unreal Engine 5.8 and build the editor target.
 2. Open the Third Person map and press **Play**.
 3. Choose **New Game** to start at zero, **Continue** to restore the local save, or **Exit** to close the standalone game. Continue is disabled when the save slot is empty.
 4. Use **WASD** to move, the **mouse** to look, and **Space** to jump.
+
+In a non-Shipping build, run `Feature.NewGame` from the console while the startup menu is open to enter the arena immediately with a zero bounce total. In Play In Editor, you can enter it in the Output Log command field. [Console command implementation](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
 ## Start fresh or pick up your count
 
@@ -17,11 +19,11 @@ The startup and pause menus show your last saved bounce total. If you're startin
 
 ![Startup menu with Continue disabled and an empty save slot](docs/images/startup-empty.png)
 
-*Unreal Editor play session with an empty slot. The menu shows “No saved game.” and disables Continue.*
+*Unreal Editor play session with an empty slot. The menu shows “No saved game.” and disables Continue. This capture predates the rename to Feature Sandbox.*
 
 ![Startup menu showing six saved bounces and an enabled Continue button](docs/images/startup-saved.png)
 
-*After restarting the play session, the menu shows six saved bounces and enables Continue.*
+*After restarting the play session, the menu shows six saved bounces and enables Continue. This capture predates the rename to Feature Sandbox.*
 
 ## Follow the ricochets
 
@@ -43,7 +45,7 @@ Use **Save game** to keep playing after a save, or **Save and quit** to leave af
 
 *Continue restores six total bounces. The HUD shows the restored value during the paused load result preview.*
 
-Saves written before the module and save class were renamed can fall back to zero on load.
+Feature Sandbox uses the `FeatureSandbox` save slot. Continue is available once that slot has a save.
 
 ## Under the hood
 

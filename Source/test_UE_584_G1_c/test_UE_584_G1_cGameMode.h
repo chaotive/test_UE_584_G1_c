@@ -78,6 +78,10 @@ protected:
 
 private:
 
+#if !UE_BUILD_SHIPPING
+	friend class FFeatureConsoleCommands;
+#endif
+
 	// Tracks which menu or gameplay phase owns the session.
 	// Stores the enum by value without pointer or reference ownership.
 	EFeatureGameFlow FlowState = EFeatureGameFlow::StartupMenu;

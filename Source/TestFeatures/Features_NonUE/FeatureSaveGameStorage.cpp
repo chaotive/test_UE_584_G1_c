@@ -73,7 +73,7 @@ bool FFeatureSaveGameStorage::SaveTotalBounces(int32 TotalBounces)
 
 const FString& FFeatureSaveGameStorage::GetSlotName()
 {
-	static const FString SlotName(TEXT("TrainingSandbox"));
+	static const FString SlotName(TEXT("FeatureSandbox"));
 	return SlotName;
 }
 

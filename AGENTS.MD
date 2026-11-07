@@ -58,6 +58,8 @@ These goals will guide future tasks:
 17. Use Unreal Editor MCP for editor operations. This project starts the MCP server automatically when Unreal Editor opens. Wait for the editor to finish starting and for its MCP endpoint to respond before attempting editor operations. If the current chat still does not expose the tools, start a new Codex chat in this project after the server is ready.
 18. Avoid lengthy or resource-intensive validation in an Unreal Editor session unless the user requests it or approves it in advance. Prefer lightweight checks by default.
 19. Move a task to Done only after the user explicitly asks to implement that task and its implementation is complete. Leave related tasks in To do even if their behavior is already implemented.
+20. Use `Feature` in the project display name and as the prefix for feature class names, source files, and console commands.
+21. Preserve or migrate old save games only when the user explicitly requests save compatibility.
 
 ## Tasks
 
@@ -82,6 +84,7 @@ These goals will guide future tasks:
 17. Move all featured UE and non-UE code into its own independent runtime module.
 18. Show the startup menu first with the game title from the project configuration and New Game, Continue, and Exit options.
 30. Show the saved bounce total below the main menu buttons, or display "No saved game." when the slot is empty.
+31. Add the non-Shipping console command `Feature.NewGame` to start a new game immediately from the startup menu.
 
 ### To do
 
