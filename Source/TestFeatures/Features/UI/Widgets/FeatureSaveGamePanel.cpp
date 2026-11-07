@@ -32,8 +32,6 @@ void UFeatureSaveGamePanel::NativeConstruct()
 
 void UFeatureSaveGamePanel::NativeDestruct()
 {
-	FTSTicker::GetCoreTicker().RemoveTicker(PreviewTicker);
-	PreviewTicker.Reset();
 	if (UGameViewportClient* Viewport = GetGameInstance()->GetGameViewportClient())
 	{
 		if (Viewport->OnWindowCloseRequested().IsBoundToObject(this)) { Viewport->OnWindowCloseRequested().Unbind(); }
@@ -90,22 +88,6 @@ FString UFeatureSaveGamePanel::FormatSaveDiagnostics(const UFeatureSaveGameSubsy
 void UFeatureSaveGamePanel::RefreshSaveStatus(const FString& Status, bool bBusy)
 {
 	SaveDiagnosticsText->SetText(FText::FromString(FormatSaveDiagnostics(*ObservedSaves.Get())));
-	UFeatureSaveGameSubsystem* Saves = ObservedSaves.Get();
-	if (bBusy && (Saves->IsWaitingForIO() || Saves->IsIOComplete()) && !PreviewTicker.IsValid())
-	{
-		PreviewTicker = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UFeatureSaveGamePanel::HandlePreviewElapsed), 1.0f);
-	}
-}
-
-bool UFeatureSaveGamePanel::HandlePreviewElapsed(float DeltaSeconds)
-{
-	PreviewTicker.Reset();
-	if (UFeatureSaveGameSubsystem* Saves = ObservedSaves.Get())
-	{
-		if (Saves->IsWaitingForIO()) { Saves->BeginPendingIO(); }
-		else if (Saves->IsIOComplete()) { Saves->FinishOperation(); }
-	}
-	return false;
 }
 
 void UFeatureSaveGamePanel::HandleSaveClicked()

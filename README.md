@@ -113,7 +113,7 @@ A victory or defeat pauses gameplay, saves the session, and presents the matchin
 
 The non-Shipping debug HUD shows the live bounce count, the save slot and file path, and the I/O history. Its **Save game** button writes a snapshot while keeping the session open. **Save and quit** exits after a successful write.
 
-Shipping builds skip the debug previews and keep gameplay paused until disk I/O finishes.
+Gameplay remains paused until asynchronous save or load I/O finishes.
 
 ### Architecture
 
@@ -208,14 +208,14 @@ flowchart LR
     State -->|"total / level events"| BallPanel
     Session -->|"read current limits"| HUD
     Saves -->|"status events"| SavePanel
-    SavePanel -->|"save request / preview timing"| Saves
+    SavePanel -->|"save request"| Saves
     classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554
     classDef feature fill:#dcfce7,stroke:#16a34a,color:#14532d
     class PCBase,WidgetBase,Input,Viewport engine
     class PC,Mode,Views,Menu,HUD,Debug,BallPanel,SavePanel,State,Saves,Session feature
 ```
 
-The menu and HUDs derive from `UUserWidget` and build their widget trees in C++. All menu views share the Crazy balls logo and the title and subtitle from project settings. The logo is loaded from `Content/FeatureBrand` and included in packaged builds as UFS content. The player controller creates and removes HUDs; each widget owns its own state subscriptions and initial synchronization. The debug save panel observes persistence status and drives its preview timers. See [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), [gameplay HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp), and [save panel](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
+The menu and HUDs derive from `UUserWidget` and build their widget trees in C++. All menu views share the Crazy balls logo and the title and subtitle from project settings. The logo is loaded from `Content/FeatureBrand` and included in packaged builds as UFS content. The player controller creates and removes HUDs; each widget owns its own state subscriptions and initial synchronization. The debug save panel observes persistence status. See [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), [gameplay HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp), and [save panel](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
 
 #### Game workflow and persistence
 

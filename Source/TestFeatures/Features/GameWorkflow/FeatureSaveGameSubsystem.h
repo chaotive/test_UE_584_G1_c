@@ -4,7 +4,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "FeatureSaveGameSubsystem.generated.h"
 
-/** Async persistence state machine; gameplay pauses while HUD-managed previews and I/O run. */
+/** Async persistence state machine; gameplay pauses while asynchronous I/O runs. */
 UCLASS()
 class TESTFEATURES_API UFeatureSaveGameSubsystem : public UGameInstanceSubsystem
 {
@@ -13,7 +13,7 @@ public:
 	DECLARE_EVENT_TwoParams(UFeatureSaveGameSubsystem, FStatusChangedEvent, const FString&, bool);
 	DECLARE_EVENT_OneParam(UFeatureSaveGameSubsystem, FLoadedEvent, FFeatureGameProgress&);
 	DECLARE_EVENT_OneParam(UFeatureSaveGameSubsystem, FSaveDeletedEvent, bool);
-	// Announces preview, disk activity, completion, and resume transitions.
+	// Announces disk activity, completion, and resume transitions.
 	// Native multicast event borrows a string and passes bool by value without owning listeners.
 	FStatusChangedEvent OnStatusChanged;
 	// Delivers restored data before gameplay resumes.
@@ -30,30 +30,18 @@ public:
 	// Returns bool by value without pointers or references.
 	bool DeleteSave();
 
-	// Requests a paused, in-game load with HUD previews.
+	// Requests a paused, in-game load.
 	// No pointer or reference parameters or return value; callbacks use this game-instance subsystem.
 	void RequestLoad();
 	// Requests an in-game save, optionally followed by a successful orderly quit.
 	// Progress is a borrowed read-only value snapshot and bQuitAfter is passed by value.
 	void RequestSave(const FFeatureGameProgress& Progress, bool bQuitAfter = false);
-	// Starts disk access after the HUD's nonblocking pre-operation hold.
-	// No pointer or reference parameters or return value; starts one pending operation.
-	void BeginPendingIO();
-	// Resumes gameplay or quits after the HUD's nonblocking result hold.
-	// No pointer or reference parameters or return value; applies the operation outcome.
-	void FinishOperation();
 	// Invalidates callbacks when the owning level is forcibly torn down.
 	// No pointer or reference parameters or return value; advances a value generation token.
 	void CancelOperation();
 	// Reports whether gameplay is currently gated by persistence.
 	// Returns bool by value without pointers or references.
 	bool IsBusy() const { return bBusy; }
-	// Reports whether the pending disk call is waiting for its preview.
-	// Returns bool by value without pointers or references.
-	bool IsWaitingForIO() const { return bWaitingForIO; }
-	// Reports whether the result preview may now end the operation.
-	// Returns bool by value without pointers or references.
-	bool IsIOComplete() const { return bIOComplete; }
 	// Reports whether an orderly quit already persisted the current snapshot.
 	// Returns bool by value without pointers or references.
 	bool HasSavedForQuit() const { return bSavedForQuit; }
@@ -67,6 +55,12 @@ public:
 	// Returns the absolute path by value without object references.
 	FString GetSaveFilePath() const;
 private:
+	// Starts asynchronous disk access for the pending operation.
+	// No pointer or reference parameters or return value.
+	void BeginPendingIO();
+	// Restores the previous pause state or quits after disk access completes.
+	// No pointer or reference parameters or return value.
+	void FinishOperation();
 	// Pauses the current world and announces a pending operation.
 	// Progress is borrowed read-only; bLoad and bQuitAfter are values without ownership transfer.
 	void StartOperation(bool bLoad, const FFeatureGameProgress& Progress, bool bQuitAfter);
@@ -88,19 +82,13 @@ private:
 	// Indicates a persistence gate is active.
 	// bool is per-instance value state without pointers.
 	bool bBusy = false;
-	// Indicates that the HUD preview must run before disk access.
-	// bool is per-instance value state without pointers.
-	bool bWaitingForIO = false;
-	// Indicates a completed operation waiting for its result preview.
-	// bool is per-instance value state without pointers.
-	bool bIOComplete = false;
 	// Selects loading rather than saving.
 	// bool is per-instance value state without pointers.
 	bool bLoading = false;
 	// Remembers the operation's success.
 	// bool is per-instance value state without pointers.
 	bool bSucceeded = false;
-	// Requests quit only after a successful save and preview.
+	// Requests quit only after a successful save.
 	// bool is per-instance value state without pointers.
 	bool bQuitRequested = false;
 	// Preserves a pause that existed before this operation.

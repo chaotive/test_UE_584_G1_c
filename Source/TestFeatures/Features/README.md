@@ -39,7 +39,7 @@ The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and 
 | `UFeatureDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [FeatureDebugHUD.cpp](UI/Archetypes/FeatureDebugHUD.cpp) |
 | `UFeatureBallPanel` | Owns bounce text, initial synchronization, and game-state subscriptions. | [FeatureBallPanel.cpp](UI/Widgets/FeatureBallPanel.cpp) |
 | `UFeatureGameplayHUD` | Displays the current level and live player-contact and ball-bounce limits. | [FeatureGameplayHUD.cpp](UI/Archetypes/FeatureGameplayHUD.cpp) |
-| `UFeatureSaveGamePanel` | Owns persistence controls, diagnostics, and preview timing. | [FeatureSaveGamePanel.cpp](UI/Widgets/FeatureSaveGamePanel.cpp) |
+| `UFeatureSaveGamePanel` | Owns persistence controls and diagnostics. | [FeatureSaveGamePanel.cpp](UI/Widgets/FeatureSaveGamePanel.cpp) |
 | `FFeatureDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [FeatureDebugHUDSpawner.cpp](../Features_NonUE/FeatureDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
@@ -84,7 +84,7 @@ The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureG
 
 The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. It publishes `OnStarted`, `OnResumed`, `OnPaused`, and `OnEnded(bVictory)`. The game mode subscribes during initialization and removes its bindings during `EndPlay`. New Game and Continue start the session. Resume returns from the pause menu. A successful `PauseSession()` request publishes the pause event. `FinishSession(bVictory)` publishes the result when a gameplay objective supplies an outcome.
 
-On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then creates the initial batch. Continue keeps the world paused through both I/O previews.
+On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then creates the initial batch. Continue keeps the world paused until loading finishes.
 
 In non-Shipping builds, `FFeatureConsoleCommands` registers `Feature.NewGame` and routes it to the same action as the New Game button when the command's world is at the startup menu. It clears the existing slot before starting at zero. [Command registration and handler](../../test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
@@ -234,9 +234,9 @@ Stopping the session ends the world actors' play. Balls and the game state log `
 
 The controller is a `UObject`, so it has no actor `BeginPlay()` or `EndPlay()` callbacks. It is initialized explicitly. Unreal's object lifetime system cleans it up when it is no longer referenced. Weak delegate bindings do not prolong that lifetime.
 
-A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a game state whose total is restored during paused in-game loading. The HUD remains rendered and operative during its real-time preview holds and asynchronous disk operations.
+A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a game state whose total is restored during paused in-game loading. The HUD remains rendered and operative during asynchronous disk operations.
 
-The player controller removes its debug widget in EndPlay. Interactive Save game / Save and quit operations happen before teardown so the HUD can stay operative. Editor Stop and forced teardown use a synchronous fallback without a preview.
+The player controller removes its debug widget in EndPlay. Interactive Save game / Save and quit operations happen before teardown so the HUD can stay operative. Editor Stop and forced teardown use a synchronous fallback.
 
 ## 7. The debug HUD: a separate UI flow
 
@@ -340,38 +340,38 @@ This example assumes the configured training game state and controller wiring. I
 
 For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) → [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) → [FeatureBall.cpp](Gameplay/FeatureBall.cpp) → [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) → [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp).
 
-## In-game load/save and HUD-controlled previews (tasks 14–16)
+## In-game load/save (tasks 14–16)
 
 The debug HUD provides persistence controls and diagnostics in non-Shipping builds. Shipping builds use **Continue** from the startup menu and **Exit** from the pause menu for interactive persistence. The persistence subsystem contains no rendering code, sleeps, or manual Slate ticks. Storage exposes asynchronous Unreal load/save APIs and remains independent of the game state and HUD.
 
-At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue starts the load after the HUD is created. The subsystem pauses the world and publishes the waiting phase. The HUD installs Game-and-UI input and shows the cursor. Physics waits while Slate renders the preview. New Game deletes the slot, starts with a zero total, and writes the slot on the next save or normal gameplay shutdown.
+At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue starts the load after the HUD is created. The subsystem pauses the world and starts the asynchronous load. The HUD installs Game-and-UI input and shows the cursor. Physics waits for loading to finish. New Game deletes the slot, starts with a zero total, and writes the slot on the next save or normal gameplay shutdown.
 
-The HUD's specialized UFeatureSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
+The sequence is: pause -> async disk access -> apply loaded total and notify the HUD -> restore the previous pause state. Gameplay does not resume until the loaded total has been applied.
 
 The HUD displays current I/O state, slot `CrazyBalls`, user index 0, the absolute desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result. Writes report success or failure. The save contains aggregate progress and chronological session records.
 
-Use **Save game** to save while staying in the current level. Use **Save and quit** for an orderly exit: snapshot progress, keep the world paused during preview and asynchronous saving, show the result, then quit only if the write succeeded. A failed save keeps the game open. The active HUD also intercepts a normal native game-window close and requests this path. Repeated save/close clicks do not launch competing writes; a quit request received during load is queued until a following save can complete.
+Use **Save game** to save while staying in the current level. Use **Save and quit** for an orderly exit: snapshot progress, keep the world paused during asynchronous saving, report the result, then quit only if the write succeeded. A failed save keeps the game open. The active HUD also intercepts a normal native game-window close and requests this path. Repeated save/close clicks do not launch competing writes; a quit request received during load is queued until a following save can complete.
 
 Unreal Editor Stop, console/engine-forced exit, or external process termination can bypass the HUD close request. EndPlay cannot keep a destroyed level running to show progress. A synchronous fallback saves an initialized total during forced teardown, without a UI preview; stopping during initial loading does not overwrite progress with an uninitialized zero. A successful gated quit skips this redundant fallback. Crashes and forced OS process termination cannot guarantee a save. Pending async callbacks carry a generation token so results from a torn-down level are ignored; an already-issued disk write itself cannot be cancelled by that token.
 
-The one-second preview adds approximately two seconds of paused-game time per interactive operation. The game thread is no longer deliberately slept and there are no manual renderer flushes. Unreal still serializes save data and constructs loaded objects on the game thread as part of its asynchronous API; async disk access does not make all CPU work free. Long histories still cost memory and formatting work. Shipping builds and headless runs start async I/O immediately and finish when its callback arrives. In Shipping, a native window close uses the teardown save path.
+There are no artificial delays or manual renderer flushes. Unreal still serializes save data and constructs loaded objects on the game thread as part of its asynchronous API; async disk access does not make all CPU work free. Long histories still cost memory and formatting work. Shipping builds and headless runs start async I/O immediately and finish when its callback arrives. In Shipping, a native window close uses the teardown save path.
 
 ### Runtime verification checklist
 
 Historical verification from 2026-11-01 after extracting both specialized panels. Unreal Header Tool, native compilation, and DLL linking passed. An offscreen run rendered both panels, restored 96 bounces, and logged the loading preview, asynchronous read, result preview, and gameplay release in order. The result preview lasted approximately one second. This run covered loading and recorded existing ball physics-material initialization errors and startup shader and sky warnings.
 
 1. Start Play with a saved total: the in-game HUD should show Loading while the character and balls remain paused, then show the restored total before gameplay resumes.
-2. Move the mouse and scroll the debug HUD during both one-second holds. The viewport should keep rendering; no native dialog should open.
+2. The viewport should keep rendering during disk I/O; no native dialog should open.
 3. Click Save game: the level remains visible, pauses, reports the real result, and resumes without leaving the map.
-4. Click Save and quit or close a standalone game window: the game remains open until successful saving and its result preview finish. A write failure must keep it open.
+4. Click Save and quit or close a standalone game window: the game remains open until saving succeeds. A write failure must keep it open.
 5. Try missing saves, failed reads, repeated clicks, and close requests during loading. Existing error policy and slot sharing are unchanged.
 6. Use editor Stop during loading and saving: verify the fallback and check that callbacks do not update a new level. This forced path intentionally has no in-game delay.
 
-The player controller still only creates, retains, and removes the HUD. The outer HUD composes sections and owns general input presentation; its UFeatureBallPanel child owns bounce display and state observation. Its UFeatureSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its progress snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
+The player controller still only creates, retains, and removes the HUD. The outer HUD composes sections and owns general input presentation; its UFeatureBallPanel child owns bounce display and state observation. Its UFeatureSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls and close gating. The state supplies its progress snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
 
 ## UI composition and documentation captures
 
-The outer [FeatureDebugHUD](UI/Archetypes/FeatureDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [FeatureBallPanel](UI/Widgets/FeatureBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [FeatureSaveGamePanel](UI/Widgets/FeatureSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions, close-request binding, and cancellation of pending core-ticker callbacks. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UFeatureBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
+The outer [FeatureDebugHUD](UI/Archetypes/FeatureDebugHUD.cpp) composes specialized panels instead of implementing ball or persistence details. It has no game-state include, pointer, subscription, or bounce formatter. [FeatureBallPanel](UI/Widgets/FeatureBallPanel.cpp) owns its label, reads the current count on construction, listens for changes, and removes its own binding on destruction. [FeatureSaveGamePanel](UI/Widgets/FeatureSaveGamePanel.cpp) is a native UUserWidget nested inside the debug overlay. Its own lifecycle handles persistence subscriptions and close-request binding. The parent retains both children through UPROPERTY/TObjectPtr and adds them as normal layout sections. For example, BuildPanel creates UFeatureBallPanel with CreateWidget and adds it to the vertical rows; it never calls a bounce-specific method. The player's controller still has no save-to-widget wiring.
 
 Include cleanup follows those boundaries too: the composing HUD no longer needs Engine/World.h, while FeatureBallPanel still includes it for its GetGameState template call. FeatureGameState no longer needs the world header either; it keeps Engine/GameInstance.h for subsystem access. Removing unused dependencies can reduce compile coupling, but does not change runtime behavior or establish a measured build-speed improvement.
 

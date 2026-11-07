@@ -1,7 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Containers/Ticker.h"
 #include "FeatureSaveGamePanel.generated.h"
 
 class AFeatureGameState;
@@ -18,10 +17,10 @@ protected:
 	// Builds the persistence controls and diagnostic section once.
 	// No pointer or reference parameters or return value; this widget owns its tree.
 	virtual void NativeOnInitialized() override;
-	// Connects save diagnostics, real-time previews, and orderly window close handling.
+	// Connects save diagnostics and orderly window close handling.
 	// No pointer or reference parameters or return value; cached world references are weak.
 	virtual void NativeConstruct() override;
-	// Removes bindings and pending preview callbacks when this section is removed.
+	// Removes bindings when this section is removed.
 	// No pointer or reference parameters or return value; releases observations without destroying systems.
 	virtual void NativeDestruct() override;
 private:
@@ -37,12 +36,9 @@ private:
 	// Formats slot, path, phase, and retained operation history.
 	// Saves is a read-only reference; the formatted string is returned by value.
 	static FString FormatSaveDiagnostics(const UFeatureSaveGameSubsystem& Saves);
-	// Refreshes diagnostics and schedules any required one-second preview.
+	// Refreshes persistence diagnostics.
 	// Status is read-only and busy is by value; event data is not retained by reference.
 	void RefreshSaveStatus(const FString& Status, bool bBusy);
-	// Advances a pending operation after its nonblocking real-time preview.
-	// DeltaSeconds and the one-shot bool result are by value without pointer ownership.
-	bool HandlePreviewElapsed(float DeltaSeconds);
 	// Requests saving without leaving the current game.
 	// No pointer or reference parameters or return value; acts on the weakly observed state.
 	UFUNCTION()
@@ -64,7 +60,4 @@ private:
 	// Observes operation state across asynchronous persistence phases.
 	// TWeakObjectPtr does not retain the game-instance-owned subsystem.
 	TWeakObjectPtr<UFeatureSaveGameSubsystem> ObservedSaves;
-	// Tracks the pending pause-independent UI preview callback.
-	// FTSTicker::FDelegateHandle is a weak ticker-entry handle removed on widget teardown.
-	FTSTicker::FDelegateHandle PreviewTicker;
 };

@@ -2,6 +2,7 @@
 #include "TestFeatures.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -18,6 +19,8 @@ void AFeatureBall::ConfigureBall()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 	BallMesh->SetMobility(EComponentMobility::Movable);
 	BallMesh->SetStaticMesh(SphereMesh.Object);
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> GlowMaterial(TEXT("/Game/Variant_Combat/Materials/M_Lava.M_Lava"));
+	BallMesh->SetMaterial(0, GlowMaterial.Object);
 	BallMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 	BallMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 	BallMesh->SetSimulatePhysics(false);

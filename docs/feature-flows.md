@@ -47,7 +47,7 @@ flowchart LR
     State["Game state"] -->|"stats and level events"| GameHUD
     State -->|"total and level events"| BallPanel
     Save -->|"status event"| SavePanel
-    SavePanel -->|"save requests and preview timing"| Save
+    SavePanel -->|"save requests"| Save
     Session["Gameplay session"] -->|"configured limits"| GameHUD
     classDef ui fill:#f3e8ff,stroke:#9333ea,color:#3b0764
     classDef systems fill:#dbeafe,stroke:#2563eb,color:#172554
@@ -55,7 +55,7 @@ flowchart LR
     class Mode,Controller,State,Save,Session systems
 ```
 
-The widgets own their subscriptions and initial synchronization. The player controller manages HUD lifetime; it does not connect state events to labels. The save panel drives the non-Shipping preview timers. See [menu views](../Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp), [menu](../Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), and [HUD](../Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp).
+The widgets own their subscriptions and initial synchronization. The player controller manages HUD lifetime; it does not connect state events to labels. The save panel observes persistence status. See [menu views](../Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp), [menu](../Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), and [HUD](../Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp).
 
 ## Game workflow: start, pause, save, and results
 
