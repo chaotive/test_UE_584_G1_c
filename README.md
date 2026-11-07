@@ -18,6 +18,10 @@ Choose **New Game** for a fresh level-one game or **Continue on level N** to pla
 
 The startup and pause menus show your last saved bounce total. On the startup menu, **Esc** exits. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
 
+![Crazy balls startup menu](docs/images/crazy-startup.png)
+
+*November 7, 2026: the startup menu shows the logo, subtitle, saved level, and bounce total.*
+
 ## How to play
 
 Each session is a race between two counters:
@@ -54,6 +58,10 @@ The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (leve
 **New Game** deletes the current save and begins level 1 with a fresh history. **Continue on level N** loads a readable save and starts its saved level. **Delete Save** removes the slot without starting a session; when there is no save, Continue is disabled and the menu displays **No saved game.** **Exit** closes the game, and **Esc** on the initial menu does the same.
 
 During a session, **Esc** opens the pause menu. Choose **Resume Game** or press **Esc** again to continue the same session; **Main Menu** returns to the startup screen, and **Exit** saves and quits. Saving or loading pauses play during I/O. In non-Shipping builds, the debug panel also offers **Save game** and **Save and quit** and shows save diagnostics.
+
+![Crazy balls pause menu](docs/images/crazy-pause.png)
+
+*November 7, 2026: the pause menu, opened through the editor console, shows the shared logo and session controls.*
 
 The save contains the current level, aggregate non-player bounce total, and a chronological session history with start times, counters, and results. The gameplay HUD's counters are for the current session; the debug HUD's total includes the saved history. A result screen requests a save automatically.
 

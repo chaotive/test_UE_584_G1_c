@@ -6,6 +6,7 @@
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -123,8 +124,11 @@ void UFeatureMainMenu::BuildHeader(UVerticalBox& Rows, const FFeatureMenuView& V
 	LogoTexture = FImageUtils::ImportFileAsTexture2D(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("FeatureBrand/FeatureCrazyBallsLogo.png")));
 	UImage* Logo = WidgetTree->ConstructWidget<UImage>();
 	Logo->SetBrushFromTexture(LogoTexture);
-	Logo->SetDesiredSizeOverride(FVector2D(210.0f, 140.0f));
-	Rows.AddChildToVerticalBox(Logo)->SetHorizontalAlignment(HAlign_Center);
+	USizeBox* LogoBox = WidgetTree->ConstructWidget<USizeBox>();
+	LogoBox->SetWidthOverride(210.0f);
+	LogoBox->SetHeightOverride(140.0f);
+	LogoBox->SetContent(Logo);
+	Rows.AddChildToVerticalBox(LogoBox)->SetHorizontalAlignment(HAlign_Center);
 
 	UTextBlock* Title = WidgetTree->ConstructWidget<UTextBlock>();
 	Title->SetText(FText::FromString(Settings->ProjectName));
