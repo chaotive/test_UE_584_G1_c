@@ -94,6 +94,7 @@ These goals will guide future tasks:
 39. Organization: Move feature code into UI, Gameplay, and GameWorkflow subfolders.
 40. Gameplay: Persist a chronological array of started sessions with their statistics.
 41. Gameplay: Enable player-ball blocking collisions and record their count in the active session.
+42. Gameplay: Configure per-session victory and defeat limits and pause when either is reached.
 
 ### To do
 

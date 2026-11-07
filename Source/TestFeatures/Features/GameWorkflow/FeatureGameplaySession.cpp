@@ -8,12 +8,55 @@
 #include "Kismet/GameplayStatics.h"
 #include "TestFeatures.h"
 
-void UFeatureGameplaySession::BindGameState(AFeatureGameState& State)
+void UFeatureGameplaySession::BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose)
 {
 	GameState = &State;
+	SaveSubsystem = State.GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
+	PlayerContactsToWin = ContactsToWin;
+	SessionBouncesToLose = BouncesToLose;
+	State.OnSessionStatsChanged.AddUObject(this, &UFeatureGameplaySession::EvaluateSessionLimits);
+	SaveSubsystem->OnStatusChanged.AddUObject(this, &UFeatureGameplaySession::HandlePersistenceStatusChanged);
 	GameStateController = NewObject<UFeatureGameStateController>(this);
 	GameStateController->Initialize(State);
 	BallSpawner.OnBallCreated.AddUObject(GameStateController.Get(), &UFeatureGameStateController::ObserveBall);
+}
+
+void UFeatureGameplaySession::Deinitialize()
+{
+	if (AFeatureGameState* State = GameState.Get())
+	{
+		State->OnSessionStatsChanged.RemoveAll(this);
+	}
+	if (UFeatureSaveGameSubsystem* Saves = SaveSubsystem.Get())
+	{
+		Saves->OnStatusChanged.RemoveAll(this);
+	}
+	Super::Deinitialize();
+}
+
+void UFeatureGameplaySession::EvaluateSessionLimits(const FFeatureGameplaySessionRecord& Stats)
+{
+	if (!CanLeaveGameplay())
+	{
+		return;
+	}
+
+	const bool bVictory = Stats.PlayerBallCollisions >= PlayerContactsToWin;
+	const bool bDefeat = Stats.TotalBounces >= SessionBouncesToLose;
+	if ((bVictory || bDefeat) && UGameplayStatics::SetGamePaused(GameState.Get(), true))
+	{
+		SessionState = ESessionState::LimitReached;
+		UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: %s limit reached; game paused (contacts: %d, bounces: %d)"),
+			bVictory ? TEXT("Victory") : TEXT("Defeat"), Stats.PlayerBallCollisions, Stats.TotalBounces);
+	}
+}
+
+void UFeatureGameplaySession::HandlePersistenceStatusChanged(const FString&, bool bBusy)
+{
+	if (!bBusy && SessionState == ESessionState::Playing)
+	{
+		EvaluateSessionLimits(GameState->GetGameplaySessions().Last());
+	}
 }
 
 void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 BallCount, const FBox& SpawnBounds, const FBox& LevelBounds)
@@ -42,6 +85,7 @@ void UFeatureGameplaySession::OnGameplaySessionResume()
 	{
 		SessionState = ESessionState::Playing;
 		OnResumed.Broadcast();
+		EvaluateSessionLimits(GameState->GetGameplaySessions().Last());
 	}
 }
 
@@ -65,7 +109,7 @@ void UFeatureGameplaySession::OnGameplaySessionEnded(bool bVictory)
 
 bool UFeatureGameplaySession::IsPersistenceBusy() const
 {
-	return GameState->GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->IsBusy();
+	return SaveSubsystem->IsBusy();
 }
 
 bool UFeatureGameplaySession::CanLeaveGameplay() const

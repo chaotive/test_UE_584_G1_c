@@ -63,7 +63,17 @@ protected:
 	// Number of training balls to create when play begins.
 	// int32 stores the ball count by value; UPROPERTY(EditAnywhere) exposes it for editor configuration without pointer ownership.
 	UPROPERTY(EditAnywhere, Category="Training_Ball")
-	int32 FeatureBallCount = 5;
+	int32 FeatureBallCount = 50;
+
+	// Sets how many player-ball blocking contacts win a gameplay session.
+	// int32 stores a positive threshold by value and exposes it in game-mode defaults.
+	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
+	int32 FeaturePlayerContactsToWin = 10;
+
+	// Sets how many ball bounces lose a gameplay session.
+	// int32 stores a positive threshold by value and exposes it in game-mode defaults.
+	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
+	int32 FeatureSessionBouncesToLose = 50;
 
 	// Minimum corner of the spawn box in world centimeters; each axis must be <= the maximum corner.
 	// FVector stores three coordinates by value; UPROPERTY exposes them for editing without a pointer or separate allocation.

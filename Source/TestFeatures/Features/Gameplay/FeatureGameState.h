@@ -14,10 +14,15 @@ class TESTFEATURES_API AFeatureGameState : public AGameStateBase
 public:
 
 	DECLARE_EVENT_OneParam(AFeatureGameState, FTotalBouncesChangedEvent, int32);
+	DECLARE_EVENT_OneParam(AFeatureGameState, FSessionStatsChangedEvent, const FFeatureGameplaySessionRecord&);
 
 	// Notifies listeners whenever the shared bounce total changes.
 	// This native multicast event passes int32 by value; only the game state can broadcast it.
 	FTotalBouncesChangedEvent OnTotalBouncesChanged;
+
+	// Announces updated statistics for the current gameplay session.
+	// The native event borrows a read-only reference to the state-owned record.
+	FSessionStatsChangedEvent OnSessionStatsChanged;
 
 	// Adds a bounce to the saved-game total and active session record, then notifies observers.
 	// No pointer or reference parameters or return value; modifies this world-owned game state.

@@ -13,6 +13,7 @@ void AFeatureGameState::RecordBounce()
 	++Progress.TotalBounces;
 	++Progress.Sessions.Last().TotalBounces;
 	OnTotalBouncesChanged.Broadcast(Progress.TotalBounces);
+	OnSessionStatsChanged.Broadcast(Progress.Sessions.Last());
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: Total bounces: %d"), *GetName(), Progress.TotalBounces);
 }
 
@@ -23,6 +24,7 @@ void AFeatureGameState::RecordPlayerBallCollision()
 		return;
 	}
 	++Progress.Sessions.Last().PlayerBallCollisions;
+	OnSessionStatsChanged.Broadcast(Progress.Sessions.Last());
 }
 
 const TArray<FFeatureGameplaySessionRecord>& AFeatureGameState::GetGameplaySessions() const

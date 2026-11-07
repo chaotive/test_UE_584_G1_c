@@ -7,6 +7,8 @@
 
 class AFeatureGameState;
 class UFeatureGameStateController;
+class UFeatureSaveGameSubsystem;
+struct FFeatureGameplaySessionRecord;
 
 /** Owns gameplay-session workflows and publishes lifecycle events to observers. */
 UCLASS()
@@ -34,9 +36,13 @@ public:
 	// Native multicast event passes the victory bool by value and stores weak UObject bindings.
 	FSessionEndedEvent OnEnded;
 
-	// Connects this session's ball events to the world's shared game state.
-	// State is a borrowed actor reference; this object owns the event controller.
-	void BindGameState(AFeatureGameState& State);
+	// Connects gameplay events and configures the per-session victory and defeat limits.
+	// State is borrowed; both limits are positive int32 values without object ownership.
+	void BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose);
+
+	// Removes this subsystem's observation when its world shuts down.
+	// No pointer or reference parameters or return value; releases weak UObject subscriptions.
+	virtual void Deinitialize() override;
 
 	// Starts the player workflow, initializes progress, and creates the enclosure and ball volley.
 	// bContinue and BallCount are values; both FBox references borrow world-space bounds.
@@ -55,15 +61,35 @@ public:
 	void OnGameplaySessionEnded(bool bVictory);
 
 private:
-	enum class ESessionState : uint8 { Ready, Playing, Paused, Ended };
+	enum class ESessionState : uint8 { Ready, Playing, Paused, LimitReached, Ended };
 
 	// Tracks which lifecycle requests the session can accept.
 	// Stores the private enum by value without pointer or reference ownership.
 	ESessionState SessionState = ESessionState::Ready;
 
+	// Sets the player-ball contact count that wins the current session.
+	// int32 stores the configured positive threshold by value without object ownership.
+	int32 PlayerContactsToWin = 10;
+
+	// Sets the ball-bounce count that loses the current session.
+	// int32 stores the configured positive threshold by value without object ownership.
+	int32 SessionBouncesToLose = 50;
+
+	// Pauses once when the current session reaches its victory or defeat limit.
+	// Stats borrows a read-only state-owned session record without transferring ownership.
+	void EvaluateSessionLimits(const FFeatureGameplaySessionRecord& Stats);
+
+	// Rechecks deferred statistics once persistence releases its gameplay pause.
+	// Status is a borrowed string reference and bBusy is passed by value without ownership.
+	void HandlePersistenceStatusChanged(const FString& Status, bool bBusy);
+
 	// Observes the world's shared bounce state throughout the session.
 	// A weak UObject pointer observes the world-owned actor without retaining its lifetime.
 	TWeakObjectPtr<AFeatureGameState> GameState;
+
+	// Observes persistence completion so paused I/O cannot conceal a reached score limit.
+	// The weak UObject pointer observes the game-instance-owned subsystem without retaining it.
+	TWeakObjectPtr<UFeatureSaveGameSubsystem> SaveSubsystem;
 
 	// Translates ball bounce events into shared state changes.
 	// UPROPERTY tracks a strong TObjectPtr to the controller owned by this session.

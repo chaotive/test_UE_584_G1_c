@@ -61,7 +61,7 @@ GameStateClass = AFeatureGameState::StaticClass();
 
 During startup, Unreal's `AGameModeBase::PreInitializeComponents()` creates the game-state actor, registers it with the world, and calls `InitGameState()`. This happens before our game mode's `BeginPlay()`. This exact creation point is also visible in the installed engine's `Engine/Source/Runtime/Engine/Private/GameModeBase.cpp`.
 
-Unreal creates `UFeatureGameplaySession` as a world subsystem. Our `InitGameState()` retrieves it and calls `BindGameState(State)` to connect the feature:
+Unreal creates `UFeatureGameplaySession` as a world subsystem. Our `InitGameState()` retrieves it and calls `BindGameState(State, ContactsToWin, BouncesToLose)` to connect the feature and configure its limits:
 
 ```cpp
 GameStateController = NewObject<UFeatureGameStateController>(this);
@@ -298,7 +298,7 @@ See [Object Pointers](https://dev.epicgames.com/documentation/en-us/unreal-engin
 
 ## Performance: what this design costs
 
-These are tradeoffs visible in the implementation, not benchmark results. The current defaults use five balls; we have not measured frame time, memory usage, or a safe maximum count.
+These are tradeoffs visible in the implementation, not benchmark results. The current defaults use fifty balls. Frame time, memory usage, and a safe maximum count have not been measured.
 
 | Choice | Benefit | Cost or limitation |
 | --- | --- | --- |
@@ -381,6 +381,8 @@ The November 7, 2026 Unreal Editor captures show ten bounces written to `Feature
 `AFeatureGameState::Progress` owns the saved game's aggregate bounce total and chronological `Sessions` array. Each record stores `StartedAtUtc`, `TotalBounces`, and `PlayerBallCollisions`. New Game resets progress; Continue restores it before adding the active session. Pause and resume use the existing record.
 
 Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
+
+The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Defaults are ten player-ball hit callbacks for victory and fifty bounces for defeat. Either result pauses the world with gameplay still visible. Threshold evaluation is latched once reached, and victory takes priority when a player contact reaches both targets. Persistence completion and manual resume recheck any deferred statistics. The initial fifty-ball volley can produce up to one hundred bounces under the current two-bounce retirement rule.
 
 ## Runtime arena bounds
 
