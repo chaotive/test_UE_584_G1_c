@@ -1,5 +1,4 @@
 #include "FeatureMainMenu.h"
-#include "Features/GameWorkflow/FeatureGameFlow.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Features_NonUE/FeatureSaveGameStorage.h"
@@ -77,7 +76,8 @@ FReply UFeatureMainMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry, const
 
 void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 {
-	bPauseMenu = Flow == EFeatureGameFlow::PauseMenu;
+	const FFeatureMenuView View = FFeatureMenuViews::ForFlow(Flow);
+	bPauseMenu = View.bPauseMenu;
 	SetIsFocusable(true);
 	UBorder* Background = WidgetTree->ConstructWidget<UBorder>();
 	WidgetTree->RootWidget = Background;
@@ -94,60 +94,53 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 	Card->SetContent(Rows);
 
 	UTextBlock* Title = WidgetTree->ConstructWidget<UTextBlock>();
-	FText Heading = FText::FromString(GetDefault<UGeneralProjectSettings>()->ProjectName);
-	switch (Flow)
-	{
-	case EFeatureGameFlow::PauseMenu:
-		Heading = LOCTEXT("Paused", "Paused");
-		break;
-	case EFeatureGameFlow::Victory:
-		Heading = LOCTEXT("Victory", "Victory");
-		break;
-	case EFeatureGameFlow::Lose:
-		Heading = LOCTEXT("Defeat", "Defeat");
-		break;
-	default:
-		break;
-	}
-	Title->SetText(Heading);
+	Title->SetText(View.Heading.IsEmpty() ? FText::FromString(GetDefault<UGeneralProjectSettings>()->ProjectName) : View.Heading);
 	Title->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 38));
 	Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.38f, 0.90f, 1.0f)));
 	Title->SetJustification(ETextJustify::Center);
 	Rows->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 24.0f));
 
-	const bool bStartupMenu = Flow == EFeatureGameFlow::StartupMenu;
-	const bool bMainMenu = bStartupMenu || bPauseMenu;
-	const bool bHasSave = bMainMenu && FFeatureSaveGameStorage::HasSave();
-	if (bStartupMenu)
+	const bool bHasSave = View.bShowSaveSummary && FFeatureSaveGameStorage::HasSave();
+	for (const FFeatureMenuItem& Item : View.Items)
 	{
-		AddAction(*Rows, LOCTEXT("NewGame", "New Game"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleNewGame);
-		ContinueButton = AddAction(*Rows, LOCTEXT("ContinueLevelOne", "Continue on level 1"));
-		ContinueButton->SetIsEnabled(false);
-		ContinueButton->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleContinue);
+		AddViewAction(*Rows, Item, bHasSave);
 	}
-	else if (bPauseMenu)
-	{
-		AddAction(*Rows, LOCTEXT("Resume", "Resume Game"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleResume);
-		AddAction(*Rows, LOCTEXT("ReturnToMenu", "Main Menu"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
-	}
-	else if (Flow == EFeatureGameFlow::Lose)
-	{
-		AddAction(*Rows, LOCTEXT("Retry", "Retry"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleRetry);
-	}
-	else
-	{
-		AddAction(*Rows, LOCTEXT("Continue", "Continue"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
-	}
-	if (bStartupMenu)
-	{
-		DeleteSaveButton = AddAction(*Rows, LOCTEXT("DeleteSave", "Delete Save"));
-		DeleteSaveButton->SetIsEnabled(bHasSave);
-		DeleteSaveButton->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleDeleteSave);
-	}
-	AddAction(*Rows, LOCTEXT("Exit", "Exit"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleExit);
-	if (bMainMenu)
+	if (View.bShowSaveSummary)
 	{
 		AddSaveSummary(*Rows, bHasSave);
+	}
+}
+
+void UFeatureMainMenu::AddViewAction(UVerticalBox& Rows, const FFeatureMenuItem& Item, bool bHasSave)
+{
+	UButton* Button = AddAction(Rows, Item.Label);
+	switch (Item.Action)
+	{
+	case EFeatureMenuAction::NewGame:
+		Button->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleNewGame);
+		break;
+	case EFeatureMenuAction::Continue:
+		ContinueButton = Button;
+		Button->SetIsEnabled(false);
+		Button->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleContinue);
+		break;
+	case EFeatureMenuAction::Resume:
+		Button->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleResume);
+		break;
+	case EFeatureMenuAction::ReturnToMenu:
+		Button->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
+		break;
+	case EFeatureMenuAction::Retry:
+		Button->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleRetry);
+		break;
+	case EFeatureMenuAction::DeleteSave:
+		DeleteSaveButton = Button;
+		Button->SetIsEnabled(bHasSave);
+		Button->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleDeleteSave);
+		break;
+	case EFeatureMenuAction::Exit:
+		Button->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleExit);
+		break;
 	}
 }
 

@@ -3,8 +3,8 @@
 
 #include "test_UE_584_G1_cPlayerController.h"
 #include "test_UE_584_G1_cGameMode.h"
-#include "Features/UI/FeatureDebugHUD.h"
-#include "Features/UI/FeatureGameplayHUD.h"
+#include "Features/UI/Archetypes/FeatureDebugHUD.h"
+#include "Features/UI/Archetypes/FeatureGameplayHUD.h"
 #if !UE_BUILD_SHIPPING
 #include "Features_NonUE/FeatureDebugHUDSpawner.h"
 #endif

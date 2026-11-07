@@ -4,7 +4,7 @@
 #include "test_UE_584_G1_c.h"
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
-#include "Features/UI/FeatureMainMenu.h"
+#include "Features/UI/Archetypes/FeatureMainMenu.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"

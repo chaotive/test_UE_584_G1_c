@@ -1,24 +1,13 @@
 #pragma once
 
 #include "Blueprint/UserWidget.h"
+#include "Features/UI/Views/FeatureMenuViews.h"
 #include "FeatureMainMenu.generated.h"
 
 class UButton;
 class UGameInstance;
 class UTextBlock;
 class UVerticalBox;
-
-enum class EFeatureGameFlow : uint8;
-
-enum class EFeatureMenuAction : uint8
-{
-	NewGame,
-	Continue,
-	Resume,
-	ReturnToMenu,
-	Retry,
-	Exit
-};
 
 /** Presents the actions available in a menu flow state. */
 UCLASS()
@@ -89,6 +78,10 @@ private:
 	// Adds a labeled action button to the menu stack.
 	// Rows and Label are borrowed references; the returned button is owned by the widget tree.
 	UButton* AddAction(UVerticalBox& Rows, const FText& Label);
+
+	// Creates a view-defined button and connects its menu action.
+	// Rows and Item are borrowed references; bHasSave is passed by value and the widget tree owns the button.
+	void AddViewAction(UVerticalBox& Rows, const FFeatureMenuItem& Item, bool bHasSave);
 
 	// Publishes the New Game selection.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.
