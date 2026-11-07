@@ -17,10 +17,15 @@ class TESTFEATURES_API AFeatureBall : public AStaticMeshActor
 public:
 
 	DECLARE_EVENT_OneParam(AFeatureBall, FBouncedEvent, AFeatureBall&);
+	DECLARE_EVENT_TwoParams(AFeatureBall, FContactEvent, AFeatureBall&, AActor&);
 
 	// Announces each counted bounce so independent listeners can react to it.
 	// The native multicast event passes this actor by reference; only AFeatureBall can broadcast it.
 	FBouncedEvent OnBounced;
+
+	// Announces blocking contacts while the ball is active, including swept character contacts.
+	// The native event borrows references to this ball and the world-owned other actor.
+	FContactEvent OnContact;
 
 	// Creates a training ball with its sphere mesh and physics configured.
 	// No pointer or reference parameters; Unreal creates and owns this actor instance.
@@ -62,7 +67,7 @@ private:
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 
-	// Counts bounces, emits an event, and returns the ball to the pool after two.
+	// Reports contacts, counts impulse-based bounces, and returns the ball to the pool after two.
 	// Component and actor pointers are non-owning event inputs, NormalImpulse is by value, and Hit is a read-only reference.
 	UFUNCTION()
 	void OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,

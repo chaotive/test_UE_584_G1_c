@@ -19,6 +19,7 @@ void AFeatureBall::ConfigureBall()
 	BallMesh->SetMobility(EComponentMobility::Movable);
 	BallMesh->SetStaticMesh(SphereMesh.Object);
 	BallMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
+	BallMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 	BallMesh->SetSimulatePhysics(false);
 	BallMesh->SetEnableGravity(true);
 	SetActorEnableCollision(false);
@@ -77,8 +78,18 @@ void AFeatureBall::ConfigureBouncing()
 void AFeatureBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Ignore queued contacts after release and contacts with no bounce impulse.
-	if (!bActive || NormalImpulse.IsNearlyZero())
+	// Ignore queued contacts after release.
+	if (!bActive)
+	{
+		return;
+	}
+
+	if (OtherActor)
+	{
+		OnContact.Broadcast(*this, *OtherActor);
+	}
+	// Character sweeps report contacts without a solver impulse.
+	if (NormalImpulse.IsNearlyZero())
 	{
 		return;
 	}

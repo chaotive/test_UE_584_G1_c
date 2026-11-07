@@ -24,13 +24,13 @@ namespace
 
 void UFeatureSaveGameSubsystem::RequestLoad()
 {
-	StartOperation(true, 0, false);
+	StartOperation(true, FFeatureGameProgress(), false);
 }
-void UFeatureSaveGameSubsystem::RequestSave(int32 Count, bool bQuitAfter)
+void UFeatureSaveGameSubsystem::RequestSave(const FFeatureGameProgress& Progress, bool bQuitAfter)
 {
-	StartOperation(false, Count, bQuitAfter);
+	StartOperation(false, Progress, bQuitAfter);
 }
-void UFeatureSaveGameSubsystem::StartOperation(bool bLoad, int32 Count, bool bQuitAfter)
+void UFeatureSaveGameSubsystem::StartOperation(bool bLoad, const FFeatureGameProgress& Progress, bool bQuitAfter)
 {
 	// Serialize requests; repeated clicks or close requests must not start competing writes.
 	if (bBusy)
@@ -42,7 +42,7 @@ void UFeatureSaveGameSubsystem::StartOperation(bool bLoad, int32 Count, bool bQu
 	OperationWorld = GetWorld();
 	bWasPaused = UGameplayStatics::IsGamePaused(GetWorld());
 	UGameplayStatics::SetGamePaused(GetWorld(), true);
-	PendingCount = Count;
+	PendingProgress = Progress;
 	bLoading = bLoad;
 	bQuitRequested = bQuitAfter;
 	bBusy = true;
@@ -67,13 +67,12 @@ void UFeatureSaveGameSubsystem::BeginPendingIO()
 	TWeakObjectPtr<UFeatureSaveGameSubsystem> WeakThis(this);
 	if (bLoading)
 	{
-		FFeatureSaveGameStorage::LoadAsync([WeakThis, RequestId](TOptional<int32> SavedCount, const FString& Result)
+		FFeatureSaveGameStorage::LoadAsync([WeakThis, RequestId](TOptional<FFeatureGameProgress> SavedProgress, const FString& Result)
 		{
 			UFeatureSaveGameSubsystem* Self = WeakThis.Get();
 			if (!Self || Self->OperationId != RequestId) { return; }
-			const int32 Count = SavedCount.Get(0);
-			Self->PendingCount = Count;
-			Self->OnLoaded.Broadcast(Count);
+			Self->PendingProgress = SavedProgress.Get(FFeatureGameProgress());
+			Self->OnLoaded.Broadcast(Self->PendingProgress);
 			Self->bSucceeded = true; // Missing/unreadable data completes with storage's zero fallback.
 			Self->bIOComplete = true;
 			if (UsesDebugPreviews())
@@ -89,7 +88,7 @@ void UFeatureSaveGameSubsystem::BeginPendingIO()
 	}
 	else
 	{
-		FFeatureSaveGameStorage::SaveAsync(PendingCount, [WeakThis, RequestId](bool bSuccess)
+		FFeatureSaveGameStorage::SaveAsync(PendingProgress, [WeakThis, RequestId](bool bSuccess)
 		{
 			UFeatureSaveGameSubsystem* Self = WeakThis.Get();
 			if (!Self || Self->OperationId != RequestId) { return; }
@@ -117,7 +116,7 @@ void UFeatureSaveGameSubsystem::FinishOperation()
 	PublishStatus(bSucceeded ? TEXT("Operation complete; gameplay released") : TEXT("Save failed; gameplay released, game kept open"));
 	if (bLoading && bQuitRequested)
 	{
-		RequestSave(PendingCount, true);
+		RequestSave(PendingProgress, true);
 		return;
 	}
 	if (bQuitRequested && bSucceeded && World)

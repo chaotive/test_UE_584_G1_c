@@ -92,6 +92,8 @@ These goals will guide future tasks:
 34. Package Win64 builds in Development, DebugGame, and Shipping configurations.
 35. Gameplay: Spawn a configurable collision enclosure around the level at gameplay-session start.
 39. Organization: Move feature code into UI, Gameplay, and GameWorkflow subfolders.
+40. Gameplay: Persist a chronological array of started sessions with their statistics.
+41. Gameplay: Enable player-ball blocking collisions and record their count in the active session.
 
 ### To do
 

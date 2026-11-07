@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "FeatureSaveGame.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "FeatureSaveGameSubsystem.generated.h"
 
@@ -10,20 +11,20 @@ class TESTFEATURES_API UFeatureSaveGameSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 public:
 	DECLARE_EVENT_TwoParams(UFeatureSaveGameSubsystem, FStatusChangedEvent, const FString&, bool);
-	DECLARE_EVENT_OneParam(UFeatureSaveGameSubsystem, FLoadedEvent, int32);
+	DECLARE_EVENT_OneParam(UFeatureSaveGameSubsystem, FLoadedEvent, FFeatureGameProgress&);
 	// Announces preview, disk activity, completion, and resume transitions.
 	// Native multicast event borrows a string and passes bool by value without owning listeners.
 	FStatusChangedEvent OnStatusChanged;
 	// Delivers restored data before gameplay resumes.
-	// Native event passes int32 by value without transferring object ownership.
+	// Native event borrows a mutable snapshot so gameplay initialization updates a queued save-after-load.
 	FLoadedEvent OnLoaded;
 
 	// Requests a paused, in-game load with HUD previews.
 	// No pointer or reference parameters or return value; callbacks use this game-instance subsystem.
 	void RequestLoad();
 	// Requests an in-game save, optionally followed by a successful orderly quit.
-	// Count and bQuitAfter are value snapshots without actor ownership.
-	void RequestSave(int32 Count, bool bQuitAfter = false);
+	// Progress is a borrowed read-only value snapshot and bQuitAfter is passed by value.
+	void RequestSave(const FFeatureGameProgress& Progress, bool bQuitAfter = false);
 	// Starts disk access after the HUD's nonblocking pre-operation hold.
 	// No pointer or reference parameters or return value; starts one pending operation.
 	void BeginPendingIO();
@@ -56,8 +57,8 @@ public:
 	FString GetSaveFilePath() const;
 private:
 	// Pauses the current world and announces a pending operation.
-	// bLoad, Count, and bQuitAfter are passed by value without ownership transfer.
-	void StartOperation(bool bLoad, int32 Count, bool bQuitAfter);
+	// Progress is borrowed read-only; bLoad and bQuitAfter are values without ownership transfer.
+	void StartOperation(bool bLoad, const FFeatureGameProgress& Progress, bool bQuitAfter);
 	// Records a diagnostic transition for HUD observers.
 	// Status is borrowed read-only and copied into owned history.
 	void PublishStatus(const FString& Status);
@@ -70,9 +71,9 @@ private:
 	// Identifies the current callback generation across level teardown.
 	// uint32 is a value token without pointer ownership.
 	uint32 OperationId = 0;
-	// Holds the requested snapshot or restored count.
-	// int32 stores data by value without live state references.
-	int32 PendingCount = 0;
+	// Holds the requested or restored progress, including session records.
+	// The reflected struct owns a value snapshot without live actor references.
+	FFeatureGameProgress PendingProgress;
 	// Indicates a persistence gate is active.
 	// bool is per-instance value state without pointers.
 	bool bBusy = false;

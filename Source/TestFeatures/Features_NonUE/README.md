@@ -11,10 +11,10 @@ The ball spawner assigns indexed actor names in every build. It also sets the ma
 
 The [feature guide](../Features/README.md) explains startup, spawning, pooling, event subscriptions, UI creation, ownership, and performance tradeoffs. This folder split changes code organization without changing those flows or their runtime costs.
 
-`FFeatureSaveGameStorage` loads and saves bounce totals using `Features/GameWorkflow/FeatureSaveGame.h`. It provides the local slot name, desktop file path, and load result for diagnostics. The [feature guide](../Features/README.md) covers asynchronous disk operations and the synchronous fallback during forced teardown.
+`FFeatureSaveGameStorage` loads and saves progress snapshots using `Features/GameWorkflow/FeatureSaveGame.h`. A snapshot includes the aggregate bounce total and each session's start time, bounces, and player-ball contacts. Storage provides the local slot name, desktop file path, and load result for diagnostics.
 
 Task 17 moved these helpers into the runtime module alongside the Unreal-reflected classes. The module is now named `TestFeatures` and exports the helpers with `TESTFEATURES_API`.
 
-Storage uses Unreal's asynchronous loading and saving APIs. An asynchronous load returns an optional bounce total so the menu can distinguish a valid zero from a missing or unreadable save. The gameplay load starts at zero when there is no usable total.
+Storage uses Unreal's asynchronous loading and saving APIs. An asynchronous load returns an optional progress snapshot so the menu can distinguish a valid zero total from a missing or unreadable save. Gameplay starts with empty progress when loading returns no usable snapshot.
 
 Compatibility policy: old data may be discarded. The configured game mode and player controller still create the current feature classes in code, so a missing save does not prevent startup.

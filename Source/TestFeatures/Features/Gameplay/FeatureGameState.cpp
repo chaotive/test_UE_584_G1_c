@@ -6,21 +6,41 @@
 
 void AFeatureGameState::RecordBounce()
 {
-	++TotalBounces;
-	OnTotalBouncesChanged.Broadcast(TotalBounces);
-	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: Total bounces: %d"), *GetName(), TotalBounces);
+	if (!bSessionInitialized)
+	{
+		return;
+	}
+	++Progress.TotalBounces;
+	++Progress.Sessions.Last().TotalBounces;
+	OnTotalBouncesChanged.Broadcast(Progress.TotalBounces);
+	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: Total bounces: %d"), *GetName(), Progress.TotalBounces);
+}
+
+void AFeatureGameState::RecordPlayerBallCollision()
+{
+	if (!bSessionInitialized)
+	{
+		return;
+	}
+	++Progress.Sessions.Last().PlayerBallCollisions;
+}
+
+const TArray<FFeatureGameplaySessionRecord>& AFeatureGameState::GetGameplaySessions() const
+{
+	return Progress.Sessions;
 }
 
 int32 AFeatureGameState::GetTotalBounces() const
 {
-	return TotalBounces;
+	return Progress.TotalBounces;
 }
 
-void AFeatureGameState::InitializeTotal(int32 Count)
+void AFeatureGameState::InitializeProgress(FFeatureGameProgress& Snapshot)
 {
-	TotalBounces = Count;
+	Snapshot.Sessions.AddDefaulted_GetRef().StartedAtUtc = FDateTime::UtcNow();
+	Progress = Snapshot;
 	bSessionInitialized = true;
-	OnTotalBouncesChanged.Broadcast(TotalBounces);
+	OnTotalBouncesChanged.Broadcast(Progress.TotalBounces);
 }
 
 void AFeatureGameState::StartSession(bool bContinue)
@@ -31,21 +51,22 @@ void AFeatureGameState::StartSession(bool bContinue)
 	}
 	else
 	{
-		InitializeTotal(0);
+		FFeatureGameProgress FreshProgress;
+		InitializeProgress(FreshProgress);
 	}
 }
 
 void AFeatureGameState::SaveSession(bool bQuitAfter)
 {
-	GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->RequestSave(TotalBounces, bQuitAfter);
+	GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->RequestSave(Progress, bQuitAfter);
 }
 
 void AFeatureGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
-	Saves->OnLoaded.AddUObject(this, &AFeatureGameState::InitializeTotal);
-	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: BeginPlay (Total bounces: %d)"), *GetName(), TotalBounces);
+	Saves->OnLoaded.AddUObject(this, &AFeatureGameState::InitializeProgress);
+	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: BeginPlay (Total bounces: %d)"), *GetName(), Progress.TotalBounces);
 }
 
 void AFeatureGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -56,8 +77,8 @@ void AFeatureGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	// Editor Stop/forced teardown cannot be deferred for a live HUD; retain a synchronous fallback.
 	if (bSessionInitialized && !Saves->HasSavedForQuit())
 	{
-		FFeatureSaveGameStorage::SaveTotalBounces(TotalBounces);
+		FFeatureSaveGameStorage::SaveProgress(Progress);
 	}
-	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: EndPlay (Total bounces: %d)"), *GetName(), TotalBounces);
+	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: EndPlay (Total bounces: %d)"), *GetName(), Progress.TotalBounces);
 	Super::EndPlay(EndPlayReason);
 }

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "GameFramework/GameStateBase.h"
 #include "FeatureGameState.generated.h"
 
-/** Holds the accumulated training ball bounce total, restored and saved at session boundaries. */
+/** Holds saved-game progress and the statistics for every started gameplay session. */
 UCLASS()
 class TESTFEATURES_API AFeatureGameState : public AGameStateBase
 {
@@ -18,11 +19,19 @@ public:
 	// This native multicast event passes int32 by value; only the game state can broadcast it.
 	FTotalBouncesChangedEvent OnTotalBouncesChanged;
 
-	// Adds one ball bounce to the session total and logs the updated count.
+	// Adds a bounce to the saved-game total and active session record, then notifies observers.
 	// No pointer or reference parameters or return value; modifies this world-owned game state.
 	void RecordBounce();
 
-	// Reads the session's total bounce count for C++ or Blueprint callers.
+	// Records one player-ball contact in the active session.
+	// No pointer or reference parameters or return value; increments a value counter.
+	void RecordPlayerBallCollision();
+
+	// Exposes the saved game's chronological session history for inspection.
+	// Returns a borrowed const TArray reference to state-owned value records.
+	const TArray<FFeatureGameplaySessionRecord>& GetGameplaySessions() const;
+
+	// Reads the saved game's aggregate bounce count for C++ or Blueprint callers.
 	// Returns int32 by value without pointers or references; const keeps this query read-only.
 	UFUNCTION(BlueprintPure, Category="Training_Ball")
 	int32 GetTotalBounces() const;
@@ -32,7 +41,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Training_Ball")
 	void SaveSession(bool bQuitAfter = false);
 
-	// Starts a new session at zero or requests restoration of the saved total.
+	// Starts a fresh saved game or loads progress before appending the current session.
 	// bContinue is passed by value without pointer or reference ownership.
 	void StartSession(bool bContinue);
 
@@ -48,16 +57,16 @@ protected:
 
 private:
 
-	// Allows teardown saving once a new or continued session has an initialized total.
+	// Allows teardown saving once a new or continued session has initialized progress.
 	// bool records session readiness by value without pointer ownership.
 	bool bSessionInitialized = false;
 
-	// Initializes a new or restored total and notifies observers.
-	// Count is passed by value without pointer or reference ownership.
-	void InitializeTotal(int32 Count);
+	// Appends the current session to a fresh or restored snapshot and notifies observers.
+	// Snapshot is a mutable borrowed reference so queued save-after-load uses initialized progress.
+	void InitializeProgress(FFeatureGameProgress& Snapshot);
 
-	// Accumulates bounces from all balls, including balls reused from the pool.
-	// int32 stores the count by value; UPROPERTY exposes it for inspection and Blueprint reads without allowing edits.
+	// Retains the aggregate bounce total and every started session's statistics.
+	// The reflected struct owns its values and array; UPROPERTY exposes read-only Blueprint inspection.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Training_Ball", meta=(AllowPrivateAccess="true"))
-	int32 TotalBounces = 0;
+	FFeatureGameProgress Progress;
 };

@@ -141,12 +141,12 @@ void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave)
 
 	Summary->SetText(LOCTEXT("ReadingSavedGame", "Reading saved game..."));
 	const TWeakObjectPtr<UTextBlock> WeakSummary(Summary);
-	FFeatureSaveGameStorage::LoadAsync([WeakSummary](TOptional<int32> Count, const FString&)
+	FFeatureSaveGameStorage::LoadAsync([WeakSummary](TOptional<FFeatureGameProgress> Progress, const FString&)
 	{
 		if (UTextBlock* Label = WeakSummary.Get())
 		{
-			Label->SetText(Count.IsSet()
-				? FText::Format(LOCTEXT("SavedTotalBounces", "Saved total bounces: {0}"), FText::AsNumber(Count.GetValue()))
+			Label->SetText(Progress.IsSet()
+				? FText::Format(LOCTEXT("SavedTotalBounces", "Saved total bounces: {0}"), FText::AsNumber(Progress.GetValue().TotalBounces))
 				: LOCTEXT("UnreadableSavedGame", "Saved game could not be read."));
 		}
 	});

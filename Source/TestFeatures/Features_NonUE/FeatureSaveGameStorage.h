@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Misc/Optional.h"
 
 /** Stores value snapshots without depending on the live game state or HUD. */
@@ -13,12 +14,12 @@ public:
 	static bool HasSave();
 
 	// Loads a snapshot without blocking rendering while disk data is read.
-	// TFunction owns the callback. TOptional distinguishes an unavailable count from zero, and the diagnostic string is borrowed.
-	static void LoadAsync(TFunction<void(TOptional<int32>, const FString&)> Completion);
+	// TFunction owns the callback; TOptional owns a value snapshot or marks unavailable data, and the diagnostic string is borrowed.
+	static void LoadAsync(TFunction<void(TOptional<FFeatureGameProgress>, const FString&)> Completion);
 
-	// Saves an integer snapshot while the game thread continues drawing UI.
-	// Count is by value and Completion is an owned callback receiving a bool result; no actors are captured by storage.
-	static void SaveAsync(int32 Count, TFunction<void(bool)> Completion);
+	// Saves a complete progress snapshot while the game thread continues drawing UI.
+	// Progress is borrowed read-only and copied into the save object; Completion owns its callback.
+	static void SaveAsync(const FFeatureGameProgress& Progress, TFunction<void(bool)> Completion);
 
 	// Reads the saved bounce total, or returns zero when no readable save exists.
 	// Result is a mutable string reference for diagnostics; returns int32 by value without transferring object ownership.
@@ -32,7 +33,7 @@ public:
 	// Returns an absolute FString path by value without pointer ownership.
 	static FString GetSaveFilePath();
 
-	// Writes a bounce-total snapshot to the sandbox's save slot before shutdown.
-	// TotalBounces and the bool success result are passed by value; no live actor references are serialized.
-	static bool SaveTotalBounces(int32 TotalBounces);
+	// Writes progress to the sandbox's save slot before shutdown.
+	// Progress is borrowed read-only and serialized by value; bool reports success without object ownership.
+	static bool SaveProgress(const FFeatureGameProgress& Progress);
 };

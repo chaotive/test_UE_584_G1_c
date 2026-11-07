@@ -31,7 +31,7 @@ The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and 
 | `FFeatureBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) |
 | `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](Gameplay/FeatureBall.cpp) |
 | `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](Gameplay/FeatureLevelBounds.cpp) |
-| `AFeatureGameState` | Stores the shared total number of bounces. | [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp) |
+| `AFeatureGameState` | Stores the shared bounce total and chronological session records. | [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp) |
 | `UFeatureGameStateController` | Listens to ball events and updates that shared total. | [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) |
 | `UFeatureSaveGameSubsystem` | Coordinates async persistence, pause/resume, and operation state. | [FeatureSaveGameSubsystem.cpp](GameWorkflow/FeatureSaveGameSubsystem.cpp) |
 | `UFeatureDebugHUD` | Composes child panels, shared headings, layout, and debug input. | [FeatureDebugHUD.cpp](UI/FeatureDebugHUD.cpp) |
@@ -180,7 +180,7 @@ There are two counters with different lifetimes:
 | Counter | Meaning | When it resets |
 | --- | --- | --- |
 | `BounceCount` on each ball | Bounces during this activation; two means return to the pool. | Every `Activate()` call. |
-| `TotalBounces` on the game state | Bounces reported by all balls in the session. | Starts at zero on New Game and is restored on Continue. Pool reuse preserves the total. |
+| `Progress.TotalBounces` on the game state | Bounces reported across the saved game's sessions. | Starts at zero on New Game and is restored on Continue. Pool reuse preserves the total. |
 
 For example, starting from a saved total of zero, ball 0 bouncing twice and ball 1 bouncing once produces a shared total of three. If ball 0 is reused, its local count returns to zero while the shared total stays three. With an existing saved total, those same bounces add three to that total.
 
@@ -331,7 +331,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 2. Press Play, choose **New Game**, and search the World Outliner for `Training_Ball_`. Inactive pooled actors can remain listed while hidden in the game view.
 3. Filter Output Log by `FeatureBallSpawner`, `FeatureBall`, `FeatureGameStateController`, or `FeatureGameState` to follow each part of the flow.
 4. Look for the dark `TRAINING DEBUG HUD` panel in the top-left corner. It appears during Play through the Third Person player controller; there is no widget asset to place in the level.
-5. Read the total through `GetTotalBounces()` or inspect `Total Bounces` on the game-state actor. The debug panel also displays the live total through state-change events.
+5. Read the total through `GetTotalBounces()` or inspect `Progress` on the game-state actor. Expand its `Sessions` array to inspect session statistics. The debug panel displays the aggregate bounce total through state-change events.
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
@@ -345,9 +345,9 @@ At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue sta
 
 The HUD's specialized UFeatureSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
 
-The HUD displays current I/O state, slot `FeatureSandbox`, user index 0, the absolute desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result. Writes report success or failure. The save contains the accumulated total, and the total stays local to the session.
+The HUD displays current I/O state, slot `FeatureSandbox`, user index 0, the absolute desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result. Writes report success or failure. The save contains aggregate progress and chronological session records.
 
-Use **Save game** to save while staying in the current level. Use **Save and quit** for an orderly exit: snapshot the total, keep the world paused during preview and asynchronous saving, show the result, then quit only if the write succeeded. A failed save keeps the game open. The active HUD also intercepts a normal native game-window close and requests this path. Repeated save/close clicks do not launch competing writes; a quit request received during load is queued until a following save can complete.
+Use **Save game** to save while staying in the current level. Use **Save and quit** for an orderly exit: snapshot progress, keep the world paused during preview and asynchronous saving, show the result, then quit only if the write succeeded. A failed save keeps the game open. The active HUD also intercepts a normal native game-window close and requests this path. Repeated save/close clicks do not launch competing writes; a quit request received during load is queued until a following save can complete.
 
 Unreal Editor Stop, console/engine-forced exit, or external process termination can bypass the HUD close request. EndPlay cannot keep a destroyed level running to show progress. A synchronous fallback saves an initialized total during forced teardown, without a UI preview; stopping during initial loading does not overwrite progress with an uninitialized zero. A successful gated quit skips this redundant fallback. Crashes and forced OS process termination cannot guarantee a save. Pending async callbacks carry a generation token so results from a torn-down level are ignored; an already-issued disk write itself cannot be cancelled by that token.
 
@@ -364,7 +364,7 @@ Historical verification from 2026-11-01 after extracting both specialized panels
 5. Try missing saves, failed reads, repeated clicks, and close requests during loading. Existing error policy and slot sharing are unchanged.
 6. Use editor Stop during loading and saving: verify the fallback and check that callbacks do not update a new level. This forced path intentionally has no in-game delay.
 
-The player controller still only creates, retains, and removes the HUD. The outer HUD composes sections and owns general input presentation; its UFeatureBallPanel child owns bounce display and state observation. Its UFeatureSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its scalar snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
+The player controller still only creates, retains, and removes the HUD. The outer HUD composes sections and owns general input presentation; its UFeatureBallPanel child owns bounce display and state observation. Its UFeatureSaveGamePanel child owns persistence subscriptions, diagnostic formatting, save controls, close gating, and preview callbacks. The state supplies its progress snapshot; the subsystem owns pause/operation/quit policy; storage owns disk access. This keeps UI rendering and relationship knowledge at the appropriate boundaries.
 
 ## UI composition and documentation captures
 
@@ -375,6 +375,12 @@ Include cleanup follows those boundaries too: the composing HUD no longer needs 
 This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
 The November 7, 2026 Unreal Editor captures show ten bounces written to `FeatureSandbox` and then restored through Continue. The HUD history records the preview, disk I/O, and return to gameplay. [Save capture](../../../docs/images/feature-save-result.png) · [Continue capture](../../../docs/images/feature-continue.png)
+
+## Saved session records
+
+`AFeatureGameState::Progress` owns the saved game's aggregate bounce total and chronological `Sessions` array. Each record stores `StartedAtUtc`, `TotalBounces`, and `PlayerBallCollisions`. New Game resets progress; Continue restores it before adding the active session. Pause and resume use the existing record.
+
+Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
 
 ## Runtime arena bounds
 
