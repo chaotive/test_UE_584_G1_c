@@ -63,11 +63,18 @@ void UFeatureMainMenu::NativeDestruct()
 
 FReply UFeatureMainMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent)
 {
-	if (bPauseMenu && KeyEvent.GetKey() == EKeys::Escape)
+	if ((bPauseMenu || bExitOnEscape) && KeyEvent.GetKey() == EKeys::Escape)
 	{
 		if (!KeyEvent.IsRepeat())
 		{
-			HandleResume();
+			if (bPauseMenu)
+			{
+				HandleResume();
+			}
+			else
+			{
+				HandleExit();
+			}
 		}
 		return FReply::Handled();
 	}
@@ -78,6 +85,7 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 {
 	const FFeatureMenuView View = FFeatureMenuViews::ForFlow(Flow);
 	bPauseMenu = View.bPauseMenu;
+	bExitOnEscape = View.bExitOnEscape;
 	SetIsFocusable(true);
 	UBorder* Background = WidgetTree->ConstructWidget<UBorder>();
 	WidgetTree->RootWidget = Background;

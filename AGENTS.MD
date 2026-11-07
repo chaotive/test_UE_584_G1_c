@@ -65,6 +65,7 @@ These goals will guide future tasks:
 24. Never change line breaks, indentation, whitespace, or make irrelevant formatting changes unless explicitly requested.
 25. When the user says "commit as new task", inspect both Done and To do task indexes, calculate one greater than the highest index across both lists, and prefix that number with the literal digits "100" to distinguish these tasks. Record the completed task and include its prefixed task number in the commit description.
 26. In CHANGES.md, display screenshot evidence directly as inline images rather than linking to them.
+27. For related UI views, keep shared construction, styling, and behavior in common UI code, and express each view's differences declaratively in code. Use another data format only when it provides a clear benefit.
 
 ## Tasks
 
@@ -93,6 +94,7 @@ These goals will guide future tasks:
 22. Main menu: Disable "Continue" when the save slot is empty.
 23. Main menu: "Exit" closes the game.
 24. Main menu: Pressing Esc pauses the game and shows the pause menu.
+29. Main menu: Pressing Esc on the initial menu exits the game.
 30. Show the saved bounce total below the main menu buttons, or display "No saved game." when the slot is empty.
 31. Add the non-Shipping console command `Feature.NewGame` to start a new game immediately from the startup menu.
 32. Show the debug HUD menu only in non-Shipping builds.
@@ -116,11 +118,6 @@ These goals will guide future tasks:
 
 ### To do
 
-25. Pause menu: First item option: "Resume game" and allows to return and unpause the game.
-26. Pause menu: Esc key pauses the game and shows Pause menu
-27. Pause menu: Pressing "Esc" key while paused, is the same as pressing "Resume game".
-28. UI: On Initial Main Menu, "Resume game" is grayed out.
-29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
 33. Add a smoke test for main easy to test features using Gauntlet.
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling

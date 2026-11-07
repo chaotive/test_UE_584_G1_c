@@ -37,6 +37,10 @@ struct FFeatureMenuView
 	// bool is stored by value without pointer ownership.
 	bool bPauseMenu;
 
+	// Makes Escape invoke Exit on the initial menu.
+	// bool is stored by value without pointer ownership.
+	bool bExitOnEscape;
+
 	// Requests the saved-game summary below the action list.
 	// bool is stored by value without pointer ownership.
 	bool bShowSaveSummary;

@@ -26,7 +26,7 @@ FFeatureMenuView FFeatureMenuViews::ForFlow(EFeatureGameFlow Flow)
 
 FFeatureMenuView FFeatureMenuViews::InitialMenu()
 {
-	return {FText::GetEmpty(), false, true, {
+	return {FText::GetEmpty(), false, true, true, {
 		{EFeatureMenuAction::NewGame, LOCTEXT("NewGame", "New Game")},
 		{EFeatureMenuAction::Continue, LOCTEXT("ContinueLevelOne", "Continue on level 1")},
 		{EFeatureMenuAction::DeleteSave, LOCTEXT("DeleteSave", "Delete Save")}
@@ -35,7 +35,7 @@ FFeatureMenuView FFeatureMenuViews::InitialMenu()
 
 FFeatureMenuView FFeatureMenuViews::PauseMenu()
 {
-	return {LOCTEXT("Paused", "Paused"), true, true, {
+	return {LOCTEXT("Paused", "Paused"), true, false, true, {
 		{EFeatureMenuAction::Resume, LOCTEXT("Resume", "Resume Game")},
 		{EFeatureMenuAction::ReturnToMenu, LOCTEXT("MainMenu", "Main Menu")}
 	}};
@@ -43,14 +43,14 @@ FFeatureMenuView FFeatureMenuViews::PauseMenu()
 
 FFeatureMenuView FFeatureMenuViews::VictoryMenu()
 {
-	return {LOCTEXT("Victory", "Victory"), false, false, {
+	return {LOCTEXT("Victory", "Victory"), false, false, false, {
 		{EFeatureMenuAction::ReturnToMenu, LOCTEXT("Continue", "Continue")}
 	}};
 }
 
 FFeatureMenuView FFeatureMenuViews::DefeatMenu()
 {
-	return {LOCTEXT("Defeat", "Defeat"), false, false, {
+	return {LOCTEXT("Defeat", "Defeat"), false, false, false, {
 		{EFeatureMenuAction::Retry, LOCTEXT("Retry", "Retry")}
 	}};
 }

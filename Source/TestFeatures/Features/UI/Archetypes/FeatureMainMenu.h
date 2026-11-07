@@ -39,7 +39,7 @@ protected:
 	// No pointer or reference parameters or return value; releases the weak event binding.
 	virtual void NativeDestruct() override;
 
-	// Treats Escape as Resume while the pause menu or one of its buttons has focus.
+	// Routes Escape to Resume or Exit for the pause and initial menus.
 	// The geometry and key event are borrowed const references; FReply is returned by value.
 	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent) override;
 
@@ -74,6 +74,10 @@ private:
 	// Identifies whether this menu supports Escape to resume.
 	// bool stores the input behavior by value.
 	bool bPauseMenu = false;
+
+	// Identifies whether Escape exits from this menu.
+	// bool stores the input behavior by value without pointer ownership.
+	bool bExitOnEscape = false;
 
 	// Adds a labeled action button to the menu stack.
 	// Rows and Label are borrowed references; the returned button is owned by the widget tree.
