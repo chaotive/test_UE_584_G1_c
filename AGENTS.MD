@@ -88,6 +88,11 @@ These goals will guide future tasks:
 16. Please give the IO loading UI step a 1 second before and after load just to see it working on save and loads.
 17. Move all featured UE and non-UE code into its own independent runtime module.
 18. Show the startup menu first with the game title from the project configuration and New Game, Continue, and Exit options.
+19. Main menu: "New Game" deletes the current save and starts a fresh session.
+21. Main menu: Add "Delete Save" above Exit to clear the save slot.
+22. Main menu: Disable "Continue" when the save slot is empty.
+23. Main menu: "Exit" closes the game.
+24. Main menu: Pressing Esc pauses the game and shows the pause menu.
 30. Show the saved bounce total below the main menu buttons, or display "No saved game." when the slot is empty.
 31. Add the non-Shipping console command `Feature.NewGame` to start a new game immediately from the startup menu.
 32. Show the debug HUD menu only in non-Shipping builds.
@@ -109,12 +114,6 @@ These goals will guide future tasks:
 
 ### To do
 
-19. Main menu: "New Game" deletes the current save and starts a fresh session.
-20. Main menu: "Continue in level N" loads the saved game and starts game on the saved level.
-21. Main menu: Add "Delete Save" above Exit to clear the save slot.
-22. Main menu: Disable "Continue ..." when the save slot is empty.
-23. Main menu: "Exit" closes the game.
-24. Main menu: Pressing "Esc" key pauses the game and shows the main menu again.
 25. Pause menu: First item option: "Resume game" and allows to return and unpause the game.
 26. Pause menu: Esc key pauses the game and shows Pause menu
 27. Pause menu: Pressing "Esc" key while paused, is the same as pressing "Resume game".
@@ -122,5 +121,6 @@ These goals will guide future tasks:
 29. Main menu: On Initial Main Menu, pressing "Esc" is the same as pressing "Exit game".
 33. Add a smoke test for main easy to test features using Gauntlet.
 48. UI: Show the current level in the gameplay HUD and other state display UI.
+49. UI - Refactor: Save in a more data oriented and declarative way each view to be formed by the MainMenu, as "InitialMenu", "PauseMenu", "VictoryMenu" and "DefeatMenu" on Source/TestFeatures/Features/UI/Views. FeatureMainMenu should call to them, and it should be moved to Source/TestFeatures/Features/UI/Archetypes, along the debughud and gameplayhud classes.
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling

@@ -12,12 +12,23 @@ class TESTFEATURES_API UFeatureSaveGameSubsystem : public UGameInstanceSubsystem
 public:
 	DECLARE_EVENT_TwoParams(UFeatureSaveGameSubsystem, FStatusChangedEvent, const FString&, bool);
 	DECLARE_EVENT_OneParam(UFeatureSaveGameSubsystem, FLoadedEvent, FFeatureGameProgress&);
+	DECLARE_EVENT_OneParam(UFeatureSaveGameSubsystem, FSaveDeletedEvent, bool);
 	// Announces preview, disk activity, completion, and resume transitions.
 	// Native multicast event borrows a string and passes bool by value without owning listeners.
 	FStatusChangedEvent OnStatusChanged;
 	// Delivers restored data before gameplay resumes.
 	// Native event borrows a mutable snapshot so gameplay initialization updates a queued save-after-load.
 	FLoadedEvent OnLoaded;
+	// Reports the outcome of a request to clear the save slot.
+	// The native event passes the success bool by value without owning listeners.
+	FSaveDeletedEvent OnSaveDeleted;
+
+	// Reports whether a save exists for a Continue request.
+	// Returns bool by value without pointers or references.
+	bool HasSave() const;
+	// Deletes the slot and announces whether the operation succeeded.
+	// Returns bool by value without pointers or references.
+	bool DeleteSave();
 
 	// Requests a paused, in-game load with HUD previews.
 	// No pointer or reference parameters or return value; callbacks use this game-instance subsystem.

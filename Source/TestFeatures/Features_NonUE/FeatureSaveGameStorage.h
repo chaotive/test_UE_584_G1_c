@@ -13,6 +13,10 @@ public:
 	// Returns bool by value without pointer or reference ownership.
 	static bool HasSave();
 
+	// Deletes the local slot, treating an already empty slot as success.
+	// Returns bool by value without pointer or reference ownership.
+	static bool DeleteSave();
+
 	// Loads a snapshot without blocking rendering while disk data is read.
 	// TFunction owns the callback; TOptional owns a value snapshot or marks unavailable data, and the diagnostic string is borrowed.
 	static void LoadAsync(TFunction<void(TOptional<FFeatureGameProgress>, const FString&)> Completion);

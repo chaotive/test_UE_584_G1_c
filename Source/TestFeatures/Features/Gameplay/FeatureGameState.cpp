@@ -2,7 +2,6 @@
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Engine/GameInstance.h"
-#include "Kismet/GameplayStatics.h"
 #include "TestFeatures.h"
 
 void AFeatureGameState::RecordBounce()
@@ -76,7 +75,6 @@ void AFeatureGameState::StartSession(bool bContinue)
 	}
 	else
 	{
-		UGameplayStatics::DeleteGameInSlot(FFeatureSaveGameStorage::GetSlotName(), 0);
 		FFeatureGameProgress FreshProgress;
 		InitializeProgress(FreshProgress);
 	}

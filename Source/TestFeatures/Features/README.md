@@ -84,7 +84,7 @@ The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResu
 
 On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then creates the initial batch. Continue keeps the world paused through both I/O previews.
 
-In non-Shipping builds, `FFeatureConsoleCommands` registers `Feature.NewGame` and routes it to the same action as the New Game button when the command's world is at the startup menu. It starts at zero and leaves the existing slot available until the session saves. [Command registration and handler](../../test_UE_584_G1_c/FeatureConsoleCommands.cpp)
+In non-Shipping builds, `FFeatureConsoleCommands` registers `Feature.NewGame` and routes it to the same action as the New Game button when the command's world is at the startup menu. It clears the existing slot before starting at zero. [Command registration and handler](../../test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
 ```cpp
 BallSpawner.SpawnMultiple(World, BallCount, SpawnBounds.Min, SpawnBounds.Max);
@@ -92,11 +92,11 @@ BallSpawner.SpawnMultiple(World, BallCount, SpawnBounds.Min, SpawnBounds.Max);
 
 The startup order is **create state → bind session and state controller → present menu → create enclosure → spawn pawn and HUD → initialize progress and spawn balls**.
 
-The startup and pause menus show a save summary below their buttons. An empty slot displays **No saved game.** When the slot contains a save, the menu reads it asynchronously once per opening. The menu shows the saved bounce total, including zero, or reports that the save could not be read. The preview leaves the live session state alone. **Continue on level N** displays the saved level and uses the regular session load. The button becomes available after the preview succeeds.
+The startup and pause menus show a save summary below their buttons. An empty slot displays **No saved game.** When the slot contains a save, the menu reads it asynchronously once per opening. The menu shows the saved bounce total, including zero, or reports that the save could not be read. The preview leaves the live session state alone. **Continue on level N** displays the saved level and uses the regular session load. The button becomes available after the preview succeeds. **Delete Save** clears the slot from the startup menu and refreshes its controls; New Game also clears the slot before starting.
 
 During gameplay, Escape forwards a pause request through the game mode to the session. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world, record and save the result, and show an end menu. Victory offers Continue to the main menu; defeat offers Retry to reload the same arena and continue from the saved progress. Exit uses the in-game save-and-quit flow. The session gates pause, resume, and result transitions during persistence operations, while the game mode gates menu actions. Only Continue waits for a readable save preview. Menus are created on transitions and use no per-frame flow polling.
 
-The [root README](../../../README.md) shows verified Unreal Editor captures of the empty and populated Feature Sandbox startup menus, the arena, and the debug HUD's bounce count and persistence history.
+The [root README](../../../README.md) shows verified captures of the arena and the debug HUD's bounce count and persistence history.
 
 Go deeper: [UObject Instance Creation](https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-objects-in-unreal-engine) explains `NewObject`; [Actor Lifecycle](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-actor-lifecycle) explains initialization and play callbacks.
 
@@ -342,7 +342,7 @@ For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test
 
 The debug HUD provides persistence controls and diagnostics in non-Shipping builds. Shipping builds use **Continue** from the startup menu and **Exit** from the pause menu for interactive persistence. The persistence subsystem contains no rendering code, sleeps, or manual Slate ticks. Storage exposes asynchronous Unreal load/save APIs and remains independent of the game state and HUD.
 
-At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue starts the load after the HUD is created. The subsystem pauses the world and publishes the waiting phase. The HUD installs Game-and-UI input and shows the cursor. Physics waits while Slate renders the preview. New Game starts immediately with a zero total and writes the slot on the next save or normal gameplay shutdown.
+At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue starts the load after the HUD is created. The subsystem pauses the world and publishes the waiting phase. The HUD installs Game-and-UI input and shows the cursor. Physics waits while Slate renders the preview. New Game deletes the slot, starts with a zero total, and writes the slot on the next save or normal gameplay shutdown.
 
 The HUD's specialized UFeatureSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
 

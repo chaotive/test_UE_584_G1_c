@@ -12,15 +12,7 @@ Choose **New Game** to start at zero or **Continue** to restore your saved bounc
 
 ## Start fresh or pick up your count
 
-The startup and pause menus show your last saved bounce total. When the slot is empty, the menu shows **No saved game.** and disables **Continue**.
-
-![Feature Sandbox startup menu with Continue disabled and an empty save slot](docs/images/feature-startup.png)
-
-*An empty save slot disables Continue and displays “No saved game.”*
-
-![Feature Sandbox startup menu showing 150 saved bounces and an enabled Continue button](docs/images/feature-startup-saved.png)
-
-*After saving 150 bounces, the startup menu shows the saved total and enables Continue. Captured November 7, 2026.*
+The startup and pause menus show your last saved bounce total. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
 
 During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena. Choose **Exit** from the pause menu to save and quit. **Continue** restores your total the next time you play.
 

@@ -1,6 +1,7 @@
 #include "FeatureMainMenu.h"
 #include "Features/GameWorkflow/FeatureGameFlow.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
+#include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -47,6 +48,18 @@ void UFeatureMainMenu::Dismiss()
 		Controller->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
 #endif
 	}
+}
+
+void UFeatureMainMenu::NativeConstruct()
+{
+	Super::NativeConstruct();
+	GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->OnSaveDeleted.AddUObject(this, &UFeatureMainMenu::HandleSaveDeleted);
+}
+
+void UFeatureMainMenu::NativeDestruct()
+{
+	GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->OnSaveDeleted.RemoveAll(this);
+	Super::NativeDestruct();
 }
 
 FReply UFeatureMainMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent)
@@ -125,6 +138,12 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 	{
 		AddAction(*Rows, LOCTEXT("Continue", "Continue"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
 	}
+	if (bStartupMenu)
+	{
+		DeleteSaveButton = AddAction(*Rows, LOCTEXT("DeleteSave", "Delete Save"));
+		DeleteSaveButton->SetIsEnabled(bHasSave);
+		DeleteSaveButton->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleDeleteSave);
+	}
 	AddAction(*Rows, LOCTEXT("Exit", "Exit"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleExit);
 	if (bMainMenu)
 	{
@@ -134,29 +153,34 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 
 void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave)
 {
-	UTextBlock* Summary = WidgetTree->ConstructWidget<UTextBlock>();
-	Summary->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));
-	Summary->SetJustification(ETextJustify::Center);
-	Rows.AddChildToVerticalBox(Summary)->SetPadding(FMargin(0.0f, 16.0f, 0.0f, 0.0f));
+	SaveSummary = WidgetTree->ConstructWidget<UTextBlock>();
+	SaveSummary->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));
+	SaveSummary->SetJustification(ETextJustify::Center);
+	Rows.AddChildToVerticalBox(SaveSummary)->SetPadding(FMargin(0.0f, 16.0f, 0.0f, 0.0f));
 
 	if (!bHasSave)
 	{
-		Summary->SetText(LOCTEXT("NoSavedGame", "No saved game."));
+		SaveSummary->SetText(LOCTEXT("NoSavedGame", "No saved game."));
 		return;
 	}
 
-	Summary->SetText(LOCTEXT("ReadingSavedGame", "Reading saved game..."));
-	const TWeakObjectPtr<UTextBlock> WeakSummary(Summary);
-	const TWeakObjectPtr<UButton> WeakContinue(ContinueButton);
-	FFeatureSaveGameStorage::LoadAsync([WeakSummary, WeakContinue](TOptional<FFeatureGameProgress> Progress, const FString&)
+	SaveSummary->SetText(LOCTEXT("ReadingSavedGame", "Reading saved game..."));
+	const uint32 RequestGeneration = ++PreviewGeneration;
+	const TWeakObjectPtr<UFeatureMainMenu> WeakMenu(this);
+	FFeatureSaveGameStorage::LoadAsync([WeakMenu, RequestGeneration](TOptional<FFeatureGameProgress> Progress, const FString&)
 	{
-		if (UTextBlock* Label = WeakSummary.Get())
+		UFeatureMainMenu* Menu = WeakMenu.Get();
+		if (!Menu || Menu->PreviewGeneration != RequestGeneration)
+		{
+			return;
+		}
+		if (UTextBlock* Label = Menu->SaveSummary.Get())
 		{
 			Label->SetText(Progress.IsSet()
 				? FText::Format(LOCTEXT("SavedTotalBounces", "Saved total bounces: {0}"), FText::AsNumber(Progress.GetValue().TotalBounces))
 				: LOCTEXT("UnreadableSavedGame", "Saved game could not be read."));
 		}
-		if (UButton* Button = WeakContinue.Get())
+		if (UButton* Button = Menu->ContinueButton.Get())
 		{
 			Button->SetIsEnabled(Progress.IsSet());
 			if (Progress.IsSet())
@@ -204,6 +228,35 @@ void UFeatureMainMenu::HandleReturnToMenu()
 void UFeatureMainMenu::HandleRetry()
 {
 	OnAction.Broadcast(EFeatureMenuAction::Retry);
+}
+
+void UFeatureMainMenu::HandleDeleteSave()
+{
+	GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->DeleteSave();
+}
+
+void UFeatureMainMenu::HandleSaveDeleted(bool bSucceeded)
+{
+	if (!SaveSummary)
+	{
+		return;
+	}
+	if (!bSucceeded)
+	{
+		SaveSummary->SetText(LOCTEXT("DeleteSaveFailed", "Could not delete saved game."));
+		return;
+	}
+	++PreviewGeneration;
+	SaveSummary->SetText(LOCTEXT("NoSavedGame", "No saved game."));
+	if (ContinueButton)
+	{
+		ContinueButton->SetIsEnabled(false);
+		Cast<UTextBlock>(ContinueButton->GetContent())->SetText(LOCTEXT("ContinueLevelOne", "Continue on level 1"));
+	}
+	if (DeleteSaveButton)
+	{
+		DeleteSaveButton->SetIsEnabled(false);
+	}
 }
 
 void UFeatureMainMenu::HandleExit()

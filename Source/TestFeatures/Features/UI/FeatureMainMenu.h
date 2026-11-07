@@ -5,6 +5,7 @@
 
 class UButton;
 class UGameInstance;
+class UTextBlock;
 class UVerticalBox;
 
 enum class EFeatureGameFlow : uint8;
@@ -41,6 +42,14 @@ public:
 	void Dismiss();
 
 protected:
+	// Observes save deletion while this menu is displayed.
+	// No pointer or reference parameters or return value; the subsystem is owned by the game instance.
+	virtual void NativeConstruct() override;
+
+	// Stops observing save deletion when the menu is removed.
+	// No pointer or reference parameters or return value; releases the weak event binding.
+	virtual void NativeDestruct() override;
+
 	// Treats Escape as Resume while the pause menu or one of its buttons has focus.
 	// The geometry and key event are borrowed const references; FReply is returned by value.
 	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent) override;
@@ -58,6 +67,20 @@ private:
 	// UPROPERTY tracks a strong widget-tree-owned button pointer for garbage collection.
 	UPROPERTY()
 	TObjectPtr<UButton> ContinueButton;
+
+	// Retains the startup Delete Save button for refresh after deletion.
+	// UPROPERTY tracks a strong widget-tree-owned button pointer for garbage collection.
+	UPROPERTY()
+	TObjectPtr<UButton> DeleteSaveButton;
+
+	// Retains the save summary while the menu is visible.
+	// UPROPERTY tracks a strong widget-tree-owned text pointer for garbage collection.
+	UPROPERTY()
+	TObjectPtr<UTextBlock> SaveSummary;
+
+	// Identifies the latest save preview so deleted data cannot reappear in the menu.
+	// uint32 stores a generation token by value without pointer ownership.
+	uint32 PreviewGeneration = 0;
 
 	// Identifies whether this menu supports Escape to resume.
 	// bool stores the input behavior by value.
@@ -91,6 +114,15 @@ private:
 	// No pointer or reference parameters or return value; bound to a widget-owned button.
 	UFUNCTION()
 	void HandleRetry();
+
+	// Requests deletion of the saved game from the persistence subsystem.
+	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	UFUNCTION()
+	void HandleDeleteSave();
+
+	// Refreshes menu controls after a save deletion attempt.
+	// bSucceeded is passed by value without pointers or references.
+	void HandleSaveDeleted(bool bSucceeded);
 
 	// Publishes the Exit selection.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.

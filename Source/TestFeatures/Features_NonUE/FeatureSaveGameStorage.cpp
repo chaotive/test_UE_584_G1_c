@@ -9,6 +9,11 @@ bool FFeatureSaveGameStorage::HasSave()
 	return UGameplayStatics::DoesSaveGameExist(GetSlotName(), 0);
 }
 
+bool FFeatureSaveGameStorage::DeleteSave()
+{
+	return !HasSave() || UGameplayStatics::DeleteGameInSlot(GetSlotName(), 0);
+}
+
 void FFeatureSaveGameStorage::LoadAsync(TFunction<void(TOptional<FFeatureGameProgress>, const FString&)> Completion)
 {
 	const bool bExists = HasSave();

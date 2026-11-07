@@ -133,7 +133,8 @@ void Atest_UE_584_G1_cGameMode::SetFlow(EFeatureGameFlow NewFlow)
 
 void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 {
-	if (GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->IsBusy())
+	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
+	if (Saves->IsBusy())
 	{
 		return;
 	}
@@ -141,8 +142,20 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 	switch (Action)
 	{
 	case EFeatureMenuAction::NewGame:
+		if (!Saves->DeleteSave())
+		{
+			break;
+		}
+		GameplaySession->OnGameplaySessionStart(false, FeatureBallCount,
+			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
+			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
+		break;
 	case EFeatureMenuAction::Continue:
-		GameplaySession->OnGameplaySessionStart(Action == EFeatureMenuAction::Continue, FeatureBallCount,
+		if (!Saves->HasSave())
+		{
+			break;
+		}
+		GameplaySession->OnGameplaySessionStart(true, FeatureBallCount,
 			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
 			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
 		break;

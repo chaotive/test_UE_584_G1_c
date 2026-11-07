@@ -22,6 +22,19 @@ namespace
 	}
 }
 
+bool UFeatureSaveGameSubsystem::HasSave() const
+{
+	return FFeatureSaveGameStorage::HasSave();
+}
+
+bool UFeatureSaveGameSubsystem::DeleteSave()
+{
+	const bool bDeleted = FFeatureSaveGameStorage::DeleteSave();
+	PublishStatus(bDeleted ? TEXT("Save slot cleared") : TEXT("Failed to delete save slot"));
+	OnSaveDeleted.Broadcast(bDeleted);
+	return bDeleted;
+}
+
 void UFeatureSaveGameSubsystem::RequestLoad()
 {
 	StartOperation(true, FFeatureGameProgress(), false);
