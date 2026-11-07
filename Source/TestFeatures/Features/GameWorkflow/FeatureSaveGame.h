@@ -46,6 +46,11 @@ struct TESTFEATURES_API FFeatureGameProgress
 {
 	GENERATED_BODY()
 
+	// Retains the level to start next, advancing only after victory.
+	// int32 stores the persistent scalar by value without pointer or reference ownership.
+	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
+	int32 CurrentLevel = 1;
+
 	// Accumulates bounces across this saved game's sessions.
 	// int32 stores the total by value without object ownership.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)

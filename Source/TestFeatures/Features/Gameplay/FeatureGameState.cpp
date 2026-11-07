@@ -2,6 +2,7 @@
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Engine/GameInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "TestFeatures.h"
 
 void AFeatureGameState::RecordBounce()
@@ -34,12 +35,21 @@ void AFeatureGameState::RecordSessionResult(bool bVictory)
 		Progress.Sessions.Last().Result = bVictory
 			? EFeatureGameplaySessionResult::Victory
 			: EFeatureGameplaySessionResult::Defeat;
+		if (bVictory)
+		{
+			++Progress.CurrentLevel;
+		}
 	}
 }
 
 const TArray<FFeatureGameplaySessionRecord>& AFeatureGameState::GetGameplaySessions() const
 {
 	return Progress.Sessions;
+}
+
+int32 AFeatureGameState::GetCurrentLevel() const
+{
+	return Progress.CurrentLevel;
 }
 
 int32 AFeatureGameState::GetTotalBounces() const
@@ -64,6 +74,7 @@ void AFeatureGameState::StartSession(bool bContinue)
 	}
 	else
 	{
+		UGameplayStatics::DeleteGameInSlot(FFeatureSaveGameStorage::GetSlotName(), 0);
 		FFeatureGameProgress FreshProgress;
 		InitializeProgress(FreshProgress);
 	}

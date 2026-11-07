@@ -1,5 +1,6 @@
 #include "FeatureMainMenu.h"
 #include "Features/GameWorkflow/FeatureGameFlow.h"
+#include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -107,8 +108,8 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 	if (bStartupMenu)
 	{
 		AddAction(*Rows, LOCTEXT("NewGame", "New Game"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleNewGame);
-		UButton* ContinueButton = AddAction(*Rows, LOCTEXT("Continue", "Continue"));
-		ContinueButton->SetIsEnabled(bHasSave);
+		ContinueButton = AddAction(*Rows, LOCTEXT("ContinueLevelOne", "Continue on level 1"));
+		ContinueButton->SetIsEnabled(false);
 		ContinueButton->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleContinue);
 	}
 	else if (bPauseMenu)
@@ -146,13 +147,24 @@ void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave)
 
 	Summary->SetText(LOCTEXT("ReadingSavedGame", "Reading saved game..."));
 	const TWeakObjectPtr<UTextBlock> WeakSummary(Summary);
-	FFeatureSaveGameStorage::LoadAsync([WeakSummary](TOptional<FFeatureGameProgress> Progress, const FString&)
+	const TWeakObjectPtr<UButton> WeakContinue(ContinueButton);
+	FFeatureSaveGameStorage::LoadAsync([WeakSummary, WeakContinue](TOptional<FFeatureGameProgress> Progress, const FString&)
 	{
 		if (UTextBlock* Label = WeakSummary.Get())
 		{
 			Label->SetText(Progress.IsSet()
 				? FText::Format(LOCTEXT("SavedTotalBounces", "Saved total bounces: {0}"), FText::AsNumber(Progress.GetValue().TotalBounces))
 				: LOCTEXT("UnreadableSavedGame", "Saved game could not be read."));
+		}
+		if (UButton* Button = WeakContinue.Get())
+		{
+			Button->SetIsEnabled(Progress.IsSet());
+			if (Progress.IsSet())
+			{
+				UTextBlock* Label = Cast<UTextBlock>(Button->GetContent());
+				Label->SetText(FText::Format(LOCTEXT("ContinueLevel", "Continue on level {0}"),
+					FText::AsNumber(Progress.GetValue().CurrentLevel)));
+			}
 		}
 	});
 }

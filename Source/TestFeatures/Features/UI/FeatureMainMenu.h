@@ -54,6 +54,11 @@ private:
 	// Rows is a borrowed widget reference and bHasSave is passed by value.
 	void AddSaveSummary(UVerticalBox& Rows, bool bHasSave);
 
+	// Retains the startup Continue button while its saved level is read.
+	// UPROPERTY tracks a strong widget-tree-owned button pointer for garbage collection.
+	UPROPERTY()
+	TObjectPtr<UButton> ContinueButton;
+
 	// Identifies whether this menu supports Escape to resume.
 	// bool stores the input behavior by value.
 	bool bPauseMenu = false;

@@ -65,12 +65,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Training_Ball")
 	int32 FeatureBallCount = 5;
 
-	// Sets how many player-ball blocking contacts win a gameplay session.
+	// Sets how many player-ball blocking contacts win level one.
 	// int32 stores a positive threshold by value and exposes it in game-mode defaults.
 	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
 	int32 FeaturePlayerContactsToWin = 10;
 
-	// Sets how many ball bounces lose a gameplay session.
+	// Sets how many ball bounces lose level one.
 	// int32 stores a positive threshold by value and exposes it in game-mode defaults.
 	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
 	int32 FeatureSessionBouncesToLose = 50;

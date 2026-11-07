@@ -38,7 +38,7 @@ public:
 	// Native multicast event passes the victory bool by value and stores weak UObject bindings.
 	FSessionEndedEvent OnEnded;
 
-	// Connects gameplay events and configures the per-session victory and defeat limits.
+	// Connects gameplay events and configures the level-one victory and defeat limits.
 	// State is borrowed; both limits are positive int32 values without object ownership.
 	void BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose);
 
@@ -77,11 +77,11 @@ private:
 	// Stores the private enum by value without pointer or reference ownership.
 	ESessionState SessionState = ESessionState::Ready;
 
-	// Sets the player-ball contact count that wins the current session.
+	// Sets the level-one player contact limit, increased by one for each subsequent level.
 	// int32 stores the configured positive threshold by value without object ownership.
 	int32 PlayerContactsToWin = 10;
 
-	// Sets the ball-bounce count that loses the current session.
+	// Sets the level-one bounce limit, decreased per level with a minimum of one.
 	// int32 stores the configured positive threshold by value without object ownership.
 	int32 SessionBouncesToLose = 50;
 

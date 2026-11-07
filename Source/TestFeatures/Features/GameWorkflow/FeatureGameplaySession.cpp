@@ -45,8 +45,8 @@ void UFeatureGameplaySession::EvaluateSessionLimits(const FFeatureGameplaySessio
 		return;
 	}
 
-	const bool bVictory = Stats.PlayerBallCollisions >= PlayerContactsToWin;
-	const bool bDefeat = Stats.TotalBounces >= SessionBouncesToLose;
+	const bool bVictory = Stats.PlayerBallCollisions >= GetPlayerContactsToWin();
+	const bool bDefeat = Stats.TotalBounces >= GetSessionBouncesToLose();
 	if (bVictory || bDefeat)
 	{
 		OnGameplaySessionEnded(bVictory);
@@ -154,12 +154,12 @@ bool UFeatureGameplaySession::IsPersistenceBusy() const
 
 int32 UFeatureGameplaySession::GetPlayerContactsToWin() const
 {
-	return PlayerContactsToWin;
+	return PlayerContactsToWin + (GameState->GetCurrentLevel() - 1);
 }
 
 int32 UFeatureGameplaySession::GetSessionBouncesToLose() const
 {
-	return SessionBouncesToLose;
+	return FMath::Max(1, SessionBouncesToLose - (GameState->GetCurrentLevel() - 1));
 }
 
 bool UFeatureGameplaySession::CanLeaveGameplay() const

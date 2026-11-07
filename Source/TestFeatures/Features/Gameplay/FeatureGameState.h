@@ -40,6 +40,10 @@ public:
 	// Returns a borrowed const TArray reference to state-owned value records.
 	const TArray<FFeatureGameplaySessionRecord>& GetGameplaySessions() const;
 
+	// Reads the saved level to start next or retry after defeat.
+	// Returns int32 by value without pointers or references.
+	int32 GetCurrentLevel() const;
+
 	// Reads the saved game's aggregate bounce count for C++ or Blueprint callers.
 	// Returns int32 by value without pointers or references; const keeps this query read-only.
 	UFUNCTION(BlueprintPure, Category="Training_Ball")
