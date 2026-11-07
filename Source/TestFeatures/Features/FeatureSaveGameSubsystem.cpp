@@ -45,10 +45,11 @@ void UFeatureSaveGameSubsystem::BeginPendingIO()
 	TWeakObjectPtr<UFeatureSaveGameSubsystem> WeakThis(this);
 	if (bLoading)
 	{
-		FFeatureSaveGameStorage::LoadAsync([WeakThis, RequestId](int32 Count, const FString& Result)
+		FFeatureSaveGameStorage::LoadAsync([WeakThis, RequestId](TOptional<int32> SavedCount, const FString& Result)
 		{
 			UFeatureSaveGameSubsystem* Self = WeakThis.Get();
 			if (!Self || Self->OperationId != RequestId) { return; }
+			const int32 Count = SavedCount.Get(0);
 			Self->PendingCount = Count;
 			Self->OnLoaded.Broadcast(Count);
 			Self->bSucceeded = true; // Missing/unreadable data completes with storage's zero fallback.

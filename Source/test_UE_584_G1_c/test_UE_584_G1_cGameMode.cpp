@@ -6,7 +6,6 @@
 #include "Features/FeatureGameStateController.h"
 #include "Features/FeatureMainMenu.h"
 #include "Features/FeatureSaveGameSubsystem.h"
-#include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -116,8 +115,7 @@ void Atest_UE_584_G1_cGameMode::SetFlow(EFeatureGameFlow NewFlow)
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("Game flow: %s"), *UEnum::GetValueAsString(FlowState));
 	if (FlowState != EFeatureGameFlow::Gameplay)
 	{
-		const bool bCanContinue = FlowState == EFeatureGameFlow::StartupMenu && FFeatureSaveGameStorage::HasSave();
-		FlowMenu = UFeatureMainMenu::Present(*GetGameInstance(), FlowState, bCanContinue);
+		FlowMenu = UFeatureMainMenu::Present(*GetGameInstance(), FlowState);
 		FlowMenu->OnAction.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleMenuAction);
 	}
 }

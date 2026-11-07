@@ -81,6 +81,7 @@ These goals will guide future tasks:
 16. Please give the IO loading UI step a 1 second before and after load just to see it working on save and loads.
 17. Move all featured UE and non-UE code into its own independent runtime module.
 18. Show the startup menu first with the game title from the project configuration and New Game, Continue, and Exit options.
+30. Show the saved bounce total below the main menu buttons, or display "No saved game." when the slot is empty.
 
 ### To do
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Misc/Optional.h"
 
 /** Stores value snapshots without depending on the live game state or HUD. */
 class TESTFEATURES_API FFeatureSaveGameStorage
@@ -12,8 +13,8 @@ public:
 	static bool HasSave();
 
 	// Loads a snapshot without blocking rendering while disk data is read.
-	// Completion is an owned TFunction callback receiving the count by value and a read-only result reference.
-	static void LoadAsync(TFunction<void(int32, const FString&)> Completion);
+	// TFunction owns the callback. TOptional distinguishes an unavailable count from zero, and the diagnostic string is borrowed.
+	static void LoadAsync(TFunction<void(TOptional<int32>, const FString&)> Completion);
 
 	// Saves an integer snapshot while the game thread continues drawing UI.
 	// Count is by value and Completion is an owned callback receiving a bool result; no actors are captured by storage.

@@ -13,6 +13,6 @@ The [feature guide](../Features/README.md) explains startup, spawning, pooling, 
 
 Task 17 moved these helpers into the runtime module alongside the Unreal-reflected classes. The module is now named `TestFeatures` and exports the helpers with `TESTFEATURES_API`.
 
-Storage uses standard Unreal asynchronous loading and saving; object creation and deserialization follow the engine API. Missing or incompatible saves start from zero. No raw payload reader or old-class migration remains.
+Storage uses Unreal's asynchronous loading and saving APIs. An asynchronous load returns an optional bounce total so the menu can distinguish a valid zero from a missing or unreadable save. The gameplay load starts at zero when there is no usable total.
 
 Compatibility policy: old data may be discarded. The configured game mode and player controller still create the current feature classes in code, so a missing save does not prevent startup.

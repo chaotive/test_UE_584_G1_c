@@ -32,8 +32,8 @@ public:
 	FActionEvent OnAction;
 
 	// Creates and presents the fullscreen menu for the current flow state.
-	// GameInstance is borrowed; the returned widget is retained by the caller and viewport.
-	static UFeatureMainMenu* Present(UGameInstance& GameInstance, EFeatureGameFlow Flow, bool bCanContinue);
+	// GameInstance is borrowed and Flow is passed by value. The caller and viewport retain the returned widget.
+	static UFeatureMainMenu* Present(UGameInstance& GameInstance, EFeatureGameFlow Flow);
 
 	// Removes the menu and returns keyboard and mouse routing to gameplay.
 	// No pointer or reference parameters or return value; operates on the viewport hosting this widget.
@@ -45,9 +45,13 @@ protected:
 	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent) override;
 
 private:
-	// Builds the menu for the selected flow and current save availability.
-	// Both arguments are passed by value without pointer or reference ownership.
-	void BuildMenu(EFeatureGameFlow Flow, bool bCanContinue);
+	// Builds the menu for the selected flow.
+	// Flow is passed by value without pointer or reference ownership.
+	void BuildMenu(EFeatureGameFlow Flow);
+
+	// Adds the saved game summary below the menu actions.
+	// Rows is a borrowed widget reference and bHasSave is passed by value.
+	void AddSaveSummary(UVerticalBox& Rows, bool bHasSave);
 
 	// Identifies whether this menu supports Escape to resume.
 	// bool stores the input behavior by value.

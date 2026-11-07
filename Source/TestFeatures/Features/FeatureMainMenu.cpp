@@ -1,5 +1,6 @@
 #include "FeatureMainMenu.h"
 #include "FeatureGameFlow.h"
+#include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -12,13 +13,14 @@
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
 #include "Styling/CoreStyle.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 
 #define LOCTEXT_NAMESPACE "FeatureMainMenu"
 
-UFeatureMainMenu* UFeatureMainMenu::Present(UGameInstance& GameInstance, EFeatureGameFlow Flow, bool bCanContinue)
+UFeatureMainMenu* UFeatureMainMenu::Present(UGameInstance& GameInstance, EFeatureGameFlow Flow)
 {
 	UFeatureMainMenu* Menu = CreateWidget<UFeatureMainMenu>(&GameInstance);
-	Menu->BuildMenu(Flow, bCanContinue);
+	Menu->BuildMenu(Flow);
 	Menu->AddToViewport(20);
 	if (APlayerController* Controller = GameInstance.GetFirstLocalPlayerController())
 	{
@@ -54,7 +56,7 @@ FReply UFeatureMainMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry, const
 	return Super::NativeOnPreviewKeyDown(Geometry, KeyEvent);
 }
 
-void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow, bool bCanContinue)
+void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 {
 	bPauseMenu = Flow == EFeatureGameFlow::PauseMenu;
 	SetIsFocusable(true);
@@ -94,11 +96,14 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow, bool bCanContinue)
 	Title->SetJustification(ETextJustify::Center);
 	Rows->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 24.0f));
 
-	if (Flow == EFeatureGameFlow::StartupMenu)
+	const bool bStartupMenu = Flow == EFeatureGameFlow::StartupMenu;
+	const bool bMainMenu = bStartupMenu || bPauseMenu;
+	const bool bHasSave = bMainMenu && FFeatureSaveGameStorage::HasSave();
+	if (bStartupMenu)
 	{
 		AddAction(*Rows, LOCTEXT("NewGame", "New Game"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleNewGame);
 		UButton* ContinueButton = AddAction(*Rows, LOCTEXT("Continue", "Continue"));
-		ContinueButton->SetIsEnabled(bCanContinue);
+		ContinueButton->SetIsEnabled(bHasSave);
 		ContinueButton->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleContinue);
 	}
 	else
@@ -110,6 +115,36 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow, bool bCanContinue)
 		AddAction(*Rows, LOCTEXT("ReturnToMenu", "Main Menu"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
 	}
 	AddAction(*Rows, LOCTEXT("Exit", "Exit"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleExit);
+	if (bMainMenu)
+	{
+		AddSaveSummary(*Rows, bHasSave);
+	}
+}
+
+void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave)
+{
+	UTextBlock* Summary = WidgetTree->ConstructWidget<UTextBlock>();
+	Summary->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));
+	Summary->SetJustification(ETextJustify::Center);
+	Rows.AddChildToVerticalBox(Summary)->SetPadding(FMargin(0.0f, 16.0f, 0.0f, 0.0f));
+
+	if (!bHasSave)
+	{
+		Summary->SetText(LOCTEXT("NoSavedGame", "No saved game."));
+		return;
+	}
+
+	Summary->SetText(LOCTEXT("ReadingSavedGame", "Reading saved game..."));
+	const TWeakObjectPtr<UTextBlock> WeakSummary(Summary);
+	FFeatureSaveGameStorage::LoadAsync([WeakSummary](TOptional<int32> Count, const FString&)
+	{
+		if (UTextBlock* Label = WeakSummary.Get())
+		{
+			Label->SetText(Count.IsSet()
+				? FText::Format(LOCTEXT("SavedTotalBounces", "Saved total bounces: {0}"), FText::AsNumber(Count.GetValue()))
+				: LOCTEXT("UnreadableSavedGame", "Saved game could not be read."));
+		}
+	});
 }
 
 UButton* UFeatureMainMenu::AddAction(UVerticalBox& Rows, const FText& Label)

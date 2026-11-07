@@ -73,7 +73,9 @@ FeatureBallSpawner.SpawnMultiple(*GetWorld(), FeatureBallCount, FeatureBallSpawn
 
 The startup order is **create state → connect state controller → present menu → spawn pawn and HUD → initialize session and spawn balls**.
 
-During gameplay, Escape requests `PauseMenu` from the game mode. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world and show an end menu. Main Menu reloads the level, and Exit uses the in-game save-and-quit flow. The game mode gates menu transitions during save and load operations. Menus are created on transitions and use no per-frame flow polling.
+The startup and pause menus show a save summary below their buttons. An empty slot displays **No saved game.** When the slot contains a save, the menu reads it asynchronously once per opening. The menu shows the saved bounce total, including zero, or reports that the save could not be read. The preview leaves the live session state alone. Continue uses the regular session load.
+
+During gameplay, Escape requests `PauseMenu` from the game mode. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world and show an end menu. Main Menu reloads the level, and Exit uses the in-game save-and-quit flow. The game mode gates transitions during session saves and loads. The menu preview leaves buttons available. Menus are created on transitions and use no per-frame flow polling.
 
 Historical Task 18 captures show the [empty-slot main menu](../../../docs/images/task-18-main-menu.jpg), [New Game at zero bounces](../../../docs/images/task-18-new-game.jpg), and [Continue after restoring 10 bounces](../../../docs/images/task-18-continue.jpg).
 

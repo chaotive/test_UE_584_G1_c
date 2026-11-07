@@ -17,13 +17,15 @@ The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:800
 
 The startup menu opens on the gameplay map before the playable character is spawned. Its title comes from `ProjectName` in `Config/DefaultGame.ini`. During gameplay, press **Esc** to pause, then press **Esc** again or choose **Resume Game** to continue. The HUD shows the running bounce total and offers **Save game** and **Save and quit**.
 
+The startup and pause menus show the last saved bounce total below their buttons. An empty slot displays **No saved game.**
+
 The game mode owns the startup, gameplay, pause, victory, and defeat states defined in [FeatureGameFlow.h](Source/TestFeatures/Features/FeatureGameFlow.h). Gameplay objectives can trigger the victory or defeat screen through `FinishSession`.
 
 The module and its reflected save class were renamed. Saves written with the old class path may start the bounce counter at zero on the next launch.
 
 ![Main menu with Continue disabled](docs/images/task-18-main-menu.jpg)
 
-*Task 18 standalone capture of the startup menu with an empty save slot.*
+*Task 18 standalone capture of the startup menu with an empty save slot, taken before the save summary was added.*
 
 ![New Game with training balls and a zero bounce total](docs/images/task-18-new-game.jpg)
 

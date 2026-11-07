@@ -9,15 +9,15 @@ bool FFeatureSaveGameStorage::HasSave()
 	return UGameplayStatics::DoesSaveGameExist(GetSlotName(), 0);
 }
 
-void FFeatureSaveGameStorage::LoadAsync(TFunction<void(int32, const FString&)> Completion)
+void FFeatureSaveGameStorage::LoadAsync(TFunction<void(TOptional<int32>, const FString&)> Completion)
 {
 	const bool bExists = HasSave();
 	UGameplayStatics::AsyncLoadGameFromSlot(GetSlotName(), 0,
 		FAsyncLoadGameFromSlotDelegate::CreateLambda([Completion = MoveTemp(Completion), bExists](const FString&, int32, USaveGame* Data)
 		{
 			UFeatureSaveGame* Save = Cast<UFeatureSaveGame>(Data);
-			const int32 Count = Save ? Save->TotalBounces : 0;
-			Completion(Count, Save ? FString::Printf(TEXT("Loaded %d total bounces"), Count)
+			const TOptional<int32> Count = Save ? TOptional<int32>(Save->TotalBounces) : TOptional<int32>();
+			Completion(Count, Save ? FString::Printf(TEXT("Loaded %d total bounces"), Save->TotalBounces)
 				: (bExists ? TEXT("Load failed; starting at zero") : TEXT("No save found; starting at zero")));
 		}));
 }
