@@ -78,7 +78,7 @@ bool FFeatureSaveGameStorage::SaveProgress(const FFeatureGameProgress& Progress)
 
 const FString& FFeatureSaveGameStorage::GetSlotName()
 {
-	static const FString SlotName(TEXT("FeatureSandbox"));
+	static const FString SlotName(TEXT("CrazyBalls"));
 	return SlotName;
 }
 

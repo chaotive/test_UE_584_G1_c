@@ -5,6 +5,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -13,6 +14,8 @@
 #include "GeneralProjectSettings.h"
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
+#include "ImageUtils.h"
+#include "Misc/Paths.h"
 #include "Styling/CoreStyle.h"
 #include "UObject/WeakObjectPtrTemplates.h"
 
@@ -101,12 +104,7 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 	UVerticalBox* Rows = WidgetTree->ConstructWidget<UVerticalBox>();
 	Card->SetContent(Rows);
 
-	UTextBlock* Title = WidgetTree->ConstructWidget<UTextBlock>();
-	Title->SetText(View.Heading.IsEmpty() ? FText::FromString(GetDefault<UGeneralProjectSettings>()->ProjectName) : View.Heading);
-	Title->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 38));
-	Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.38f, 0.90f, 1.0f)));
-	Title->SetJustification(ETextJustify::Center);
-	Rows->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 24.0f));
+	BuildHeader(*Rows, View);
 
 	const bool bHasSave = View.bShowSaveSummary && FFeatureSaveGameStorage::HasSave();
 	for (const FFeatureMenuItem& Item : View.Items)
@@ -116,6 +114,39 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 	if (View.bShowSaveSummary)
 	{
 		AddSaveSummary(*Rows, bHasSave);
+	}
+}
+
+void UFeatureMainMenu::BuildHeader(UVerticalBox& Rows, const FFeatureMenuView& View)
+{
+	const UGeneralProjectSettings* Settings = GetDefault<UGeneralProjectSettings>();
+	LogoTexture = FImageUtils::ImportFileAsTexture2D(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("FeatureBrand/FeatureCrazyBallsLogo.png")));
+	UImage* Logo = WidgetTree->ConstructWidget<UImage>();
+	Logo->SetBrushFromTexture(LogoTexture);
+	Logo->SetDesiredSizeOverride(FVector2D(210.0f, 140.0f));
+	Rows.AddChildToVerticalBox(Logo)->SetHorizontalAlignment(HAlign_Center);
+
+	UTextBlock* Title = WidgetTree->ConstructWidget<UTextBlock>();
+	Title->SetText(FText::FromString(Settings->ProjectName));
+	Title->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 32));
+	Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.38f, 0.90f, 1.0f)));
+	Title->SetJustification(ETextJustify::Center);
+	Rows.AddChildToVerticalBox(Title);
+
+	UTextBlock* Subtitle = WidgetTree->ConstructWidget<UTextBlock>();
+	Subtitle->SetText(FText::FromString(Settings->Description));
+	Subtitle->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));
+	Subtitle->SetJustification(ETextJustify::Center);
+	Rows.AddChildToVerticalBox(Subtitle)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 12.0f));
+
+	if (!View.Heading.IsEmpty())
+	{
+		UTextBlock* Heading = WidgetTree->ConstructWidget<UTextBlock>();
+		Heading->SetText(View.Heading);
+		Heading->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 26));
+		Heading->SetColorAndOpacity(FSlateColor(FLinearColor(0.38f, 0.90f, 1.0f)));
+		Heading->SetJustification(ETextJustify::Center);
+		Rows.AddChildToVerticalBox(Heading)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 12.0f));
 	}
 }
 

@@ -1,6 +1,10 @@
-# Feature Sandbox
+# Crazy balls
 
-Feature Sandbox is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round starts with five balls launched from random positions in random directions.
+**Features test on Unreal 5.8.4**
+
+Crazy balls is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round starts with five balls launched from random positions in random directions.
+
+![Crazy balls logo](Content/FeatureBrand/FeatureCrazyBallsLogo.png)
 
 ![Illustration of a player approaching bouncing balls in a training arena](docs/images/feature-rules-illustration.png)
 
@@ -13,10 +17,6 @@ Choose **New Game** for a fresh level-one game or **Continue on level N** to pla
 ## Start fresh or pick up your count
 
 The startup and pause menus show your last saved bounce total. On the startup menu, **Esc** exits. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
-
-![Startup menu with a saved game](docs/images/current-startup.png)
-
-*The November 7, 2026 play session shows the saved total and the level offered by Continue, alongside New Game, Delete Save, and Exit.*
 
 ## How to play
 
@@ -35,10 +35,6 @@ flowchart LR
     Ball -->|"Hits the arena or another ball"| Bounce["+1 non-player bounce<br/>toward Defeat"]
     Bounce -->|"This ball reaches 5"| Retire["Ball retires;<br/>no automatic replacement"]
 ```
-
-![Gameplay with the player's level and both objective counters](docs/images/current-gameplay.png)
-
-*Verified play capture, November 7, 2026: level 1 requires 10 player contacts to win and ends at 50 non-player bounces. The left panel is the non-Shipping debug HUD; the top-right panel is the gameplay HUD.*
 
 ### Levels and results
 
@@ -60,6 +56,8 @@ The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (leve
 During a session, **Esc** opens the pause menu. Choose **Resume Game** or press **Esc** again to continue the same session; **Main Menu** returns to the startup screen, and **Exit** saves and quits. Saving or loading pauses play during I/O. In non-Shipping builds, the debug panel also offers **Save game** and **Save and quit** and shows save diagnostics.
 
 The save contains the current level, aggregate non-player bounce total, and a chronological session history with start times, counters, and results. The gameplay HUD's counters are for the current session; the debug HUD's total includes the saved history. A result screen requests a save automatically.
+
+The renamed game uses a `CrazyBalls` save slot. Saves from the former `FeatureSandbox` slot are not loaded by this version.
 
 ## Development
 
@@ -207,7 +205,7 @@ flowchart LR
     class PC,Mode,Views,Menu,HUD,Debug,BallPanel,SavePanel,State,Saves,Session feature
 ```
 
-The menu and HUDs derive from `UUserWidget` and build their widget trees in C++. The player controller creates and removes HUDs; each widget owns its own state subscriptions and initial synchronization. The debug save panel observes persistence status and drives its preview timers. See [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), [gameplay HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp), and [save panel](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
+The menu and HUDs derive from `UUserWidget` and build their widget trees in C++. All menu views share the Crazy balls logo and the title and subtitle from project settings. The logo is loaded from `Content/FeatureBrand` and included in packaged builds as UFS content. The player controller creates and removes HUDs; each widget owns its own state subscriptions and initial synchronization. The debug save panel observes persistence status and drives its preview timers. See [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), [gameplay HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp), and [save panel](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
 
 #### Game workflow and persistence
 
@@ -230,7 +228,7 @@ flowchart LR
         Snapshot["UFeatureSaveGame<br/>progress snapshot"]
         Menu["UFeatureMainMenu"]
     end
-    Slot[("FeatureSandbox save slot")]
+    Slot[("CrazyBalls save slot")]
     ModeBase -->|"base class"| Mode
     WorldSub -->|"base class"| Session
     InstanceSub -->|"base class"| Saves
@@ -274,6 +272,14 @@ For explicitly requested editor work, open `test_UE_584_G1_c.uproject` normally.
 The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:8000/mcp`. If the endpoint is unavailable and Unreal Editor is closed, open the project and wait for the editor to finish loading and the local server to respond. If the current chat does not expose the Unreal tools once the server responds, start a new Codex chat in this project with the editor still open.
 
 ### Game evolution
+
+![Earlier startup menu](docs/images/current-startup.png)
+
+*November 7, 2026, before the Crazy balls rename: the startup menu showed the previous title and saved total.*
+
+![Earlier gameplay HUD](docs/images/current-gameplay.png)
+
+*November 7, 2026, before the rename: gameplay showed level-one objective counters and the earlier debug HUD branding.*
 
 ![Historical loading HUD](docs/images/in-game-loading-hud.png)
 

@@ -49,7 +49,7 @@ UBorder* UFeatureDebugHUD::BuildPanel()
 	UTextBlock* Title = CreateText(FText::FromString(TEXT("TRAINING DEBUG HUD")), 18);
 	Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.2f, 0.85f, 1.0f)));
 	Rows->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
-	Rows->AddChildToVerticalBox(CreateText(FText::FromString(TEXT("C++ feature sandbox")), 14));
+	Rows->AddChildToVerticalBox(CreateText(FText::FromString(TEXT("Crazy balls")), 14));
 	BallPanel = CreateWidget<UFeatureBallPanel>(GetOwningPlayer(), UFeatureBallPanel::StaticClass());
 	Rows->AddChildToVerticalBox(BallPanel);
 	SavePanel = CreateWidget<UFeatureSaveGamePanel>(GetOwningPlayer(), UFeatureSaveGamePanel::StaticClass());

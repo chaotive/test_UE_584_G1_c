@@ -1,4 +1,4 @@
-# Feature Sandbox: system flows
+# Crazy balls: system flows
 
 These diagrams show the current C++ relationships and runtime flows. Solid arrows show calls, data, or player actions; arrows labelled “event” show notifications between systems. Limits and initial pool sizes are configurable defaults.
 

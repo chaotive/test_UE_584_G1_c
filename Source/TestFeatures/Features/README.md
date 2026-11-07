@@ -282,7 +282,7 @@ Reading the current count after subscribing covers either startup order: the pan
 
 `CreateText()` centralizes font and color setup. The HUD enables a visible mouse cursor and Game-and-UI input. Its outer widget uses SelfHitTestInvisible; diagnostic scrolling and save buttons remain usable while the game world is paused.
 
-The panel displays TRAINING DEBUG HUD, C++ feature sandbox, the current level, Total bounces: N, save controls, and live persistence diagnostics. The specialized UFeatureBallPanel child connects to `AFeatureGameState::OnTotalBouncesChanged` and `OnCurrentLevelChanged` in `NativeConstruct()` and immediately reads both values, so it starts synchronized. `NativeDestruct()` removes the subscriptions and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session state. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when a value changes.
+The panel displays TRAINING DEBUG HUD, Crazy balls, the current level, Total bounces: N, save controls, and live persistence diagnostics. The specialized UFeatureBallPanel child connects to `AFeatureGameState::OnTotalBouncesChanged` and `OnCurrentLevelChanged` in `NativeConstruct()` and immediately reads both values, so it starts synchronized. `NativeDestruct()` removes the subscriptions and clears its weak state reference. These paired hooks support removing and re-adding the same widget without accumulating bindings; `NativeOnInitialized()` builds the layout only once. The player controller only creates, retains, and removes the overlay and has no knowledge of state events or display methods. Each local HUD observes the same session state. Updates use synchronous events rather than per-frame polling; formatting and layout invalidation happen when a value changes.
 
 ## Reading the types without getting lost
 
@@ -348,7 +348,7 @@ At `BeginPlay()`, the game state subscribes to `OnLoaded`. Choosing Continue sta
 
 The HUD's specialized UFeatureSaveGamePanel child owns a one-shot FTSTicker core-ticker callback for each one-second preview. Unlike a game-world timer or Sleep, the core ticker continues advancing while gameplay is paused and does not block rendering. Sequence: pause -> HUD preview for one real-time second -> async disk access -> apply loaded total and notify the HUD -> HUD result preview for one real-time second -> restore the previous pause state. The game must not resume until the loaded total has been applied. No separate window appears, and no delay is implemented in disk storage.
 
-The HUD displays current I/O state, slot `FeatureSandbox`, user index 0, the absolute desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result. Writes report success or failure. The save contains aggregate progress and chronological session records.
+The HUD displays current I/O state, slot `CrazyBalls`, user index 0, the absolute desktop save-file path, and operation history. History retains loading transitions before the HUD was constructed. Missing or unreadable saves complete with the existing zero fallback and a visible result. Writes report success or failure. The save contains aggregate progress and chronological session records.
 
 Use **Save game** to save while staying in the current level. Use **Save and quit** for an orderly exit: snapshot progress, keep the world paused during preview and asynchronous saving, show the result, then quit only if the write succeeded. A failed save keeps the game open. The active HUD also intercepts a normal native game-window close and requests this path. Repeated save/close clicks do not launch competing writes; a quit request received during load is queued until a following save can complete.
 
@@ -377,7 +377,15 @@ Include cleanup follows those boundaries too: the composing HUD no longer needs 
 
 This refactor changes ownership boundaries and function size, not the intended pause/I/O behavior. Each child user widget adds a small amount of object/layout bookkeeping; no per-frame polling, new window, or synchronous delay was added. Save diagnostics and controls retain the same event-driven design.
 
-The November 7, 2026 Unreal Editor captures show ten bounces written to `FeatureSandbox` and then restored through Continue. The HUD history records the preview, disk I/O, and return to gameplay. [Save capture](../../../docs/images/feature-save-result.png) · [Continue capture](../../../docs/images/feature-continue.png)
+### Game evolution: save diagnostics
+
+![Historical save diagnostics](../../../docs/images/feature-save-result.png)
+
+*November 7, 2026, before the Crazy balls rename: ten bounces were written to the former `FeatureSandbox` slot.*
+
+![Historical load diagnostics](../../../docs/images/feature-continue.png)
+
+*November 7, 2026, before the rename: Continue restored the ten-bounce total and displayed the I/O history.*
 
 ## Saved session records
 

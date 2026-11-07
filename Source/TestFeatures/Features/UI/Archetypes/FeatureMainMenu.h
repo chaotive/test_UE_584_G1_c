@@ -7,6 +7,7 @@
 class UButton;
 class UGameInstance;
 class UTextBlock;
+class UTexture2D;
 class UVerticalBox;
 
 /** Presents the actions available in a menu flow state. */
@@ -48,6 +49,10 @@ private:
 	// Flow is passed by value without pointer or reference ownership.
 	void BuildMenu(EFeatureGameFlow Flow);
 
+	// Builds the shared logo, title, subtitle, and optional view heading.
+	// Rows and View are borrowed references; the widget tree owns the created controls.
+	void BuildHeader(UVerticalBox& Rows, const FFeatureMenuView& View);
+
 	// Adds the saved game summary below the menu actions.
 	// Rows is a borrowed widget reference and bHasSave is passed by value.
 	void AddSaveSummary(UVerticalBox& Rows, bool bHasSave);
@@ -66,6 +71,11 @@ private:
 	// UPROPERTY tracks a strong widget-tree-owned text pointer for garbage collection.
 	UPROPERTY()
 	TObjectPtr<UTextBlock> SaveSummary;
+
+	// Keeps the generated logo texture available while this menu is displayed.
+	// UPROPERTY tracks the strong TObjectPtr to the transient texture for garbage collection.
+	UPROPERTY()
+	TObjectPtr<UTexture2D> LogoTexture;
 
 	// Identifies the latest save preview so deleted data cannot reappear in the menu.
 	// uint32 stores a generation token by value without pointer ownership.
