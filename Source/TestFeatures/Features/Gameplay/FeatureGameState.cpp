@@ -6,7 +6,7 @@
 
 void AFeatureGameState::RecordBounce()
 {
-	if (!bSessionInitialized)
+	if (!bSessionInitialized || Progress.Sessions.Last().Result != EFeatureGameplaySessionResult::InProgress)
 	{
 		return;
 	}
@@ -19,12 +19,22 @@ void AFeatureGameState::RecordBounce()
 
 void AFeatureGameState::RecordPlayerBallCollision()
 {
-	if (!bSessionInitialized)
+	if (!bSessionInitialized || Progress.Sessions.Last().Result != EFeatureGameplaySessionResult::InProgress)
 	{
 		return;
 	}
 	++Progress.Sessions.Last().PlayerBallCollisions;
 	OnSessionStatsChanged.Broadcast(Progress.Sessions.Last());
+}
+
+void AFeatureGameState::RecordSessionResult(bool bVictory)
+{
+	if (bSessionInitialized && Progress.Sessions.Last().Result == EFeatureGameplaySessionResult::InProgress)
+	{
+		Progress.Sessions.Last().Result = bVictory
+			? EFeatureGameplaySessionResult::Victory
+			: EFeatureGameplaySessionResult::Defeat;
+	}
 }
 
 const TArray<FFeatureGameplaySessionRecord>& AFeatureGameState::GetGameplaySessions() const

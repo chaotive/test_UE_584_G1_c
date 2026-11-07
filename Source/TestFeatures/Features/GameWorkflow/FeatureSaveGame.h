@@ -4,6 +4,15 @@
 #include "GameFramework/SaveGame.h"
 #include "FeatureSaveGame.generated.h"
 
+/** Outcome of a gameplay session, retained with its statistics. */
+UENUM(BlueprintType)
+enum class EFeatureGameplaySessionResult : uint8
+{
+	InProgress,
+	Victory,
+	Defeat
+};
+
 /** Value data recorded for one started gameplay session. */
 USTRUCT(BlueprintType)
 struct TESTFEATURES_API FFeatureGameplaySessionRecord
@@ -24,6 +33,11 @@ struct TESTFEATURES_API FFeatureGameplaySessionRecord
 	// int32 stores the count by value without retaining players or balls.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
 	int32 PlayerBallCollisions = 0;
+
+	// Records whether this session is running, won, or lost.
+	// The reflected enum is serialized by value without object ownership.
+	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
+	EFeatureGameplaySessionResult Result = EFeatureGameplaySessionResult::InProgress;
 };
 
 /** Complete progress snapshot for one saved game. */

@@ -43,11 +43,9 @@ void UFeatureGameplaySession::EvaluateSessionLimits(const FFeatureGameplaySessio
 
 	const bool bVictory = Stats.PlayerBallCollisions >= PlayerContactsToWin;
 	const bool bDefeat = Stats.TotalBounces >= SessionBouncesToLose;
-	if ((bVictory || bDefeat) && UGameplayStatics::SetGamePaused(GameState.Get(), true))
+	if (bVictory || bDefeat)
 	{
-		SessionState = ESessionState::LimitReached;
-		UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: %s limit reached; game paused (contacts: %d, bounces: %d)"),
-			bVictory ? TEXT("Victory") : TEXT("Defeat"), Stats.PlayerBallCollisions, Stats.TotalBounces);
+		OnGameplaySessionEnded(bVictory);
 	}
 }
 
@@ -103,7 +101,9 @@ void UFeatureGameplaySession::OnGameplaySessionEnded(bool bVictory)
 	if (CanLeaveGameplay() && UGameplayStatics::SetGamePaused(GameState.Get(), true))
 	{
 		SessionState = ESessionState::Ended;
+		GameState->RecordSessionResult(bVictory);
 		OnEnded.Broadcast(bVictory);
+		UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: Ended (%s)"), bVictory ? TEXT("Victory") : TEXT("Defeat"));
 	}
 }
 

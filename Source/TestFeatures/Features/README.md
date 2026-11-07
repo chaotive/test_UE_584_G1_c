@@ -378,11 +378,11 @@ The November 7, 2026 Unreal Editor captures show ten bounces written to `Feature
 
 ## Saved session records
 
-`AFeatureGameState::Progress` owns the saved game's aggregate bounce total and chronological `Sessions` array. Each record stores `StartedAtUtc`, `TotalBounces`, and `PlayerBallCollisions`. New Game resets progress; Continue restores it before adding the active session. Pause and resume use the existing record.
+`AFeatureGameState::Progress` owns the saved game's aggregate bounce total and chronological `Sessions` array. Each record stores `StartedAtUtc`, `TotalBounces`, `PlayerBallCollisions`, and `Result`. The result is `InProgress`, `Victory`, or `Defeat`. New Game resets progress; Continue restores it before adding the active session. Pause and resume use the existing record.
 
 Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
 
-The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Defaults are ten player-ball hit callbacks for victory and fifty bounces for defeat. Either result pauses the world with gameplay still visible. Threshold evaluation is latched once reached, and victory takes priority when a player contact reaches both targets. Persistence completion and manual resume recheck any deferred statistics. The initial fifty-ball volley can produce up to one hundred bounces under the current two-bounce retirement rule.
+The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Defaults are ten player-ball hit callbacks for victory and fifty bounces for defeat. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, and publishes `OnEnded`. The game mode presents the fullscreen Victory or Defeat menu. Its Continue button reloads the level into the initial menu, and the existing teardown save persists the result. Victory takes priority when a player contact reaches both targets. Persistence completion and manual resume recheck deferred statistics.
 
 ## Runtime arena bounds
 

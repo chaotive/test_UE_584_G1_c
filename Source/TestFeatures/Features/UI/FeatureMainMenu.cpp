@@ -111,13 +111,14 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 		ContinueButton->SetIsEnabled(bHasSave);
 		ContinueButton->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleContinue);
 	}
+	else if (bPauseMenu)
+	{
+		AddAction(*Rows, LOCTEXT("Resume", "Resume Game"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleResume);
+		AddAction(*Rows, LOCTEXT("ReturnToMenu", "Main Menu"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
+	}
 	else
 	{
-		if (bPauseMenu)
-		{
-			AddAction(*Rows, LOCTEXT("Resume", "Resume Game"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleResume);
-		}
-		AddAction(*Rows, LOCTEXT("ReturnToMenu", "Main Menu"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
+		AddAction(*Rows, LOCTEXT("Continue", "Continue"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleReturnToMenu);
 	}
 	AddAction(*Rows, LOCTEXT("Exit", "Exit"))->OnClicked.AddDynamic(this, &UFeatureMainMenu::HandleExit);
 	if (bMainMenu)

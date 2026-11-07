@@ -32,6 +32,10 @@ public:
 	// No pointer or reference parameters or return value; increments a value counter.
 	void RecordPlayerBallCollision();
 
+	// Stores the current session's outcome and stops accepting further gameplay statistics.
+	// bVictory is passed by value without pointer or reference ownership.
+	void RecordSessionResult(bool bVictory);
+
 	// Exposes the saved game's chronological session history for inspection.
 	// Returns a borrowed const TArray reference to state-owned value records.
 	const TArray<FFeatureGameplaySessionRecord>& GetGameplaySessions() const;

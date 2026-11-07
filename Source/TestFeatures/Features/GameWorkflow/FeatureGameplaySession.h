@@ -56,12 +56,12 @@ public:
 	// No pointer or reference parameters or return value; updates the observed state's world.
 	void OnGameplaySessionPaused();
 
-	// Pauses gameplay and announces a victory or defeat.
+	// Ends gameplay, records the outcome, and announces victory or defeat to observers.
 	// bVictory is passed by value without pointer or reference ownership.
 	void OnGameplaySessionEnded(bool bVictory);
 
 private:
-	enum class ESessionState : uint8 { Ready, Playing, Paused, LimitReached, Ended };
+	enum class ESessionState : uint8 { Ready, Playing, Paused, Ended };
 
 	// Tracks which lifecycle requests the session can accept.
 	// Stores the private enum by value without pointer or reference ownership.
@@ -75,7 +75,7 @@ private:
 	// int32 stores the configured positive threshold by value without object ownership.
 	int32 SessionBouncesToLose = 50;
 
-	// Pauses once when the current session reaches its victory or defeat limit.
+	// Ends the current session once it reaches its victory or defeat limit.
 	// Stats borrows a read-only state-owned session record without transferring ownership.
 	void EvaluateSessionLimits(const FFeatureGameplaySessionRecord& Stats);
 

@@ -24,6 +24,8 @@ The startup and pause menus show your last saved bounce total. When the slot is 
 
 During gameplay, press **Esc** to pause. Press it again or choose **Resume Game** to return to the arena. Choose **Exit** from the pause menu to save and quit. **Continue** restores your total the next time you play.
 
+Make ten player-ball contacts before the session reaches fifty bounces. The round ends with a fullscreen **Victory** or **Defeat** screen. Choose **Continue** to return to the initial menu. Your session history records the outcome.
+
 ## Development
 
 ### Build and run
@@ -83,8 +85,8 @@ Shipping builds skip the debug previews and keep gameplay paused until disk I/O 
 - **Game flow.** The gameplay session handles starting, pausing, resuming, and ending gameplay. The game mode observes its events and presents startup, gameplay, pause, victory, and defeat screens. The startup title comes from `ProjectName` in `Config/DefaultGame.ini`. A gameplay objective can call `FinishSession` to supply a result. [Gameplay session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.h)
 - **Physics and state.** The C++ spawner launches single balls or batches inside configurable bounds and reuses pooled actors after their second bounce. Balls publish bounce events, a state controller updates the shared total, and the debug HUD observes it. The Unreal log records lifecycle events, launches, bounces, and pool returns.
 - **Persistence.** The menu reads the save preview asynchronously. Session saves and loads pause gameplay during disk I/O. The debug HUD adds one-second previews before I/O and after the result and reports the slot, file path, and operation history.
-- **Session history.** Saves retain a chronological array of gameplay sessions with UTC start time, bounce count, and player-ball blocking-hit count. New Game starts a fresh history. Continue restores it and appends a session. Resume keeps the current record.
-- **Session limits.** Edit `Feature Session Limits` in the game-mode defaults. The defaults are ten player-ball contacts for victory and fifty session bounces for defeat. Reaching either limit pauses gameplay and logs the result. Gameplay starts with fifty balls.
+- **Session history.** Saves retain a chronological array of gameplay sessions with UTC start time, bounce count, player-ball blocking-hit count, and result. New Game starts a fresh history. Continue restores it and appends a session. Resume keeps the current record.
+- **Session limits.** Edit `Feature Session Limits` in the game-mode defaults. The defaults are ten player-ball contacts for victory and fifty session bounces for defeat. Reaching either limit ends gameplay and presents the fullscreen result menu. Gameplay starts with fifty balls.
 - **Module boundaries.** The `TestFeatures` runtime module houses the C++ gameplay, UI, and persistence code. The project uses standard Unreal assets and has no third-party plugin dependencies. Blueprint supports supplementary logic, and an AngelScript feature is planned.
 
 Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. Plain C++ spawning and storage helpers live in the sibling `Features_NonUE` folder.

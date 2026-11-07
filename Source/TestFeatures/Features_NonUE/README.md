@@ -11,7 +11,7 @@ The ball spawner assigns indexed actor names in every build. It also sets the ma
 
 The [feature guide](../Features/README.md) explains startup, spawning, pooling, event subscriptions, UI creation, ownership, and performance tradeoffs. This folder split changes code organization without changing those flows or their runtime costs.
 
-`FFeatureSaveGameStorage` loads and saves progress snapshots using `Features/GameWorkflow/FeatureSaveGame.h`. A snapshot includes the aggregate bounce total and each session's start time, bounces, and player-ball contacts. Storage provides the local slot name, desktop file path, and load result for diagnostics.
+`FFeatureSaveGameStorage` loads and saves progress snapshots using `Features/GameWorkflow/FeatureSaveGame.h`. A snapshot includes the aggregate bounce total and each session's start time, bounces, player-ball contacts, and result. Storage provides the local slot name, desktop file path, and load result for diagnostics.
 
 Task 17 moved these helpers into the runtime module alongside the Unreal-reflected classes. The module is now named `TestFeatures` and exports the helpers with `TESTFEATURES_API`.
 
