@@ -4,6 +4,10 @@
 
 Crazy balls is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round starts with five balls launched from random positions in random directions.
 
+## Latest release
+
+[Download the latest release build](https://github.com/chaotive/test_UE_584_G1_c/releases/download/0.1/Build.zip) (`0.1`, Win64 Development, DebugGame, and Shipping).
+
 ![Crazy balls logo](Content/FeatureBrand/FeatureCrazyBallsLogo.png)
 
 ![Illustration of a player approaching bouncing balls in a training arena](docs/images/feature-rules-illustration.png)
@@ -62,8 +66,6 @@ The save contains the current level, aggregate non-player bounce total, and a ch
 The renamed game uses a `CrazyBalls` save slot. Saves from the former `FeatureSandbox` slot are not loaded by this version.
 
 ## Development
-
-[Download the latest release build](https://github.com/chaotive/test_UE_584_G1_c/releases/download/0.1/Build.zip) (`0.1`, Win64 Development, DebugGame, and Shipping).
 
 ### Build and run
 
