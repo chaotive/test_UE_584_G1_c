@@ -1,8 +1,8 @@
 # Training balls: how this feature works
 
-For a documentation-only assessment of efficiency, risks, and proposed improvements, see [Performance and design ideas](../../../PERFORMANCE_IDEAS.md). Those ideas are not implementation changes or measured benchmark results.
+For a documentation-only assessment of efficiency, risks, and proposed improvements, see [Performance and design ideas](../../../docs/PERFORMANCE_IDEAS.md). Those ideas are not implementation changes or measured benchmark results.
 
-This folder is a small C++ learning example: create balls, launch them, count their bounces, and reuse them. You can follow the code without knowing Unreal's whole gameplay framework.
+This feature is a small C++ learning example: create balls, launch them, count their bounces, and reuse them. You can follow the code without knowing Unreal's whole gameplay framework.
 
 Start with the startup flow below. The later sections explain the event connections, object lifetime, and performance tradeoffs. Code snippets are excerpts from this project; examples that you can try are labeled separately.
 
@@ -18,7 +18,7 @@ Start with the startup flow below. The later sections explain the event connecti
 | `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
 | `UI` | Menu and HUD archetypes, declarative menu views, and panel widgets |
 
-The sibling `Features_GameLogic` folder contains all AngelScript source and its C++ hosts and bindings, including the level-threshold formulas and `UFeatureLevelRules` bridge. The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
+The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) contains the rules and their C++ hosts and bindings, including the level-threshold example currently implemented with AngelScript. The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
 
 ![Standalone gameplay after moving feature classes into responsibility folders](../../../docs/images/feature-organized-gameplay.png)
 
@@ -98,7 +98,7 @@ The startup menu shows the saved level, total bounces, session count, and latest
 
 During gameplay, Escape forwards a pause request through the game mode to the session. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world, record and save the result, and show an end menu. Victory offers Continue to start the next level; defeat offers Retry to reload the same arena and continue from the saved progress. Exit uses the in-game save-and-quit flow. The session gates pause, resume, and result transitions during persistence operations, while the game mode gates menu actions. Only Continue waits for a readable save preview. Menus are created on transitions and use no per-frame flow polling.
 
-The [root README](../../../README.md) shows verified captures of the arena and the debug HUD's bounce count and persistence history.
+The [change history](../../../CHANGES.md#game-evolution) retains historical arena, HUD and persistence captures.
 
 Go deeper: [UObject Instance Creation](https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-objects-in-unreal-engine) explains `NewObject`; [Actor Lifecycle](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-actor-lifecycle) explains initialization and play callbacks.
 
@@ -407,7 +407,7 @@ The game mode exposes `FeatureLevelBoundsCenter` and `FeatureLevelBoundsHalfExte
 
 ## Task 17 module boundary
 
-This folder and its sibling `Features_NonUE` belong to the independent `TestFeatures` runtime module. The project game mode and player controller consume its exported API. The feature module uses engine dependencies, the pinned AngelScript external library, and its own log category, `LogTestFeatures`. Serialized references to the former module package may fail to resolve. Storage uses Unreal's `AsyncLoadGameFromSlot` and `LoadGameFromSlot`, casts to the current `UFeatureSaveGame` type, and starts at zero if no usable save is returned. Saves use Unreal's asynchronous saving API.
+The `Features` and `Features_NonUE` source folders belong to the independent `TestFeatures` runtime module. The project game mode and player controller consume its exported API. The feature module uses engine dependencies, the pinned AngelScript external library, and its own log category, `LogTestFeatures`. Serialized references to the former module package may fail to resolve. Storage uses Unreal's `AsyncLoadGameFromSlot` and `LoadGameFromSlot`, casts to the current `UFeatureSaveGame` type, and starts at zero if no usable save is returned. Saves use Unreal's asynchronous saving API.
 
 Historical task 17 verification with the former compatibility reader (2026-11-01): Unreal Header Tool, native compilation, and both runtime-module DLL links passed. A headless game smoke test loaded the pre-migration save total of 145, released gameplay, counted ball bounces, returned balls to their pool, and saved during orderly teardown. The original save bytes were restored after testing. The run skipped UI preview timing and logged physics-material initialization errors during class default object construction.
 

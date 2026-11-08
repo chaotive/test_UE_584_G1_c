@@ -1,6 +1,6 @@
 # Performance and design improvement ideas
 
-Historical review: the later in-game HUD refactor replaces the sleep/flush/modal implementation discussed below with paused gameplay, core-ticker previews, and asynchronous I/O. Those observations describe the earlier snapshot, not the current implementation. See the Features README for the current flow.
+Historical review: the later in-game HUD refactor replaces the sleep/flush/modal implementation discussed below with paused gameplay, core-ticker previews, and asynchronous I/O. Those observations describe the earlier snapshot, not the current implementation. See the [feature walkthrough](../Source/TestFeatures/Features/README.FEATURES.md) for the current flow.
 
 Task 17 follow-up: feature source links now point into the independent TestFeatures runtime module; this build boundary does not establish a runtime performance gain.
 
@@ -40,7 +40,7 @@ The most obvious user-visible delay is intentional: the UI sleeps one second bef
 
 ## 1. Pool searches can become quadratic across a batch
 
-Read [FeatureBallSpawner.cpp](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp), especially `SpawnMultiple()`, `Spawn()`, and `FindAvailableBall()`.
+Read [FeatureBallSpawner.cpp](../Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp), especially `SpawnMultiple()`, `Spawn()`, and `FindAvailableBall()`.
 
 Every request scans the list from its beginning. Creating an initial batch of N active balls examines about `0 + 1 + ... + (N - 1)` existing entries before deciding to create more: **O(N squared)** search work over that batch. This excludes actor creation itself. Reusing many inactive balls can show a similar pattern as early entries become active again.
 
@@ -65,7 +65,7 @@ Prewarming a pool can move creation work away from gameplay bursts, but increase
 
 ## 3. Physics and bounce meaning deserve attention before micro-optimizations
 
-Read `ConfigureBouncing()`, `Activate()`, and `OnBallHit()` in [FeatureBall.cpp](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp).
+Read `ConfigureBouncing()`, `Activate()`, and `OnBallHit()` in [FeatureBall.cpp](../Source/TestFeatures/Features/Gameplay/FeatureBall.cpp).
 
 Active physics bodies and dense contact pairs may dominate a large-ball scenario. `AlwaysSpawn` plus independent random positions allows overlapping starts. Those overlaps can cause immediate contact resolution and hit notifications. Collision filtering, a larger spawn volume, or spaced placement could reduce unnecessary contacts if the intended behavior permits it.
 
@@ -95,7 +95,7 @@ Compare the same scene with detailed logging enabled and reduced before spending
 
 ## 6. Diagnostic history is unbounded and repeatedly reformatted
 
-Read `PublishStatus()` in [FeatureSaveGameSubsystem.cpp](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) and `FormatSaveDiagnostics()` in [FeatureSaveGamePanel.cpp](Source/TestFeatures/Features/UI/FeatureSaveGamePanel.cpp).
+Read `PublishStatus()` in [FeatureSaveGameSubsystem.cpp](../Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) and `FormatSaveDiagnostics()` in [FeatureSaveGamePanel.cpp](../Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
 
 Each phase appends an FString to a game-instance-lifetime array. Every refresh joins the entire history and recomputes the desktop path. For H similarly sized entries, one rebuild is **O(H)** text work. Rebuilding after each append can accumulate **O(H squared)** work over a long session. Actual string lengths also matter.
 

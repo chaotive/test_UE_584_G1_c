@@ -2,9 +2,11 @@
 
 **Features test on Unreal 5.8.4**
 
+## Game
+
 Crazy balls is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round starts with five balls launched from random positions in random directions.
 
-## Latest release
+### Latest release
 
 [Download the latest release build](https://github.com/chaotive/test_UE_584_G1_c/releases/download/0.1/Build.zip) (`0.1`, Win64 Development, DebugGame, and Shipping).
 
@@ -14,11 +16,11 @@ Crazy balls is a third-person ball-contact game. Move around the arena and inter
 
 *AI-generated illustration of the game's premise. This is concept art, not an in-game capture.*
 
-## Jump into the arena
+### Jump into the arena
 
 Choose **New Game** for a fresh game at the configured initial level (level 1 by default) or **Continue on level N** to play your saved level. Use **WASD** to move, the **mouse** to look, and **Space** to jump. Run into a ball to score a player contact: that ball is retired and another launches into the arena.
 
-## Start fresh or pick up your count
+### Start fresh or pick up your count
 
 The startup menu shows your saved level, total bounces, session count, and the latest session’s result and counts. The pause menu shows your last saved bounce total. On the startup menu, **Esc** exits. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
 
@@ -26,7 +28,7 @@ The startup menu shows your saved level, total bounces, session count, and the l
 
 *November 7, 2026: the startup menu shows the logo, subtitle, saved level, and bounce total.*
 
-## How to play
+### How to play
 
 Each player-ball contact also doubles your configured base movement speed for five seconds by default. Another contact refreshes the boost, and pausing the game pauses its countdown. Optional stacking adds another bonus for each contact and resets the shared timer; with the default 2× bonus, consecutive contacts produce 2×, 3×, and 4× base speed until it expires.
 
@@ -36,9 +38,9 @@ Each session is a race between two counters:
 2. **Keep an eye on other bounces.** When a ball hits the floor, a wall, or another ball with enough physical impulse to register a bounce, the loss counter rises. Player contacts are counted separately. Two balls hitting each other can each register a bounce.
 3. **Reach the win target first.** Reaching the player-contact target ends the session in Victory. Reaching the non-player bounce limit ends it in Defeat. The top-right HUD shows the current level and both counts against their limits.
 
-Each ball has its own lifetime: after its configured number of non-player bounces (five by default), it returns to the pool. A ball that touches the player is also retired immediately. In either case, a replacement is scheduled while the session is active.
+Each ball has its own lifetime: after its configured number of non-player bounces (five by default), it returns to the pool. A ball that touches the player is also retired immediately. In either case, a replacement is scheduled while the session is active. The [arena enclosure](docs/DEVELOPMENT.md#arena-collision-bounds) keeps the balls in the play area; its size and spawn settings are configurable.
 
-### Levels and results
+#### Levels and results
 
 By default, every new game begins at level 1; the initial level is configurable in the game mode. Winning advances the saved level by one; losing keeps the same level. Each new session resets its two objective counters, while the saved aggregate bounce total and session history continue across sessions.
 
@@ -49,13 +51,13 @@ By default, every new game begins at level 1; the initial level is configurable 
 | 3 | 12 | 98 |
 | 50 | 59 | 51 |
 
-The defaults follow `10 + (level - 1)` for the win target and `max(50, 100 - (level - 1))` for the loss limit. The game mode can change the base limits, per-level adjustments, and minimum loss limit. The default loss limit starts at 100 and decreases by one per level until it reaches 50. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to start the next level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
+The defaults follow `10 + (level - 1)` for the win target and `max(50, 100 - (level - 1))` for the loss limit. The game mode can change the base limits, per-level adjustments, and minimum loss limit. The default loss limit starts at 100 and decreases by one per level until it reaches 50. **Victory** pauses the game, records the result, advances the saved level, and saves progress through the [session result flow](docs/DEVELOPMENT.md#session-results). Choose **Continue** to start the next level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
 
-### Menus, pause, and saves
+#### Menus, pause, and saves
 
 **New Game** deletes the current save and begins at the configured initial level with a fresh history. **Continue on level N** loads a readable save and starts its saved level. **Delete Save** removes the slot without starting a session; when there is no save, Continue is disabled and the menu displays **No saved game.** **Exit** closes the game, and **Esc** on the initial menu does the same.
 
-During a session, **Esc** opens the pause menu. Choose **Resume Game** or press **Esc** again to continue the same session; **Main Menu** returns to the startup screen, and **Exit** saves and quits. Saving or loading pauses play during I/O. In non-Shipping builds, the debug panel also offers **Save game** and **Save and quit** and shows save diagnostics.
+During a session, **Esc** opens the pause menu. Choose **Resume Game** or press **Esc** again to continue the same session; **Main Menu** returns to the startup screen, and **Exit** saves and quits. Saving or loading pauses play during I/O. Non-Shipping builds also include a [debug HUD](docs/DEVELOPMENT.md#debug-hud-and-save-diagnostics) for inspecting live state and save operations.
 
 ![Crazy balls pause menu](docs/images/crazy-pause.png)
 
@@ -65,69 +67,15 @@ The save contains the current level, aggregate non-player bounce total, and a ch
 
 The renamed game uses a `CrazyBalls` save slot. Saves from the former `FeatureSandbox` slot are not loaded by this version.
 
-## Development
+Earlier milestones and their runtime captures are recorded in the [change history](CHANGES.md#game-evolution).
 
-### Build and run
-
-1. Open `test_UE_584_G1_c.uproject` in Unreal Engine 5.8 and build the editor target.
-2. Open the Third Person map and press **Play**.
-3. In a non-Shipping build, enter `Feature.NewGame` in the console at the startup menu to start immediately. In Play In Editor, use the Output Log command field. [Console command implementation](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp)
-
-### AngelScript rules
-
-All `.as` source and its project-authored C++ bridges stay in [Source/TestFeatures/Features_GameLogic](Source/TestFeatures/Features_GameLogic). [FeatureLevelRules.as](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) is the only implementation of the win/loss threshold formulas. C++ owns the game-mode configuration and saved progress, passes integer values into the script, and uses the returned limits for gameplay and the HUD.
-
-The [rules world subsystem](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) reads and compiles the saved `.as` file once per world. For script-only changes, stop PIE, edit and save the script, then start PIE again. The new PIE world creates a fresh host that reads the latest file from disk. This requires neither a C++ game rebuild nor an editor restart; the AngelScript compiler handles the updated rules when the world initializes. Script errors are logged and stop execution rather than selecting a duplicate C++ fallback. The build stages `.as` files as UFS runtime dependencies for packaged games.
-
-The project links a prebuilt Win64 AngelScript static library through an external Unreal module. The [dependency manifest](Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json) pins its version, archive checksum, toolchain and build options. The [library README](Source/ThirdParty/FeatureAngelScriptRuntime/README.md) describes the supplied artifacts and update process. SDK source and build intermediates stay in the ignored `.dependencies/AngelScript/<version>` cache; normal Unreal builds only validate and link the library.
-
-### Smoke checks
-
-After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for the `Feature.Smoke` checks: menu definitions, session state, ball-pool reuse and player-contact replacement, loss-limit progression and minimum, save serialization, and temporary player-speed boosts including timer expiry and stacking. Reports and logs are stored under `Intermediate/FeatureSmoke`. These checks do not replace a playthrough or exercise the rendered UI.
-
-### Package for Win64
-
-[Build-Win64.ps1](Build-Win64.ps1) generates project files, then packages Development, DebugGame, and Shipping together. It discovers the project's Unreal Engine version through the Windows installation registry, falling back to `D:\Program Files\Epic Games\UE_<version>`. Project and archive paths are relative to the script. Project-file generation must succeed before packaging starts.
-
-```powershell
-.\Build-Win64.ps1
-```
-
-The default archive ID is `Dev`, so repeated calls reuse `Builds\Dev`. After packaging, the script copies the latest AutomationTool `Log.txt` for this project's current run to `Build.log` in that archive, including failed packaging runs that produced a log. Reusing an ID replaces its attached log. Supply an ID to use a different archive directory:
-
-```powershell
-.\Build-Win64.ps1 -Id '1'
-```
-
-DebugGame supports debugging project C++. Each archive contains a `Windows` directory with configuration-specific launchers. Keep the staged files together when launching any of the three builds.
-
-The asset manager registers the `GameFeatureData` cook rule required by the engine's Game Features subsystem. [Project settings](Config/DefaultGame.ini)
-
-### Arena collision bounds
-
-The game-mode defaults expose the base player speed multiplier, contact speed multiplier, stacking option, and contact boost duration under `Feature Player Speed`. They also expose the initial level, initial ball count, per-level objective adjustments, rebounds before retirement, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; its default size and the initial ball count are both five. A size or speed multiplier of 1 preserves the default ball size or launch speed.
-
-Gameplay creates one `AFeatureLevelBounds` actor with six wireframe collision faces visible in game. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after their configured rebound limit or player contact and are replaced while the session is active.
-
-`UFeatureGameplaySession` is a world subsystem that organizes `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. Its start workflow creates the enclosure before the initial ball volley. The game mode observes lifecycle events to spawn the player and present screens. Other features can access the session through `World.GetSubsystem<UFeatureGameplaySession>()` and subscribe to its lifecycle events.
-
-### Session results
-
-A victory or defeat pauses gameplay, saves the session, and presents the matching fullscreen result. **Continue** starts the next saved level after victory. **Retry** reloads the arena and starts a new session after defeat.
-
-### Debug HUD and save diagnostics
-
-The non-Shipping debug HUD shows the live bounce count, the save slot and file path, and the I/O history. Its **Save game** button writes a snapshot while keeping the session open. **Save and quit** exits after a successful write.
-
-Gameplay remains paused until asynchronous save or load I/O finishes.
-
-### Architecture
+## Architecture
 
 The flows below are small, purpose-built examples for this prototype. Each uses a concrete game feature to explore architectural benefits: clear ownership, localized dependencies, shared construction, and a single source of truth for rules and state. The patterns guide those boundaries; each implementation stays focused on its current use case and can grow when another use case needs it.
 
 Each view highlights its own boundary: gameplay events, UI construction, session lifecycle, script iteration, or helper ownership. Repeated class names provide context; their detailed responsibilities stay in the relevant view. Solid arrows show calls or data flow; the dashed arrow shows state observation. Expand the class references for full names and base types. These are architecture illustrations, not runtime captures.
 
-#### Gameplay architecture
+### Gameplay architecture
 
 ![Square gameplay architecture diagram: session, arena, pool, ball, state bridge and shared state.](docs/images/feature-gameplay-flow.png)
 
@@ -149,7 +97,7 @@ The ball cycle demonstrates Observer events and event-to-state translation. Ball
 
 Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [pool](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) · [ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [state bridge](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp).
 
-#### UI architecture
+### UI architecture
 
 ![Square UI architecture diagram: declarative menu definitions, shared menu, gameplay HUD and composed debug panels.](docs/images/feature-ui-flow.png)
 
@@ -171,7 +119,7 @@ The four menu views demonstrate declarative differences over shared construction
 
 Source: [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [HUDs](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) · [panels](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
 
-#### Session and persistence architecture
+### Session and persistence architecture
 
 ![Square session architecture diagram: game mode, gameplay session, progress state, save coordinator, storage and snapshot.](docs/images/feature-workflow-flow.png)
 
@@ -193,13 +141,13 @@ A small enum-based state machine makes round transitions explicit. World and gam
 
 Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [save coordinator](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) · [storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [snapshot](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
 
-#### Game logic architecture
+### Game logic architecture
 
 ![Square game logic architecture diagram: C++ session values enter the rules host, AS functions calculate thresholds, and results return to the session.](docs/images/feature-gamelogic-flow.png)
 
-The main driver for AngelScript is to change simple, code-based game logic without recompiling the C++ game. The two threshold functions demonstrate value-based bindings: a world-scoped host passes level and settings into AS, and the session and HUD share the returned limits. C++ owns configuration and saved state; AS owns the formulas. The host and scripts stay together in `Features_GameLogic`.
+The main driver for AngelScript is to change simple, code-based game logic without recompiling the C++ game. The two threshold functions demonstrate value-based bindings: a world-scoped host passes level and settings into AS, and the session and HUD share the returned limits. C++ owns configuration and saved state; AS owns the formulas. The [game-logic guide](Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md) covers work in `Features_GameLogic`, where the host and scripts stay together.
 
-Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and compiles the latest saved script. That provides the edit-and-restart workflow shown above, with the existing C++ binary and editor. Live hot reload is a secondary convenience; changes to native bindings still require a C++ build. See [AngelScript rules](#angelscript-rules) for usage and packaging.
+Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and compiles the latest saved script. That provides the edit-and-restart workflow shown above, with the existing C++ binary and editor. Live hot reload is a secondary convenience; changes to native bindings still require a C++ build. See [AngelScript rules](docs/DEVELOPMENT.md#angelscript-rules) for usage and packaging.
 
 <details>
 <summary>Class and binding reference</summary>
@@ -214,9 +162,9 @@ Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and comp
 
 </details>
 
-Source: [AS rules](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) · [C++ host](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) · [session consumers](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [dependency manifest](Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json). See the [library README](Source/ThirdParty/FeatureAngelScriptRuntime/README.md) for versioning and updates.
+Source: [AS rules](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) · [C++ host](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) · [session consumers](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [dependency manifest](Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json). See the [library versioning guide](Source/ThirdParty/FeatureAngelScriptRuntime/README.ANGELSCRIPT.md) for versioning and updates.
 
-#### Non-UE helper architecture
+### Non-UE helper architecture
 
 ![Square non-UE helper architecture diagram: session, save coordinator and player controller call ball-pool, storage and debug-HUD factory helpers.](docs/images/feature-nonue-flow.png)
 
@@ -242,31 +190,19 @@ The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal a
 
 Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. Plain C++ spawning, storage, and HUD factory helpers live in `Features_NonUE`.
 
-- [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)
-- [Runtime helpers](Source/TestFeatures/Features_NonUE/README.md)
-- [Project objectives and technical requirements](AGENTS.MD)
-- [Completed tasks and capture index](CHANGES.md)
 
-### Local Unreal Editor MCP
+## Development
 
-For explicitly requested editor work, open `test_UE_584_G1_c.uproject` normally. The project enables Epic's built-in MCP and toolset plugins for editor targets and starts the local server automatically. To turn off automatic startup for your local editor, clear **Auto Start Server** under **Edit → Editor Preferences → Model Context Protocol**.
+### Run and test
 
-The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:8000/mcp`. If the endpoint is unavailable and Unreal Editor is closed, open the project and wait for the editor to finish loading and the local server to respond. If the current chat does not expose the Unreal tools once the server responds, start a new Codex chat in this project with the editor still open.
+Open the project in Unreal Engine 5.8.4, build the Development Editor target, open the Third Person map, and press **Play**. The [build-and-run instructions](docs/DEVELOPMENT.md#build-and-run) cover setup and the development console command. After building, use [Gauntlet smoke checks](docs/DEVELOPMENT.md#smoke-checks) to check selected features; that guide explains their scope and report location.
 
-### Game evolution
+### Make changes
 
-![Earlier startup menu](docs/images/current-startup.png)
+Edit native systems in [Source/TestFeatures](Source/TestFeatures) and rebuild the editor target for C++ changes. The [feature walkthrough](Source/TestFeatures/Features/README.FEATURES.md) explains the code and lifecycle; the [helper guide](Source/TestFeatures/Features_NonUE/README.NON_UE.md) covers plain C++ ownership boundaries. For script-only logic changes, follow the [game-logic workflow](Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md#change-a-rule): stop PIE, save the rule edit, and start PIE again without rebuilding C++. Native binding changes still need a C++ build.
 
-*November 7, 2026, before the Crazy balls rename: the startup menu showed the previous title and saved total.*
+Use [game-mode configuration](docs/DEVELOPMENT.md#game-mode-configuration) for spawning and movement settings, and [arena collision bounds](docs/DEVELOPMENT.md#arena-collision-bounds) to resize the play area. Use [session-result details](docs/DEVELOPMENT.md#session-results) when changing win, loss, or retry behavior, and the [debug HUD and diagnostics](docs/DEVELOPMENT.md#debug-hud-and-save-diagnostics) to inspect state and persistence. The [historical performance review](docs/PERFORMANCE_IDEAS.md) records investigation ideas and their evidence limits.
 
-![Earlier gameplay HUD](docs/images/current-gameplay.png)
+### Project tools and delivery
 
-*November 7, 2026, before the rename: gameplay showed level-one objective counters and the earlier debug HUD branding.*
-
-![Historical loading HUD](docs/images/in-game-loading-hud.png)
-
-*November 1, 2026, before the main menu: an offscreen test showed load progress and a restored total of 96 bounces.*
-
-![First startup menu](docs/images/task-18-main-menu.jpg)
-
-*Task 18, November 7, 2026: the first startup menu offered New Game and Continue; the saved-total summary and Delete Save action came later.*
+Use [Win64 packaging](docs/DEVELOPMENT.md#package-for-win64) to produce Development, DebugGame, and Shipping archives. For authorized editor automation, see [Unreal Editor MCP setup](docs/DEVELOPMENT.md#local-unreal-editor-mcp). The [development guide's grouped topic index](docs/DEVELOPMENT.md#topic-index) brings these workflows together; [AGENTS.MD](AGENTS.MD) defines project and agent rules.
