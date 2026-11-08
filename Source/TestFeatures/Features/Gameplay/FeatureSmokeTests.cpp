@@ -9,8 +9,10 @@
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/AutomationTest.h"
+#include "TimerManager.h"
 
 // Checks the actions and Escape behavior exposed by each menu view.
 // The automation framework owns the test instance; no pointer or reference ownership is transferred.
@@ -124,7 +126,9 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 	Session->ObserveBall(*Ball);
 	APawn* PlayerPawn = World->SpawnActor<APawn>();
 	APlayerController* PlayerController = World->SpawnActor<APlayerController>();
+	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
 	PlayerController->Possess(PlayerPawn);
+	TestTrue(TEXT("The possessed pawn has a non-bot player state"), PlayerPawn->IsPlayerControlled());
 	bool bPlayerContactAnnounced = false;
 	Session->OnPlayerBallContact.AddLambda([&bPlayerContactAnnounced, PlayerPawn](APawn& ContactedPawn)
 	{
@@ -135,9 +139,10 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Player contact is published"), bPlayerContactAnnounced);
 	TestFalse(TEXT("The contacted ball is retired"), Ball->IsActive());
 	TestEqual(TEXT("Retirement schedules one replacement"), Session->PendingBallReplacements, 1);
-	Session->SpawnReplacementBall();
+	World->GetTimerManager().Tick(0.01f);
 	TestTrue(TEXT("The replacement reuses the retired ball"), Ball->IsActive());
 	TestEqual(TEXT("Replacement does not grow the prewarmed pool"), Session->BallSpawner.GetSpawnedBalls().Num(), 1);
+	TestEqual(TEXT("The scheduled replacement is consumed"), Session->PendingBallReplacements, 0);
 
 	World->DestroyWorld(false);
 	return true;

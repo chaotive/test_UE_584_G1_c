@@ -19,9 +19,11 @@ This guide covers running and testing Crazy balls, changing its implementation, 
 
 ### Smoke checks
 
-After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for the `Feature.Smoke` checks: menu definitions, session state, ball-pool reuse and player-contact replacement, loss-limit progression and minimum, save serialization, and temporary player-speed boosts including timer expiry and stacking. Reports and logs are stored under `Intermediate/FeatureSmoke`. These checks do not replace a playthrough or exercise the rendered UI.
+After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for seven `Feature.Smoke` checks: menu definitions, session state, ball-pool reuse, player-contact replacement, script-backed win/loss progression and minimum, save serialization, and temporary player-speed boosts including refresh, timer expiry, and stacking. Logs are stored under `Intermediate/FeatureSmoke`; the runner exports `Report/index.json` and `Report/index.html` there. Repeated runs replace the current artifacts. These headless checks do not replace a playthrough or exercise the rendered UI.
 
-The latest recorded Gauntlet attempt failed during editor startup and executed no checks; see the [tracked startup issue](../AGENTS.MD#bugs).
+November 8, 2026: the Development Editor build succeeded and Gauntlet passed all seven checks with exit code 0 and no per-test warnings or errors. The [saved JSON report](validation/2026-11-08-gauntlet-report.json) records each result. Two fixture failures found in the initial run were corrected: the replacement fixture now supplies a non-bot player state and exercises the queued replacement timer; the speed fixture advances across engine frames and uses separate characters for independent boost configurations.
+
+The editor still logs startup diagnostics before the checks, including 14 `LogAutomationTest: Error: Condition failed` messages in this passing run. These were not suppressed. The previous initialization failure was not reproduced when running outside the restricted execution environment; its cause remains unconfirmed. See the [tracked startup issue](../AGENTS.MD#bugs).
 
 ### Package for Win64
 

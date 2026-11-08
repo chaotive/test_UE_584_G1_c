@@ -1,0 +1,134 @@
+﻿{
+	"devices": [
+		{
+			"deviceName": "LocalDevice0",
+			"instance": "5EE3D9FC4E8FF855B3E74A84B0599FE8",
+			"instanceName": "LT-LEN-LEO-1-6720",
+			"platform": "WindowsEditor",
+			"oSVersion": "Windows 11 (25H2) [10.0.26200.9711] ",
+			"model": "Default",
+			"gPU": "NVIDIA GeForce RTX 4060 Laptop GPU",
+			"cPUModel": "AMD Ryzen 7 7435HS                             ",
+			"rAMInGB": 16,
+			"renderMode": "SM6",
+			"rHI": "",
+			"appInstanceLog": ""
+		}
+	],
+	"reportCreatedOn": "2026.11.08-15.29.00",
+	"succeeded": 7,
+	"succeededWithWarnings": 0,
+	"failed": 0,
+	"notRun": 0,
+	"inProcess": 0,
+	"totalDuration": 0.23097209632396698,
+	"comparisonExported": false,
+	"comparisonExportDirectory": "",
+	"tests": [
+		{
+			"testDisplayName": "BallPool",
+			"fullTestPath": "Feature.Smoke.BallPool",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"5EE3D9FC4E8FF855B3E74A84B0599FE8"
+			],
+			"duration": 0.04323820024728775,
+			"dateTime": "2026.11.08-15.28.59",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MenuViews",
+			"fullTestPath": "Feature.Smoke.MenuViews",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"5EE3D9FC4E8FF855B3E74A84B0599FE8"
+			],
+			"duration": 0.0018509998917579651,
+			"dateTime": "2026.11.08-15.29.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PlayerBallReplacement",
+			"fullTestPath": "Feature.Smoke.PlayerBallReplacement",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"5EE3D9FC4E8FF855B3E74A84B0599FE8"
+			],
+			"duration": 0.018874600529670715,
+			"dateTime": "2026.11.08-15.29.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PlayerSpeedBoost",
+			"fullTestPath": "Feature.Smoke.PlayerSpeedBoost",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"5EE3D9FC4E8FF855B3E74A84B0599FE8"
+			],
+			"duration": 0.1466422975063324,
+			"dateTime": "2026.11.08-15.29.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SaveRoundTrip",
+			"fullTestPath": "Feature.Smoke.SaveRoundTrip",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"5EE3D9FC4E8FF855B3E74A84B0599FE8"
+			],
+			"duration": 0.0030971989035606384,
+			"dateTime": "2026.11.08-15.29.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SessionLossLimit",
+			"fullTestPath": "Feature.Smoke.SessionLossLimit",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"5EE3D9FC4E8FF855B3E74A84B0599FE8"
+			],
+			"duration": 0.0077413991093635559,
+			"dateTime": "2026.11.08-15.29.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SessionState",
+			"fullTestPath": "Feature.Smoke.SessionState",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"5EE3D9FC4E8FF855B3E74A84B0599FE8"
+			],
+			"duration": 0.0095274001359939575,
+			"dateTime": "2026.11.08-15.29.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		}
+	]
+}
