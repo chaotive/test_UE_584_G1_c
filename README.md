@@ -151,14 +151,17 @@ The main driver for AngelScript is to change simple, code-based game logic witho
 
 Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and compiles the latest saved script. That provides the edit-and-restart workflow shown above, with the existing C++ binary and editor. Live hot reload is a secondary convenience; changes to native bindings still require a C++ build. See [AngelScript rules](docs/DEVELOPMENT.md#angelscript-rules) for usage and packaging.
 
+[Player-character rules](Source/TestFeatures/Features_GameLogic/FeaturePlayerRules.as) use the same value-based boundary for baseline speed and contact bonuses. A focused `UFeaturePlayerRules` actor component handles contact observation, movement updates, and timer expiry, keeping that feature out of the character's movement/input class. Its script is read when a spawned character is configured; restarting PIE picks up edits to both examples.
+
 <details>
 <summary>Class and binding reference</summary>
 
 | Diagram role | Class or value | Base or primary consumer |
 | --- | --- | --- |
 | Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem`; supplies level and configuration values |
-| C++ rules host | `UFeatureLevelRules` | Extends `UWorldSubsystem`; owns the native script engine and context |
+| C++ rules host | `UFeatureLevelRules` | Extends `UWorldSubsystem`; owns an `FFeatureScriptRuntime` for level rules |
 | AngelScript rules | `PlayerContactsToWin` / `SessionBouncesToLose` in `FeatureLevelRules.as` | Stateless functions called by `UFeatureLevelRules` |
+| Player-character bridge | `UFeaturePlayerRules` | Extends `UActorComponent`; calls `FeaturePlayerRules.as` and owns native movement/timer integration |
 | AngelScript library | `FeatureAngelScriptRuntime` external module | Links the pinned Win64 static library into `TestFeatures` |
 | Calculated limits | `int32` return values | Consumed by session limit checks and the gameplay HUD |
 

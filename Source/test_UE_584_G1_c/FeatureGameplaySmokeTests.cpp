@@ -2,6 +2,7 @@
 
 #include "test_UE_584_G1_cCharacter.h"
 #include "Engine/World.h"
+#include "Features_GameLogic/FeaturePlayerRules.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Misc/AutomationTest.h"
 #include "TimerManager.h"
@@ -23,19 +24,21 @@ bool FFeaturePlayerSpeedBoostSmokeTest::RunTest(const FString& Parameters)
 	}
 
 	Atest_UE_584_G1_cCharacter* Character = World->SpawnActor<Atest_UE_584_G1_cCharacter>(CharacterClass);
-	Character->ConfigureFeatureSpeed(0.5f, 2.0f, 5.0f, false);
+	UFeaturePlayerRules* Logic = Character->FindComponentByClass<UFeaturePlayerRules>();
+	Logic->ConfigureSpeed(0.5f, 2.0f, 5.0f, false);
 	TestEqual(TEXT("Base multiplier configures the baseline walk speed"), Character->GetCharacterMovement()->MaxWalkSpeed, 250.0f);
-	Character->HandleFeatureBallContact(*Character);
+	Logic->HandleBallContact(*Character);
 	TestEqual(TEXT("Ball contact temporarily doubles the base speed"), Character->GetCharacterMovement()->MaxWalkSpeed, 500.0f);
 
 	Atest_UE_584_G1_cCharacter* StackingCharacter = World->SpawnActor<Atest_UE_584_G1_cCharacter>(CharacterClass);
-	StackingCharacter->ConfigureFeatureSpeed(0.5f, 2.0f, 5.0f, true);
-	StackingCharacter->HandleFeatureBallContact(*StackingCharacter);
-	StackingCharacter->HandleFeatureBallContact(*StackingCharacter);
+	UFeaturePlayerRules* StackingLogic = StackingCharacter->FindComponentByClass<UFeaturePlayerRules>();
+	StackingLogic->ConfigureSpeed(0.5f, 2.0f, 5.0f, true);
+	StackingLogic->HandleBallContact(*StackingCharacter);
+	StackingLogic->HandleBallContact(*StackingCharacter);
 	TestEqual(TEXT("Stacking adds one contact boost per contact"), StackingCharacter->GetCharacterMovement()->MaxWalkSpeed, 750.0f);
 
 	// Each incomplete latent update yields an engine frame; timers activate before their elapsed-time checks.
-	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this, World, Character, StackingCharacter, Step = 0]() mutable
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this, World, Character, StackingCharacter, Logic, Step = 0]() mutable
 	{
 		switch (Step++)
 		{
@@ -45,7 +48,7 @@ bool FFeaturePlayerSpeedBoostSmokeTest::RunTest(const FString& Parameters)
 		case 1:
 			World->GetTimerManager().Tick(4.0f);
 			TestEqual(TEXT("The boost remains before expiry"), Character->GetCharacterMovement()->MaxWalkSpeed, 500.0f);
-			Character->HandleFeatureBallContact(*Character);
+			Logic->HandleBallContact(*Character);
 			return false;
 		case 2:
 			World->GetTimerManager().Tick(4.0f);

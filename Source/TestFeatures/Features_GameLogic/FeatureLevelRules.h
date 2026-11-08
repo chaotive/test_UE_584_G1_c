@@ -2,16 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Containers/ArrayView.h"
+#include "FeatureScriptRuntime.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "FeatureLevelRules.generated.h"
-
-namespace AngelScript
-{
-    class asIScriptEngine;
-    class asIScriptContext;
-    class asIScriptFunction;
-    struct asSMessageInfo;
-}
 
 /** Hosts value-only gameplay rules without exposing world objects to scripts. */
 UCLASS()
@@ -37,21 +30,13 @@ public:
     int32 SessionBouncesToLose(int32 Level, int32 BaseBounces, int32 DecreasePerLevel, int32 MinimumBounces) const;
 
 private:
-    // Reports script compilation diagnostics through the feature log.
-    // Message is a borrowed AngelScript diagnostic pointer; UserData is an unused non-owning callback pointer.
-    static void LogScriptMessage(const AngelScript::asSMessageInfo* Message, void* UserData);
-
     // Passes integer arguments to a compiled script function and reads its integer result.
     // Function is borrowed from the engine; TConstArrayView borrows a contiguous input array without copying it.
     int32 Execute(AngelScript::asIScriptFunction& Function, TConstArrayView<int32> Arguments) const;
 
     // Owns the compiler, module and functions for this world's rules.
-    // Native reference-counted pointer is explicitly released in Deinitialize; it is not a UObject.
-    AngelScript::asIScriptEngine* ScriptEngine = nullptr;
-
-    // Reuses one execution context for synchronous game-thread rule calls.
-    // Native reference-counted pointer is subsystem-owned and released before its engine.
-    AngelScript::asIScriptContext* Context = nullptr;
+    // TUniquePtr exclusively owns the native runtime until subsystem deinitialization.
+    TUniquePtr<FFeatureScriptRuntime> Runtime;
 
     // Identifies the script function for the victory threshold.
     // Non-owning native pointer borrows a function retained by the script module.

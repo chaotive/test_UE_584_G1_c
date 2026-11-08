@@ -2,13 +2,14 @@
 
 #include "test_UE_584_G1_cGameMode.h"
 #include "test_UE_584_G1_c.h"
-#include "test_UE_584_G1_cCharacter.h"
+#include "Features_GameLogic/FeaturePlayerRules.h"
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/UI/Archetypes/FeatureMainMenu.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "TimerManager.h"
@@ -82,7 +83,7 @@ void Atest_UE_584_G1_cGameMode::HandleGameplaySessionStarted()
 	SetFlow(EFeatureGameFlow::Gameplay);
 	APlayerController* Player = GetGameInstance()->GetFirstLocalPlayerController();
 	RestartPlayer(Player);
-	CastChecked<Atest_UE_584_G1_cCharacter>(Player->GetPawn())->ConfigureFeatureSpeed(
+	Player->GetPawn()->FindComponentByClass<UFeaturePlayerRules>()->ConfigureSpeed(
 		FeaturePlayerBaseSpeedMultiplier, FeaturePlayerContactSpeedMultiplier, FeaturePlayerContactBoostDuration, bFeaturePlayerContactBoostStacks);
 }
 
