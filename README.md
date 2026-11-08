@@ -63,6 +63,8 @@ The renamed game uses a `CrazyBalls` save slot. Saves from the former `FeatureSa
 
 ## Development
 
+[Download the latest release build](https://github.com/chaotive/test_UE_584_G1_c/releases/download/0.1/Build.zip) (`0.1`, Win64 Development, DebugGame, and Shipping).
+
 ### Build and run
 
 1. Open `test_UE_584_G1_c.uproject` in Unreal Engine 5.8 and build the editor target.
