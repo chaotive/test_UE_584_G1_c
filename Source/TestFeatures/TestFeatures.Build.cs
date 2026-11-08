@@ -1,4 +1,5 @@
 using UnrealBuildTool;
+using System.IO;
 
 public class TestFeatures : ModuleRules
 {
@@ -12,7 +13,12 @@ public class TestFeatures : ModuleRules
             "Core", "CoreUObject", "Engine", "UMG"
         });
         PrivateDependencyModuleNames.AddRange(new string[] {
-            "EngineSettings", "InputCore", "PhysicsCore", "Slate", "SlateCore"
+            "EngineSettings", "InputCore", "PhysicsCore", "Slate", "SlateCore", "FeatureAngelScriptRuntime"
         });
+        string GameLogicDirectory = Path.Combine(ModuleDirectory, "Features_GameLogic");
+        foreach (string Script in Directory.GetFiles(GameLogicDirectory, "*.as", SearchOption.AllDirectories))
+        {
+            RuntimeDependencies.Add(Script, StagedFileType.UFS);
+        }
     }
 }

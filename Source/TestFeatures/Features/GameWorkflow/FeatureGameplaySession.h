@@ -90,23 +90,23 @@ private:
 
 	// Sets the level-one player contact limit, increased by the configured amount for each subsequent level.
 	// int32 stores the configured positive threshold by value without object ownership.
-	int32 PlayerContactsToWin = 10;
+	int32 PlayerContactsToWin = 0;
 
 	// Sets the level-one bounce limit, decreased per level down to the configured minimum.
 	// int32 stores the configured positive threshold by value without object ownership.
-	int32 SessionBouncesToLose = 100;
+	int32 SessionBouncesToLose = 0;
 
 	// Sets the lowest non-player bounce defeat limit for any level.
 	// int32 stores the positive configured floor by value.
-	int32 MinimumSessionBouncesToLose = 50;
+	int32 MinimumSessionBouncesToLose = 0;
 
 	// Sets the per-level increase in required player contacts.
 	// int32 stores the increment by value.
-	int32 ContactsIncreasePerLevel = 1;
+	int32 ContactsIncreasePerLevel = 0;
 
 	// Sets the per-level decrease in allowed non-player bounces.
 	// int32 stores the decrement by value.
-	int32 BouncesDecreasePerLevel = 1;
+	int32 BouncesDecreasePerLevel = 0;
 
 	// Stores the uniform scale for newly created pooled balls.
 	// float stores the scale by value.

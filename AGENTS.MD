@@ -68,6 +68,9 @@ These goals will guide future tasks:
 27. For related UI views, keep shared construction, styling, and behavior in common UI code, and express each view's differences declaratively in code. Use another data format only when it provides a clear benefit.
 28. Development runs, tests, documentation updates, and requested screenshot sessions may use, replace, or delete the game's save slot without preserving player progress or asking for permission.
 29. In documentation, link to other documents and prefer displaying pictures directly as inline images.
+30. Keep all AngelScript (.as) source files exclusively in `Source/TestFeatures/Features_GameLogic`. Packaged script copies are build artifacts; do not author scripts elsewhere.
+31. Keep a single source of truth across C++ and AngelScript: each gameplay rule has one authoritative implementation, without mirrored implementations in the other language. C++ owns configuration and persistent state; scripts receive values and return results. Bindings, snapshots, and test fixtures may pass or copy data, but must not duplicate rule implementations or independently maintained gameplay defaults.
+32. Keep project-authored AngelScript bridge code, including C++ script hosts and bindings, in `Source/TestFeatures/Features_GameLogic` alongside the `.as` scripts. This also applies to UE-derived bridge classes as a focused exception to the general UE folder rule. Keep the external SDK/library dependency separate under ThirdParty, with SDK implementation source in the ignored dependency cache.
 
 ## Tasks
 

@@ -1,0 +1,63 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Containers/ArrayView.h"
+#include "Subsystems/WorldSubsystem.h"
+#include "FeatureLevelRules.generated.h"
+
+namespace AngelScript
+{
+    class asIScriptEngine;
+    class asIScriptContext;
+    class asIScriptFunction;
+    struct asSMessageInfo;
+}
+
+/** Hosts value-only gameplay rules without exposing world objects to scripts. */
+UCLASS()
+class TESTFEATURES_API UFeatureLevelRules : public UWorldSubsystem
+{
+    GENERATED_BODY()
+
+public:
+    // Loads and compiles the level rules once for this world.
+    // Collection is a borrowed subsystem-collection reference; this subsystem owns the native runtime.
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+    // Releases the execution context before shutting down its script engine.
+    // No pointer or reference arguments or return value; releases subsystem-owned native resources.
+    virtual void Deinitialize() override;
+
+    // Invokes the script's player-contact threshold rule.
+    // All int32 inputs and the result are copied values without pointers or references.
+    int32 PlayerContactsToWin(int32 Level, int32 BaseContacts, int32 IncreasePerLevel) const;
+
+    // Invokes the script's non-player bounce threshold rule.
+    // All int32 inputs and the result are copied values without pointers or references.
+    int32 SessionBouncesToLose(int32 Level, int32 BaseBounces, int32 DecreasePerLevel, int32 MinimumBounces) const;
+
+private:
+    // Reports script compilation diagnostics through the feature log.
+    // Message is a borrowed AngelScript diagnostic pointer; UserData is an unused non-owning callback pointer.
+    static void LogScriptMessage(const AngelScript::asSMessageInfo* Message, void* UserData);
+
+    // Passes integer arguments to a compiled script function and reads its integer result.
+    // Function is borrowed from the engine; TConstArrayView borrows a contiguous input array without copying it.
+    int32 Execute(AngelScript::asIScriptFunction& Function, TConstArrayView<int32> Arguments) const;
+
+    // Owns the compiler, module and functions for this world's rules.
+    // Native reference-counted pointer is explicitly released in Deinitialize; it is not a UObject.
+    AngelScript::asIScriptEngine* ScriptEngine = nullptr;
+
+    // Reuses one execution context for synchronous game-thread rule calls.
+    // Native reference-counted pointer is subsystem-owned and released before its engine.
+    AngelScript::asIScriptContext* Context = nullptr;
+
+    // Identifies the script function for the victory threshold.
+    // Non-owning native pointer borrows a function retained by the script module.
+    AngelScript::asIScriptFunction* WinRule = nullptr;
+
+    // Identifies the script function for the defeat threshold.
+    // Non-owning native pointer borrows a function retained by the script module.
+    AngelScript::asIScriptFunction* LossRule = nullptr;
+};

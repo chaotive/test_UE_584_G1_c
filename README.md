@@ -73,6 +73,14 @@ The renamed game uses a `CrazyBalls` save slot. Saves from the former `FeatureSa
 2. Open the Third Person map and press **Play**.
 3. In a non-Shipping build, enter `Feature.NewGame` in the console at the startup menu to start immediately. In Play In Editor, use the Output Log command field. [Console command implementation](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
+### AngelScript rules
+
+All `.as` source and its project-authored C++ bridges stay in [Source/TestFeatures/Features_GameLogic](Source/TestFeatures/Features_GameLogic). [FeatureLevelRules.as](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) is the only implementation of the win/loss threshold formulas. C++ owns the game-mode configuration and saved progress, passes integer values into the script, and uses the returned limits for gameplay and the HUD.
+
+The [rules world subsystem](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) compiles the script once per world. Restart the session world to pick up edits; automatic script reload is not implemented. Script errors are logged and stop execution rather than selecting a duplicate C++ fallback. The build stages `.as` files as UFS runtime dependencies for packaged games.
+
+The project links a prebuilt Win64 AngelScript static library through an external Unreal module. The [dependency manifest](Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json) pins its version, archive checksum, toolchain and build options. The [library README](Source/ThirdParty/FeatureAngelScriptRuntime/README.md) describes the supplied artifacts and update process. SDK source and build intermediates stay in the ignored `.dependencies/AngelScript/<version>` cache; normal Unreal builds only validate and link the library.
+
 ### Smoke checks
 
 After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for the `Feature.Smoke` checks: menu definitions, session state, ball-pool reuse and player-contact replacement, loss-limit progression and minimum, save serialization, and temporary player-speed boosts including timer expiry and stacking. Reports and logs are stored under `Intermediate/FeatureSmoke`. These checks do not replace a playthrough or exercise the rendered UI.
@@ -183,7 +191,7 @@ An enum-based state machine controls round transitions in the world subsystem. T
 
 Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [save coordinator](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) · [storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [snapshot](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
 
-The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript remains a project goal.
+The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements the level-threshold rules through an embedded standalone runtime.
 
 Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. Plain C++ spawning and storage helpers live in the sibling `Features_NonUE` folder.
 

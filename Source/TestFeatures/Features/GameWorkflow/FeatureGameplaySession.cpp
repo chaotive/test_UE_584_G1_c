@@ -4,6 +4,7 @@
 #include "Features/Gameplay/FeatureGameStateController.h"
 #include "Features/Gameplay/FeatureLevelBounds.h"
 #include "FeatureSaveGameSubsystem.h"
+#include "Features_GameLogic/FeatureLevelRules.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
@@ -167,12 +168,14 @@ bool UFeatureGameplaySession::IsPersistenceBusy() const
 
 int32 UFeatureGameplaySession::GetPlayerContactsToWin() const
 {
-	return PlayerContactsToWin + ContactsIncreasePerLevel * (GameState->GetCurrentLevel() - 1);
+	return GetWorld()->GetSubsystem<UFeatureLevelRules>()->PlayerContactsToWin(
+		GameState->GetCurrentLevel(), PlayerContactsToWin, ContactsIncreasePerLevel);
 }
 
 int32 UFeatureGameplaySession::GetSessionBouncesToLose() const
 {
-	return FMath::Max(MinimumSessionBouncesToLose, SessionBouncesToLose - BouncesDecreasePerLevel * (GameState->GetCurrentLevel() - 1));
+	return GetWorld()->GetSubsystem<UFeatureLevelRules>()->SessionBouncesToLose(
+		GameState->GetCurrentLevel(), SessionBouncesToLose, BouncesDecreasePerLevel, MinimumSessionBouncesToLose);
 }
 
 bool UFeatureGameplaySession::CanLeaveGameplay() const

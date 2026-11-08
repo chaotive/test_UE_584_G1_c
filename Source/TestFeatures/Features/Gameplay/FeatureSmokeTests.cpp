@@ -78,7 +78,7 @@ bool FFeatureSessionSmokeTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-// Checks the configured level-one loss target and its minimum across progression levels.
+// Checks script-backed win and loss thresholds across progression levels.
 // The automation framework owns the test; its temporary world owns the game-state actor and subsystem.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFeatureLossLimitSmokeTest, "Feature.Smoke.SessionLossLimit",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -89,10 +89,17 @@ bool FFeatureLossLimitSmokeTest::RunTest(const FString& Parameters)
 	AFeatureGameState* State = World->SpawnActor<AFeatureGameState>();
 	UFeatureGameplaySession* Session = World->GetSubsystem<UFeatureGameplaySession>();
 	Session->GameState = State;
+	Session->PlayerContactsToWin = 10;
+	Session->ContactsIncreasePerLevel = 1;
+	Session->SessionBouncesToLose = 100;
+	Session->BouncesDecreasePerLevel = 1;
+	Session->MinimumSessionBouncesToLose = 50;
 
 	State->StartSession(false, 1);
+	TestEqual(TEXT("The script returns the configured level-one win target"), Session->GetPlayerContactsToWin(), 10);
 	TestEqual(TEXT("Level one uses the new 100-bounce base target"), Session->GetSessionBouncesToLose(), 100);
 	State->StartSession(false, 2);
+	TestEqual(TEXT("The script increases the win target at level two"), Session->GetPlayerContactsToWin(), 11);
 	TestEqual(TEXT("The target decreases by one at level two"), Session->GetSessionBouncesToLose(), 99);
 	State->StartSession(false, 52);
 	TestEqual(TEXT("The target stops at the configured 50-bounce minimum"), Session->GetSessionBouncesToLose(), 50);

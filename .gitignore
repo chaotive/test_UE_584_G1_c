@@ -77,3 +77,9 @@ DerivedDataCache/*
 
 # IDE
 .idea
+
+# Downloaded SDK source and dependency build intermediates
+/.dependencies/
+
+# Deliberately versioned AngelScript static-library artifacts
+!Source/ThirdParty/FeatureAngelScriptRuntime/*/lib/Win64/Release/angelscript.lib
