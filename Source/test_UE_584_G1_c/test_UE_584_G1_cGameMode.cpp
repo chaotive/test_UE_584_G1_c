@@ -6,14 +6,12 @@
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureProgressPersistence.h"
-#include "Features/UI/Archetypes/FeatureMainMenu.h"
+#include "Features/UI/Controllers/FeatureMenuController.h"
 #include "Features/UI/Controllers/FeatureMenuActions.h"
-#include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetSystemLibrary.h"
 #include "TimerManager.h"
 
 Atest_UE_584_G1_cGameMode::Atest_UE_584_G1_cGameMode()
@@ -43,6 +41,8 @@ void Atest_UE_584_G1_cGameMode::InitGameState()
 		return;
 	}
 
+	MenuController = GetWorld()->GetSubsystem<UFeatureMenuController>();
+	MenuController->OnStartRequested.AddUObject(this, &Atest_UE_584_G1_cGameMode::StartGameplaySession);
 	GameplaySession = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
 	UFeatureProgressPersistence::AttachTo(*GetGameState<AFeatureGameState>());
 	GameplaySession->BindGameState(*GetGameState<AFeatureGameState>(), FeaturePlayerContactsToWin, FeatureSessionBouncesToLose,
@@ -72,7 +72,7 @@ void Atest_UE_584_G1_cGameMode::StartPlay()
 
 void Atest_UE_584_G1_cGameMode::StartRetrySession()
 {
-	HandleMenuAction(EFeatureMenuAction::Continue);
+	MenuController->Execute(EFeatureMenuAction::Continue);
 }
 
 void Atest_UE_584_G1_cGameMode::BeginPlay()
@@ -130,70 +130,16 @@ void Atest_UE_584_G1_cGameMode::HandleGameplaySessionEnded(bool bVictory)
 
 void Atest_UE_584_G1_cGameMode::SetFlow(EFeatureGameFlow NewFlow)
 {
-	if (FlowMenu)
-	{
-		FlowMenu->OnAction.RemoveAll(this);
-		FlowMenu->Dismiss();
-		FlowMenu = nullptr;
-	}
-
 	FlowState = NewFlow;
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("Game flow: %s"), *UEnum::GetValueAsString(FlowState));
-	if (FlowState != EFeatureGameFlow::Gameplay)
-	{
-		FlowMenu = UFeatureMainMenu::Present(*GetGameInstance(), FlowState);
-		FlowMenu->OnAction.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleMenuAction);
-	}
+	MenuController->PresentFlow(FlowState);
 }
 
-void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
+void Atest_UE_584_G1_cGameMode::StartGameplaySession(bool bContinue)
 {
-	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
-	if (Saves->IsBusy())
-	{
-		return;
-	}
-
-	switch (Action)
-	{
-	case EFeatureMenuAction::NewGame:
-		if (!Saves->DeleteSave())
-		{
-			break;
-		}
-		GameplaySession->OnGameplaySessionStart(false, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier, FeatureBallReboundsBeforeRetirement,
-			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
-			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
-		break;
-	case EFeatureMenuAction::Continue:
-		if (!Saves->HasSave())
-		{
-			break;
-		}
-		GameplaySession->OnGameplaySessionStart(true, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier, FeatureBallReboundsBeforeRetirement,
-			FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
-			FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
-		break;
-	case EFeatureMenuAction::Resume:
-		GameplaySession->OnGameplaySessionResume();
-		break;
-	case EFeatureMenuAction::ReturnToMenu:
-		UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)));
-		break;
-	case EFeatureMenuAction::Retry:
-		UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)), true, TEXT("FeatureRetry=1"));
-		break;
-	case EFeatureMenuAction::Exit:
-		if (FlowState == EFeatureGameFlow::StartupMenu)
-		{
-			UKismetSystemLibrary::QuitGame(this, GetGameInstance()->GetFirstLocalPlayerController(), EQuitPreference::Quit, false);
-		}
-		else
-		{
-			GetGameState<AFeatureGameState>()->FindComponentByClass<UFeatureProgressPersistence>()->SaveSession(true);
-		}
-		break;
-	}
+	GameplaySession->OnGameplaySessionStart(bContinue, FeatureInitialLevel, FeatureBallCount, FeatureBallSize, FeatureBallSpeedMultiplier, FeatureBallReboundsBeforeRetirement,
+		FBox(FeatureBallSpawnMin, FeatureBallSpawnMax),
+		FBox::BuildAABB(FeatureLevelBoundsCenter, FeatureLevelBoundsHalfExtent));
 }
 
 void Atest_UE_584_G1_cGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -205,10 +151,9 @@ void Atest_UE_584_G1_cGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason
 		GameplaySession->OnPaused.RemoveAll(this);
 		GameplaySession->OnEnded.RemoveAll(this);
 	}
-	if (FlowMenu)
+	if (MenuController)
 	{
-		FlowMenu->OnAction.RemoveAll(this);
-		FlowMenu->RemoveFromParent();
+		MenuController->OnStartRequested.RemoveAll(this);
 	}
 	UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("GameMode [%s]: EndPlay (Reason: %s)"),
 		*GetName(), *UEnum::GetValueAsString(EndPlayReason));

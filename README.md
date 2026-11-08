@@ -103,7 +103,7 @@ Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySessi
 
 ![Square UI architecture diagram: declarative menu definitions, shared menu, gameplay HUD and composed debug panels.](docs/images/feature-ui-flow.png)
 
-The four menu views demonstrate declarative differences over shared construction: common layout and behavior have one implementation, and each view supplies its heading and actions. The game mode manages menus; the player controller manages HUD lifetime. Widgets own their Observer bindings, so display changes stay within UI code and controllers do not need to know which state events update which labels.
+The four menu views demonstrate declarative differences over shared construction: common layout and behavior have one implementation, and each view supplies its heading and actions. The menu controller owns menu lifetime and executes actions; GameMode supplies flow changes and configured session starts. The player controller manages HUD lifetime. Widgets own their Observer bindings, so display changes stay within UI code and controllers do not need to know which state events update which labels.
 
 The [saved-progress panel](Source/TestFeatures/Features/UI/Widgets/FeatureSavedProgressPanel.cpp) owns asynchronous preview loading, summary formatting, and deletion observation. The menu composes it and updates Continue/Delete Save from its saved-level and slot-availability events, with an initial read when the binding is attached.
 
@@ -113,6 +113,7 @@ The [saved-progress panel](Source/TestFeatures/Features/UI/Widgets/FeatureSavedP
 | Diagram role | Class | Base or primary consumer |
 | --- | --- | --- |
 | Action definitions | `FFeatureMenuSessionActions`, `FFeatureMenuPersistenceActions`, `FFeatureMenuNavigationActions` | Define operations and default captions in `UI/Controllers`, grouped by purpose |
+| Menu controller | `UFeatureMenuController` | Extends `UWorldSubsystem`; owns menus and routes session, persistence, and navigation actions |
 | Menu definitions | `FFeatureMenuViews` | Creates `FFeatureMenuView` values for `UFeatureMainMenu` |
 | Shared menu | `UFeatureMainMenu` | Extends `UUserWidget` |
 | Saved-progress preview | `UFeatureSavedProgressPanel` | Extends `UUserWidget`; composed by the menu |
@@ -123,7 +124,7 @@ The [saved-progress panel](Source/TestFeatures/Features/UI/Widgets/FeatureSavedP
 
 </details>
 
-Source: [actions](Source/TestFeatures/Features/UI/Controllers/FeatureMenuActions.h) · [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [HUDs](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) · [panels](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
+Source: [controller](Source/TestFeatures/Features/UI/Controllers/FeatureMenuController.cpp) · [actions](Source/TestFeatures/Features/UI/Controllers/FeatureMenuActions.h) · [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [HUDs](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) · [panels](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
 
 ### Session and persistence architecture
 
@@ -177,9 +178,9 @@ Source: [AS rules](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) 
 
 ### Non-UE helper architecture
 
-![Square non-UE helper architecture diagram: save coordinator and player controller call storage and debug-HUD factory helpers.](docs/images/feature-nonue-flow.png)
+![Square non-UE helper architecture diagram: save coordination and menu previews share a focused storage helper.](docs/images/feature-nonue-flow.png)
 
-This view focuses on ownership and narrow helper APIs. Storage and HUD factory helpers contain the engine API details needed by their callers. These are plain C++ classes using Unreal types, with no UObject lifetime of their own. Event scoring belongs to the gameplay view, rendered composition to the UI view, and pause/result coordination to the session view.
+This view focuses on ownership and narrow helper APIs. The storage helper contains save-slot, serialization, and disk API details used by the save coordinator and saved-progress preview. It is a plain C++ class using Unreal types, with no UObject lifetime of its own. Event scoring belongs to the gameplay view, rendered composition to the UI view, and pause/result coordination to the session view.
 
 <details>
 <summary>Class and ownership reference</summary>
@@ -187,17 +188,16 @@ This view focuses on ownership and narrow helper APIs. Storage and HUD factory h
 | Diagram role | Class | Base or primary consumer |
 | --- | --- | --- |
 | Save coordinator | `UFeatureSaveGameSubsystem` | Extends `UGameInstanceSubsystem`; coordinates persistence |
+| Saved-progress preview | `UFeatureSavedProgressPanel` | Extends `UUserWidget`; reads storage without mutating live state |
 | Save storage helper | `FFeatureSaveGameStorage` | Creates `UFeatureSaveGame` snapshots for the save coordinator; also serves menu previews |
-| Player controller | `Atest_UE_584_G1_cPlayerController` | Extends `APlayerController`; retains and removes HUD widgets |
-| Debug HUD factory | `FFeatureDebugHUDSpawner` | Creates `UFeatureDebugHUD` for the player controller in non-Shipping builds |
 
 </details>
 
-Source: [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [HUD factory](Source/TestFeatures/Features_NonUE/FeatureDebugHUDSpawner.cpp) · [player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp).
+Source: [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp).
 
 The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements level, player, and ball rules through an embedded standalone runtime.
 
-Within `TestFeatures/Features`, `Gameplay` contains the ball manager, balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. Plain C++ spawning, storage, and HUD factory helpers live in `Features_NonUE`.
+Within `TestFeatures/Features`, `Gameplay` contains the ball manager, balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. The plain C++ storage helper lives in `Features_NonUE`.
 
 
 ## Development

@@ -106,11 +106,6 @@ void UFeatureSavedProgressPanel::PublishPreview(const FText& Summary)
 	OnPreviewChanged.Broadcast(SavedLevel, bHasSaveSlot);
 }
 
-void UFeatureSavedProgressPanel::DeleteSave()
-{
-	ObservedSaves->DeleteSave();
-}
-
 void UFeatureSavedProgressPanel::HandleSaveDeleted(bool bSucceeded)
 {
 	if (!bSucceeded)

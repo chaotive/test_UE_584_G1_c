@@ -45,7 +45,6 @@ The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) conta
 | `UFeatureGameplayHUD` | Displays the current level and live player-contact and ball-bounce limits. | [FeatureGameplayHUD.cpp](UI/Archetypes/FeatureGameplayHUD.cpp) |
 | `UFeatureSaveGamePanel` | Owns persistence controls and diagnostics. | [FeatureSaveGamePanel.cpp](UI/Widgets/FeatureSaveGamePanel.cpp) |
 | `UFeatureSavedProgressPanel` | Owns menu-preview loading, saved-session summaries, and deletion observation; publishes saved level and slot availability. | [FeatureSavedProgressPanel.cpp](UI/Widgets/FeatureSavedProgressPanel.cpp) |
-| `FFeatureDebugHUDSpawner` | Creates the debug widget and adds it to the local player's screen. | [FeatureDebugHUDSpawner.cpp](../Features_NonUE/FeatureDebugHUDSpawner.cpp) |
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
 
@@ -85,9 +84,9 @@ Read those lines as:
 
 The world owns the session subsystem, and the session retains its controller through `UPROPERTY`. Other features retrieve the session with `World.GetSubsystem<UFeatureGameplaySession>()` to subscribe without depending on the game-mode class.
 
-The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](GameWorkflow/FeatureGameFlow.h). It starts in `StartupMenu` and asks [FeatureMainMenu](UI/Archetypes/FeatureMainMenu.cpp) to present a game-instance-owned widget. The four [menu views](UI/Views/FeatureMenuViews.cpp) declare their headings and ordered actions from [session, persistence, and navigation definitions](UI/Controllers/FeatureMenuActions.h); the archetype supplies their shared layout and behavior. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
+The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](GameWorkflow/FeatureGameFlow.h). It starts in `StartupMenu` and passes that phase to [FeatureMenuController](UI/Controllers/FeatureMenuController.cpp), which owns the game-instance-created [FeatureMainMenu](UI/Archetypes/FeatureMainMenu.cpp) widget and subscribes to its actions. The four [menu views](UI/Views/FeatureMenuViews.cpp) declare their headings and ordered actions from [session, persistence, and navigation definitions](UI/Controllers/FeatureMenuActions.h); the archetype supplies their shared layout and behavior. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
 
-The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. It publishes `OnStarted`, `OnResumed`, `OnPaused`, and `OnEnded(bVictory)`. The game mode subscribes during initialization and removes its bindings during `EndPlay`. New Game and Continue start the session. Resume returns from the pause menu. A successful `PauseSession()` request publishes the pause event. `FinishSession(bVictory)` publishes the result when a gameplay objective supplies an outcome.
+The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. It publishes `OnStarted`, `OnResumed`, `OnPaused`, and `OnEnded(bVictory)`. The game mode subscribes during initialization and removes its bindings during `EndPlay`. The menu controller handles save eligibility, deletion, navigation, resume, and exit. New Game and Continue publish `OnStartRequested(bContinue)`; GameMode starts the session using its configured arena and ball settings. Resume returns from the pause menu. A successful `PauseSession()` request publishes the pause event. `FinishSession(bVictory)` publishes the result when a gameplay objective supplies an outcome.
 
 On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then asks [the ball manager](Gameplay/FeatureBallManager.cpp) to create the initial batch. Continue keeps the world paused until loading finishes.
 
@@ -103,7 +102,7 @@ The startup menu shows the saved level, total bounces, session count, and latest
 
 `UFeatureMainMenu` delegates preview loading, summary formatting, and deletion observation to its `UFeatureSavedProgressPanel` child. The child publishes only an optional saved level and slot availability, so an unreadable save disables Continue but remains deletable. The menu owns its button bindings and reads the child's initial state after subscribing. The child invalidates pending reads after deletion or removal and refreshes when reconstructed; the menu has no storage API or saved-session-record dependency.
 
-During gameplay, Escape forwards a pause request through the game mode to the session. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world, record and save the result, and show an end menu. Victory offers Continue to start the next level; defeat offers Retry to reload the same arena and continue from the saved progress. Exit uses the in-game save-and-quit flow. The session gates pause, resume, and result transitions during persistence operations, while the game mode gates menu actions. Only Continue waits for a readable save preview. Menus are created on transitions and use no per-frame flow polling.
+During gameplay, Escape forwards a pause request through the game mode to the session. Resume Game or Escape returns to the same pawn and pool. Gameplay systems can call `FinishSession(true)` for `Victory` or `FinishSession(false)` for `Lose`. Both outcomes pause the world, record and save the result, and show an end menu. Victory offers Continue to start the next level; defeat offers Retry to reload the same arena and continue from the saved progress. Exit uses the in-game save-and-quit flow. The session gates pause, resume, and result transitions during persistence operations, while the menu controller gates menu actions. Only Continue waits for a readable save preview. Menus are created on transitions and use no per-frame flow polling.
 
 The [change history](../../../CHANGES.md#game-evolution) retains historical arena, HUD and persistence captures.
 
@@ -247,23 +246,23 @@ The player controller removes its debug widget in EndPlay. Interactive Save game
 
 ## 7. The debug HUD: a separate UI flow
 
-The widget layout lives in `FeatureDebugHUD.h/.cpp`, while its creation helper lives separately in `../Features_NonUE/FeatureDebugHUDSpawner.h/.cpp`. The player controller includes both headers: one for the widget instance and one for the spawning API.
+The widget layout, visibility, and input behavior live in `FeatureDebugHUD.h/.cpp`. The player controller creates, retains, and removes the HUD directly.
 
 The local Third Person player controller requests the overlay after New Game or Continue:
 
 ```cpp
-DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
+DebugHUD = CreateWidget<UFeatureDebugHUD>(this);
+DebugHUD->AddToPlayerScreen(10);
 ```
 
-This local-player check is meaningful: the screen belongs to a player on this machine, not to a remote player's controller. The helper has no dependency on the ball manager, ball events, or game state.
+This local-player check is meaningful: the screen belongs to a player on this machine, not to a remote player's controller. Creation does not wire ball or state events; the composed widgets own those bindings.
 
-`FFeatureDebugHUDSpawner::Spawn()` calls `CreateWidget<UFeatureDebugHUD>()` with the player controller as the owning player. It then calls `AddToPlayerScreen(10)` and returns the widget. The controller stores it in a `UPROPERTY`-tracked `TObjectPtr` so it remains reachable throughout the player's session. See Epic's [AddToPlayerScreen](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/UMG/UUserWidget/AddToPlayerScreen?lang=en-US) reference for player-specific viewport placement and layering.
+The player controller calls `CreateWidget<UFeatureDebugHUD>()` with itself as the owning player, then `AddToPlayerScreen(10)`. The controller stores it in a `UPROPERTY`-tracked `TObjectPtr` so it remains reachable throughout the player's session. See Epic's [AddToPlayerScreen](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/UMG/UUserWidget/AddToPlayerScreen?lang=en-US) reference for player-specific viewport placement and layering.
 
 During widget creation, `NativeOnInitialized()` builds the controls once. No Widget Blueprint asset or designer layout is needed:
 
 ```text
 Player controller CreateGameplayWidgets
-  -> FFeatureDebugHUDSpawner::Spawn()
   -> CreateWidget<UFeatureDebugHUD>()
   -> NativeOnInitialized() -> BuildLayout() -> BuildPanel()
   -> AddToPlayerScreen(10)
@@ -400,7 +399,7 @@ This refactor changes ownership boundaries and function size, not the intended p
 
 Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. [FeatureBallRules.as](../Features_GameLogic/FeatureBallRules.as) decides bounce counting, retirement, and replacement eligibility: a player-hit ball retires without counting that contact as a bounce, and the ball manager schedules its replacement while playing. The native ball applies those decisions. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
 
-The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Level-one defaults are ten player-ball hit callbacks for victory and one hundred non-player bounces for defeat. The saved `CurrentLevel` starts at the game-mode initial level (1 by default) and advances once on victory; defeat and Retry keep it unchanged. The limits are calculated by [FeatureLevelRules.as](../Features_GameLogic/FeatureLevelRules.as) through `UFeatureLevelRules`; configuration and saved progress stay in C++. The configured per-level changes and minimum defeat limit (50 by default) are inputs to that script. New Game deletes the slot and initializes fresh progress. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, publishes `OnEnded`, and requests a save. The game mode presents the fullscreen Victory or Defeat menu. Victory's Continue reloads the arena and starts the next saved level; defeat's Retry reloads it and starts a continued session at the same level. Persistence completion and manual resume recheck deferred statistics.
+The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Level-one defaults are ten player-ball hit callbacks for victory and one hundred non-player bounces for defeat. The saved `CurrentLevel` starts at the game-mode initial level (1 by default) and advances once on victory; defeat and Retry keep it unchanged. The limits are calculated by [FeatureLevelRules.as](../Features_GameLogic/FeatureLevelRules.as) through `UFeatureLevelRules`; configuration and saved progress stay in C++. The configured per-level changes and minimum defeat limit (50 by default) are inputs to that script. New Game deletes the slot and initializes fresh progress. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, publishes `OnEnded`, and requests a save. The game mode supplies the result flow to the menu controller, which presents the fullscreen Victory or Defeat menu. Victory's Continue reloads the arena and starts the next saved level; defeat's Retry reloads it and starts a continued session at the same level. Persistence completion and manual resume recheck deferred statistics.
 
 ## Runtime arena bounds
 

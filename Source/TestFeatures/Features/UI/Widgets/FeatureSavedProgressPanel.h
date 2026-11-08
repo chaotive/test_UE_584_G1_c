@@ -25,10 +25,6 @@ public:
 	// bDetailed is copied by value without pointers or references.
 	void Configure(bool bDetailed);
 
-	// Requests deletion through the observed persistence subsystem.
-	// No pointer or reference arguments or return value; the game instance owns the subsystem.
-	void DeleteSave();
-
 	// Reports the level available from the most recently completed preview.
 	// Returns a borrowed const optional reference; TOptional distinguishes an unreadable or absent preview from a saved level.
 	const TOptional<int32>& GetSavedLevel() const;

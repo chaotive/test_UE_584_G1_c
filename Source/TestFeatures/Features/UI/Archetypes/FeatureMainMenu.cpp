@@ -237,7 +237,7 @@ void UFeatureMainMenu::HandleRetry()
 
 void UFeatureMainMenu::HandleDeleteSave()
 {
-	SavedProgressPanel->DeleteSave();
+	OnAction.Broadcast(EFeatureMenuAction::DeleteSave);
 }
 
 void UFeatureMainMenu::UpdateSaveActions(const TOptional<int32>& SavedLevel, bool bHasSave)

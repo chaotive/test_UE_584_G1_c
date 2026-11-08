@@ -124,7 +124,7 @@ private:
 	UFUNCTION()
 	void HandleRetry();
 
-	// Routes the Delete Save action to the child that owns its preview.
+	// Publishes Delete Save so the action controller can clear the slot.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.
 	UFUNCTION()
 	void HandleDeleteSave();

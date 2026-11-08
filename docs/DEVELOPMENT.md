@@ -63,7 +63,7 @@ Gameplay creates one `AFeatureLevelBounds` actor with six wireframe collision fa
 
 ### Session results
 
-`UFeatureGameplaySession` is a world subsystem that organizes `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. Its start workflow creates the enclosure before the initial ball volley. The game mode observes lifecycle events to spawn the player and present screens. Other features can access the session through `World.GetSubsystem<UFeatureGameplaySession>()` and subscribe to its lifecycle events.
+`UFeatureGameplaySession` is a world subsystem that organizes `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. Its start workflow creates the enclosure before the initial ball volley. The game mode observes lifecycle events to spawn the player and pass flow changes to `UFeatureMenuController`. That UI subsystem owns menu presentation and action execution; it requests configured session starts through an event. Other features can access the session through `World.GetSubsystem<UFeatureGameplaySession>()` and subscribe to its lifecycle events.
 
 A victory or defeat pauses gameplay, saves the session, and presents the matching fullscreen result. **Continue** starts the next saved level after victory. **Retry** reloads the arena and starts a new session after defeat.
 

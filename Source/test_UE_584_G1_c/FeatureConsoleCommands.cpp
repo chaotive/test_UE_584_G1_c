@@ -3,9 +3,10 @@
 #if !UE_BUILD_SHIPPING
 
 #include "Engine/World.h"
+#include "Features/UI/Controllers/FeatureMenuController.h"
 #include "Features/UI/Controllers/FeatureMenuActions.h"
+#include "Features/GameWorkflow/FeatureGameFlow.h"
 #include "HAL/IConsoleManager.h"
-#include "test_UE_584_G1_cGameMode.h"
 
 FAutoConsoleCommandWithWorld FFeatureConsoleCommands::NewGameCommand(
 	TEXT("Feature.NewGame"),
@@ -14,10 +15,10 @@ FAutoConsoleCommandWithWorld FFeatureConsoleCommands::NewGameCommand(
 
 void FFeatureConsoleCommands::StartNewGame(UWorld* World)
 {
-	auto* GameMode = World ? World->GetAuthGameMode<Atest_UE_584_G1_cGameMode>() : nullptr;
-	if (GameMode && GameMode->GetFlowState() == EFeatureGameFlow::StartupMenu)
+	UFeatureMenuController* Menu = World && World->GetAuthGameMode() ? World->GetSubsystem<UFeatureMenuController>() : nullptr;
+	if (Menu && Menu->GetFlowState() == EFeatureGameFlow::StartupMenu)
 	{
-		GameMode->HandleMenuAction(EFeatureMenuAction::NewGame);
+		Menu->Execute(EFeatureMenuAction::NewGame);
 	}
 }
 

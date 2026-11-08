@@ -8,8 +8,7 @@
 #include "test_UE_584_G1_cGameMode.generated.h"
 
 class UFeatureGameplaySession;
-class UFeatureMainMenu;
-enum class EFeatureMenuAction : uint8;
+class UFeatureMenuController;
 
 /**
  *  Simple GameMode for a third person game
@@ -152,10 +151,6 @@ protected:
 
 private:
 
-#if !UE_BUILD_SHIPPING
-	friend class FFeatureConsoleCommands;
-#endif
-
 	// Tracks which menu or gameplay phase owns the session.
 	// Stores the enum by value without pointer or reference ownership.
 	EFeatureGameFlow FlowState = EFeatureGameFlow::StartupMenu;
@@ -168,10 +163,10 @@ private:
 	// No pointer or reference parameters or return value; the game mode owns the flow transition.
 	void StartRetrySession();
 
-	// Retains the active flow screen while it is displayed.
-	// UPROPERTY tracks the strong widget pointer for garbage collection.
+	// Retains the world subsystem that presents menus and executes their actions.
+	// UPROPERTY tracks a strong reference to the world-owned controller.
 	UPROPERTY()
-	TObjectPtr<UFeatureMainMenu> FlowMenu;
+	TObjectPtr<UFeatureMenuController> MenuController;
 
 	// Creates the player and presents gameplay when the session starts.
 	// No pointer or reference parameters or return value; responds to a session event.
@@ -193,9 +188,9 @@ private:
 	// NewFlow is passed by value without pointer or reference ownership.
 	void SetFlow(EFeatureGameFlow NewFlow);
 
-	// Handles the intent published by the active flow screen.
-	// Action is passed by value without pointer or reference ownership.
-	void HandleMenuAction(EFeatureMenuAction Action);
+	// Starts gameplay using the configured arena and ball settings.
+	// bContinue is copied by value from the menu controller event without pointer ownership.
+	void StartGameplaySession(bool bContinue);
 
 	// Retains the gameplay session whose lifecycle events drive player spawning and screens.
 	// UPROPERTY tracks a strong TObjectPtr to the world-owned subsystem.

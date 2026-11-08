@@ -16,6 +16,7 @@ void UFeatureDebugHUD::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	SetIsFocusable(false);
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	BuildLayout();
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureDebugHUD: Initialized"));
 }

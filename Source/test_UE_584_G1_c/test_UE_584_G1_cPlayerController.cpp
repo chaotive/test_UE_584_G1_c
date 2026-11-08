@@ -5,9 +5,6 @@
 #include "test_UE_584_G1_cGameMode.h"
 #include "Features/UI/Archetypes/FeatureDebugHUD.h"
 #include "Features/UI/Archetypes/FeatureGameplayHUD.h"
-#if !UE_BUILD_SHIPPING
-#include "Features_NonUE/FeatureDebugHUDSpawner.h"
-#endif
 #include "Components/InputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -43,7 +40,9 @@ void Atest_UE_584_G1_cPlayerController::CreateGameplayWidgets()
 #if !UE_BUILD_SHIPPING
 	if (!DebugHUD)
 	{
-		DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
+		DebugHUD = CreateWidget<UFeatureDebugHUD>(this);
+		DebugHUD->AddToPlayerScreen(10);
+		UE_LOG(Logtest_UE_584_G1_c, Log, TEXT("FeatureDebugHUD: Overlay added for %s"), *GetName());
 	}
 #endif
 	if (!MobileControlsWidget && ShouldUseTouchControls())
