@@ -77,7 +77,7 @@ The renamed game uses a `CrazyBalls` save slot. Saves from the former `FeatureSa
 
 All `.as` source and its project-authored C++ bridges stay in [Source/TestFeatures/Features_GameLogic](Source/TestFeatures/Features_GameLogic). [FeatureLevelRules.as](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) is the only implementation of the win/loss threshold formulas. C++ owns the game-mode configuration and saved progress, passes integer values into the script, and uses the returned limits for gameplay and the HUD.
 
-The [rules world subsystem](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) compiles the script once per world. Restart the session world to pick up edits; automatic script reload is not implemented. Script errors are logged and stop execution rather than selecting a duplicate C++ fallback. The build stages `.as` files as UFS runtime dependencies for packaged games.
+The [rules world subsystem](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) reads and compiles the saved `.as` file once per world. For script-only changes, stop PIE, edit and save the script, then start PIE again. The new PIE world creates a fresh host that reads the latest file from disk. This requires neither a C++ game rebuild nor an editor restart; the AngelScript compiler handles the updated rules when the world initializes. Script errors are logged and stop execution rather than selecting a duplicate C++ fallback. The build stages `.as` files as UFS runtime dependencies for packaged games.
 
 The project links a prebuilt Win64 AngelScript static library through an external Unreal module. The [dependency manifest](Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json) pins its version, archive checksum, toolchain and build options. The [library README](Source/ThirdParty/FeatureAngelScriptRuntime/README.md) describes the supplied artifacts and update process. SDK source and build intermediates stay in the ignored `.dependencies/AngelScript/<version>` cache; normal Unreal builds only validate and link the library.
 
@@ -123,13 +123,15 @@ Gameplay remains paused until asynchronous save or load I/O finishes.
 
 ### Architecture
 
-Three square diagrams summarize responsibilities, dependencies, and patterns. Solid arrows show calls or data flow; the dashed arrow shows state observation. Expand the class references for full names and base types. These are architecture illustrations, not runtime captures.
+The flows below are small, purpose-built examples for this prototype. Each uses a concrete game feature to explore architectural benefits: clear ownership, localized dependencies, shared construction, and a single source of truth for rules and state. The patterns guide those boundaries; each implementation stays focused on its current use case and can grow when another use case needs it.
+
+Each view highlights its own boundary: gameplay events, UI construction, session lifecycle, script iteration, or helper ownership. Repeated class names provide context; their detailed responsibilities stay in the relevant view. Solid arrows show calls or data flow; the dashed arrow shows state observation. Expand the class references for full names and base types. These are architecture illustrations, not runtime captures.
 
 #### Gameplay architecture
 
 ![Square gameplay architecture diagram: session, arena, pool, ball, state bridge and shared state.](docs/images/feature-gameplay-flow.png)
 
-Object pooling reuses actors. Observer events connect balls to the state bridge and shared state without a direct ball-to-state dependency. Both player contact and the rebound limit retire a ball and schedule a replacement while playing.
+The ball cycle demonstrates Observer events and event-to-state translation. Balls report contacts and bounces; a focused bridge gives those events meaning as session statistics. The session observes the resulting score changes. This keeps physics behavior independent of shared state and UI. Pool ownership and reuse are detailed in the [non-UE helper view](#non-ue-helper-architecture).
 
 <details>
 <summary>Class reference</summary>
@@ -151,7 +153,7 @@ Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySessi
 
 ![Square UI architecture diagram: declarative menu definitions, shared menu, gameplay HUD and composed debug panels.](docs/images/feature-ui-flow.png)
 
-Declarative views share one menu implementation. The game mode manages menus; the player controller manages HUD lifetime. Widgets own their Observer bindings.
+The four menu views demonstrate declarative differences over shared construction: common layout and behavior have one implementation, and each view supplies its heading and actions. The game mode manages menus; the player controller manages HUD lifetime. Widgets own their Observer bindings, so display changes stay within UI code and controllers do not need to know which state events update which labels.
 
 <details>
 <summary>Class reference</summary>
@@ -173,7 +175,7 @@ Source: [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [
 
 ![Square session architecture diagram: game mode, gameplay session, progress state, save coordinator, storage and snapshot.](docs/images/feature-workflow-flow.png)
 
-An enum-based state machine controls round transitions in the world subsystem. The game-instance subsystem coordinates persistence; storage creates a value snapshot from current state. The game state requests save/load operations, and the save subsystem publishes restored data and I/O status.
+A small enum-based state machine makes round transitions explicit. World and game-instance subsystems separate round lifetime from persistence coordination, while value snapshots separate saved progress from live actors. The game state requests save/load operations, and the save subsystem publishes restored data and I/O status. This example explores lifecycle ownership and observable operations with a deliberately small set of states.
 
 <details>
 <summary>Class reference</summary>
@@ -191,9 +193,54 @@ An enum-based state machine controls round transitions in the world subsystem. T
 
 Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [save coordinator](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) · [storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [snapshot](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
 
+#### Game logic architecture
+
+![Square game logic architecture diagram: C++ session values enter the rules host, AS functions calculate thresholds, and results return to the session.](docs/images/feature-gamelogic-flow.png)
+
+The main driver for AngelScript is to change simple, code-based game logic without recompiling the C++ game. The two threshold functions demonstrate value-based bindings: a world-scoped host passes level and settings into AS, and the session and HUD share the returned limits. C++ owns configuration and saved state; AS owns the formulas. The host and scripts stay together in `Features_GameLogic`.
+
+Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and compiles the latest saved script. That provides the edit-and-restart workflow shown above, with the existing C++ binary and editor. Live hot reload is a secondary convenience; changes to native bindings still require a C++ build. See [AngelScript rules](#angelscript-rules) for usage and packaging.
+
+<details>
+<summary>Class and binding reference</summary>
+
+| Diagram role | Class or value | Base or primary consumer |
+| --- | --- | --- |
+| Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem`; supplies level and configuration values |
+| C++ rules host | `UFeatureLevelRules` | Extends `UWorldSubsystem`; owns the native script engine and context |
+| AngelScript rules | `PlayerContactsToWin` / `SessionBouncesToLose` in `FeatureLevelRules.as` | Stateless functions called by `UFeatureLevelRules` |
+| AngelScript library | `FeatureAngelScriptRuntime` external module | Links the pinned Win64 static library into `TestFeatures` |
+| Calculated limits | `int32` return values | Consumed by session limit checks and the gameplay HUD |
+
+</details>
+
+Source: [AS rules](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) · [C++ host](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) · [session consumers](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [dependency manifest](Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json). See the [library README](Source/ThirdParty/FeatureAngelScriptRuntime/README.md) for versioning and updates.
+
+#### Non-UE helper architecture
+
+![Square non-UE helper architecture diagram: session, save coordinator and player controller call ball-pool, storage and debug-HUD factory helpers.](docs/images/feature-nonue-flow.png)
+
+This view focuses on ownership and narrow helper APIs. The session owns its pool by value; weak references observe world-owned actors without retaining them. Storage and HUD factory helpers contain the engine API details needed by their callers. These are plain C++ classes using Unreal types, with no UObject lifetime of their own. Event scoring belongs to the gameplay view, rendered composition to the UI view, and pause/result coordination to the session view.
+
+<details>
+<summary>Class and ownership reference</summary>
+
+| Diagram role | Class | Base or primary consumer |
+| --- | --- | --- |
+| Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem`; owns the pool helper by value |
+| Ball pool helper | `FFeatureBallSpawner` | Creates `AFeatureBall` for `UFeatureGameplaySession`; world owns actors |
+| Save coordinator | `UFeatureSaveGameSubsystem` | Extends `UGameInstanceSubsystem`; coordinates persistence |
+| Save storage helper | `FFeatureSaveGameStorage` | Creates `UFeatureSaveGame` snapshots for the save coordinator; also serves menu previews |
+| Player controller | `Atest_UE_584_G1_cPlayerController` | Extends `APlayerController`; retains and removes HUD widgets |
+| Debug HUD factory | `FFeatureDebugHUDSpawner` | Creates `UFeatureDebugHUD` for the player controller in non-Shipping builds |
+
+</details>
+
+Source: [ball pool](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) · [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [HUD factory](Source/TestFeatures/Features_NonUE/FeatureDebugHUDSpawner.cpp) · [player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp).
+
 The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements the level-threshold rules through an embedded standalone runtime.
 
-Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. Plain C++ spawning and storage helpers live in the sibling `Features_NonUE` folder.
+Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. Plain C++ spawning, storage, and HUD factory helpers live in `Features_NonUE`.
 
 - [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)
 - [Runtime helpers](Source/TestFeatures/Features_NonUE/README.md)

@@ -39,9 +39,9 @@ These goals will guide future tasks:
 ## Code standards
 
 
-1. Use as little files as possible, this is a simple project.
-2. Do not add defensive code, it is more important to give clarity to the code features understanding and reading.
-3. No need to ask editor or other guards unless required to.
+1. Prioritize cohesive responsibilities, localized dependencies, and decoupling over minimizing file count. Keep the number of files small where those goals allow.
+2. Do not add defensive checks or guards unless the task explicitly requests them. Keep feature logic straightforward and readable.
+3. Once an action is authorized, proceed without asking for the same confirmation again. Preserve the explicit editor-operation and runtime-validation authorization requirements in rules 17 and 18.
 4. Commits: if a task is being implemented, always mention it on the description.
 5. Commits: commits should give a brief but useful description of changes.
 6. Avoid too many one liners, when possible, separate in functions that act as groupers to have a better top down understanding of code.
@@ -58,11 +58,11 @@ These goals will guide future tasks:
 17. Perform editor operations only when the user explicitly requests them, and use Unreal Editor MCP for those operations. For an authorized editor task, if the MCP endpoint is unavailable and Unreal Editor is closed, launch this project's `.uproject` so the server starts automatically. If the editor is already starting, wait rather than opening another instance. Wait for startup to finish and for the MCP endpoint to respond before operating the editor. If this chat still does not expose the tools after the server is ready, start a new Codex chat in this project. The agent may close an editor instance it started itself when needed for its work, without asking the user.
 18. Default implementation validation is compile-only. Run Unreal Editor, standalone gameplay, automation tests, or other runtime validation only when the user explicitly requests that validation. Keep requested validation focused on the relevant behavior.
 19. Move a task to Done only after the user explicitly asks to implement that task and its implementation is complete. Leave related tasks in To do even if their behavior is already implemented.
-20. Use `Feature` in the project display name and as the prefix for feature class names, source files, and console commands.
+20. Keep technical project/module identifiers separate from public, user-facing names. Use `Feature` as the prefix for feature class names, source files, and console commands. Public branding and display titles come from configuration and do not require that prefix.
 21. Preserve or migrate old save games only when the user explicitly requests save compatibility.
 22. Update `CHANGES.md` only when the user explicitly requests a changelog update. When requested, link relevant source and any available verified evidence. A changelog request does not authorize taking screenshots or running the editor or game unless the user also requests those actions.
 23. Never create a git commit unless the user explicitly asks to commit.
-24. Never change line breaks, indentation, whitespace, or make irrelevant formatting changes unless explicitly requested.
+24. Preserve existing formatting outside the requested work. Allow line-break, indentation, and whitespace changes necessary for an authorized implementation or prose correction; avoid unrelated formatting changes unless explicitly requested.
 25. When the user says "commit as new task", inspect both Done and To do task indexes, calculate one greater than the highest index across both lists, and prefix that number with the literal digits "100" to distinguish these tasks. Record the completed task and include its prefixed task number in the commit description.
 26. In CHANGES.md, display screenshot evidence directly as inline images rather than linking to them.
 27. For related UI views, keep shared construction, styling, and behavior in common UI code, and express each view's differences declaratively in code. Use another data format only when it provides a clear benefit.
@@ -73,6 +73,8 @@ These goals will guide future tasks:
 32. Keep project-authored AngelScript bridge code, including C++ script hosts and bindings, in `Source/TestFeatures/Features_GameLogic` alongside the `.as` scripts. This also applies to UE-derived bridge classes as a focused exception to the general UE folder rule. Keep the external SDK/library dependency separate under ThirdParty, with SDK implementation source in the ignored dependency cache.
 
 ## Tasks
+
+Done entries record completed milestones at the time they were implemented. Preserve their history and mark details superseded by later work; use the current implementation and README for current behavior.
 
 ### Done
 
@@ -107,15 +109,15 @@ These goals will guide future tasks:
 34. Package Win64 builds in Development, DebugGame, and Shipping configurations.
 35. Gameplay: Spawn a configurable collision enclosure around the level at gameplay-session start.
 36. Gameplay: Retire balls after five non-player bounces. On player contact, retire the ball and spawn a replacement.
-37. End state: End a winning session, record Victory, and show a fullscreen result with Continue returning to the initial menu.
+37. End state: End a winning session, record Victory, and show a fullscreen result with Continue returning to the initial menu. (Historical menu flow; superseded by Bug 2.)
 38. End state: End a losing session, record Defeat, and show the same result flow.
 39. Organization: Move feature code into UI, Gameplay, and GameWorkflow subfolders.
 40. Gameplay: Persist a chronological array of started sessions with their statistics.
 41. Gameplay: Enable player-ball blocking collisions and record their count in the active session.
 42. Gameplay: Configure per-session victory and defeat limits and pause when either is reached.
-43. Gameplay: Persist the current level, starting at 1. Victory advances it; defeat and Retry retain it. New Game resets it to 1. Show "Continue on level N" in the initial menu. Increase the win limit and decrease the loss limit by one per level, with a minimum loss limit of one bounce.
+43. Gameplay: Persist the current level, starting at 1. Victory advances it; defeat and Retry retain it. New Game resets it to 1. Show "Continue on level N" in the initial menu. Increase the win limit and decrease the loss limit by one per level, with a minimum loss limit of one bounce. (Historical loss floor; configuration updated by task 53.)
 44. Gameplay: Show a HUD with the current player and non-player bounce counts and the respective win and loss limits.
-45. Gameplay: Spawn five balls initially and prewarm a pool three times that size.
+45. Gameplay: Spawn five balls initially and prewarm a pool three times that size. (Historical pool ratio; current prewarm matches the initial ball count.)
 46. End: The defeat screen shows only Retry and Exit. Retry restarts the current level.
 47. End: Save the game state whenever an end state is reached.
 49. UI: Define the initial, pause, victory, and defeat menu views declaratively in UI/Views, and move the menu and HUD archetypes to UI/Archetypes.
