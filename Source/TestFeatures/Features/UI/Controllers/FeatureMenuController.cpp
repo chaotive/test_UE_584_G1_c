@@ -72,7 +72,7 @@ void UFeatureMenuController::ExitGame()
 {
 	if (PresentedFlow == EFeatureGameFlow::StartupMenu)
 	{
-		UKismetSystemLibrary::QuitGame(this, GetWorld()->GetFirstPlayerController(), EQuitPreference::Quit, false);
+		UKismetSystemLibrary::QuitGame(this, GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), EQuitPreference::Quit, false);
 	}
 	else
 	{

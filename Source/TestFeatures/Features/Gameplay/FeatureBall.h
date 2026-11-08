@@ -44,7 +44,7 @@ public:
 	// Location is a read-only FVector reference; no pointer ownership is transferred.
 	void Activate(const FVector& Location);
 
-	// Stops and hides this ball so the spawner can reuse it later.
+	// Stops and hides this ball so the ball manager can reuse it later.
 	// No pointer or reference parameters or return value; modifies this world-owned actor.
 	void Deactivate();
 

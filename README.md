@@ -81,7 +81,7 @@ Each view highlights its own boundary: gameplay events, UI construction, session
 
 ![Square gameplay architecture diagram: session, arena, ball manager, ball, state bridge and shared state.](docs/images/feature-gameplay-flow.png)
 
-The ball cycle demonstrates Observer events and event-to-state translation. Balls report contacts and bounces; a focused bridge gives those events meaning as session statistics. The session observes the resulting score changes. This keeps physics behavior independent of shared state and UI. Pool ownership and reuse are detailed in the [non-UE helper view](#non-ue-helper-architecture).
+The ball cycle demonstrates Observer events and event-to-state translation. Balls report contacts and bounces; a focused bridge gives those events meaning as session statistics. The session observes the resulting score changes. This keeps physics behavior independent of shared state and UI. The [ball manager](Source/TestFeatures/Features/Gameplay/FeatureBallManager.h) owns the pool, reuses retired actors, and schedules replacements.
 
 <details>
 <summary>Class reference</summary>

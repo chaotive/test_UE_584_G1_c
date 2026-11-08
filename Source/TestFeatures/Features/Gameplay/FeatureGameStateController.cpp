@@ -13,7 +13,7 @@ void UFeatureGameStateController::Initialize(AFeatureGameState& State)
 
 void UFeatureGameStateController::ObserveBall(AFeatureBall& Ball)
 {
-	// The spawner's creation event reaches this method once, so reusing a ball adds no duplicate binding.
+	// The ball manager's creation event reaches this method once, so reusing a ball adds no duplicate binding.
 	// AddUObject stores a weak controller binding and ignores it if the controller is no longer valid.
 	Ball.OnBounced.AddUObject(this, &UFeatureGameStateController::HandleBallBounced);
 	Ball.OnContact.AddUObject(this, &UFeatureGameStateController::HandleBallContact);

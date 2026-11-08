@@ -110,7 +110,7 @@ Go deeper: [UObject Instance Creation](https://dev.epicgames.com/documentation/e
 
 ## 2. Requesting a ball: create or reuse?
 
-`SpawnMultiple()` builds an `FBox` from the minimum and maximum corners. Each iteration chooses a point with `FMath::RandPointInBox()` and calls the same public `Spawn()` used for single balls.
+`SpawnMultiple()` receives the spawn region as an `FBox`. Each iteration chooses a point with `FMath::RandPointInBox()` and calls the same public `Spawn()` used for single balls.
 
 ```mermaid
 flowchart TD
@@ -126,7 +126,7 @@ flowchart TD
 When creating an actor, `CreateBall()` uses:
 
 ```cpp
-AFeatureBall* Ball = World.SpawnActor<AFeatureBall>(Location, FRotator::ZeroRotator, SpawnParameters);
+AFeatureBall* Ball = GetWorld()->SpawnActor<AFeatureBall>(Location, FRotator::ZeroRotator, SpawnParameters);
 ```
 
 Unreal constructs the actor and its inherited mesh component. The ball constructor caches that component once, loads the built-in sphere, prepares physics, and creates its bouncy material. The ball applies the material in `BeginPlay()`, when physics can update the mesh. Initially, the ball is hidden and inactive.
