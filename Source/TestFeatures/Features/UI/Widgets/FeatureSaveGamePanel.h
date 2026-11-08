@@ -3,7 +3,7 @@
 #include "Blueprint/UserWidget.h"
 #include "FeatureSaveGamePanel.generated.h"
 
-class AFeatureGameState;
+class UFeatureProgressPersistence;
 class UFeatureSaveGameSubsystem;
 class UHorizontalBox;
 class UTextBlock;
@@ -40,11 +40,11 @@ private:
 	// Status is read-only and busy is by value; event data is not retained by reference.
 	void RefreshSaveStatus(const FString& Status, bool bBusy);
 	// Requests saving without leaving the current game.
-	// No pointer or reference parameters or return value; acts on the weakly observed state.
+	// No pointer or reference parameters or return value; acts on the weakly observed workflow binding.
 	UFUNCTION()
 	void HandleSaveClicked();
 	// Requests saving followed by a successful orderly quit.
-	// No pointer or reference parameters or return value; acts on the weakly observed state.
+	// No pointer or reference parameters or return value; acts on the weakly observed workflow binding.
 	UFUNCTION()
 	void HandleSaveAndQuitClicked();
 	// Gates native game-window close through the save-and-quit flow.
@@ -54,9 +54,9 @@ private:
 	// UPROPERTY tracks a strong TObjectPtr to a widget-tree-owned text block.
 	UPROPERTY()
 	TObjectPtr<UTextBlock> SaveDiagnosticsText;
-	// Observes the state that supplies the save snapshot.
-	// TWeakObjectPtr observes a world-owned actor without extending its lifetime.
-	TWeakObjectPtr<AFeatureGameState> ObservedState;
+	// Observes the workflow component that supplies progress snapshots to persistence.
+	// TWeakObjectPtr does not retain the game-state-owned component.
+	TWeakObjectPtr<UFeatureProgressPersistence> ObservedProgress;
 	// Observes operation state across asynchronous persistence phases.
 	// TWeakObjectPtr does not retain the game-instance-owned subsystem.
 	TWeakObjectPtr<UFeatureSaveGameSubsystem> ObservedSaves;

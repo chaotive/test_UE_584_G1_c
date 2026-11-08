@@ -1,8 +1,5 @@
 #include "FeatureGameState.h"
-#include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
-#include "Features_NonUE/FeatureSaveGameStorage.h"
 #include "Features_GameLogic/FeatureLevelRules.h"
-#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "TestFeatures.h"
 
@@ -61,7 +58,7 @@ int32 AFeatureGameState::GetTotalBounces() const
 	return Progress.TotalBounces;
 }
 
-void AFeatureGameState::InitializeProgress(FFeatureGameProgress& Snapshot)
+void AFeatureGameState::InitializeSession(FFeatureGameProgress& Snapshot)
 {
 	Snapshot.Sessions.AddDefaulted_GetRef().StartedAtUtc = FDateTime::UtcNow();
 	Progress = Snapshot;
@@ -71,43 +68,24 @@ void AFeatureGameState::InitializeProgress(FFeatureGameProgress& Snapshot)
 	OnCurrentLevelChanged.Broadcast(Progress.CurrentLevel);
 }
 
-void AFeatureGameState::StartSession(bool bContinue, int32 InitialLevel)
+const FFeatureGameProgress& AFeatureGameState::GetProgress() const
 {
-	if (bContinue)
-	{
-		GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->RequestLoad();
-	}
-	else
-	{
-		FFeatureGameProgress FreshProgress;
-		FreshProgress.CurrentLevel = InitialLevel;
-		InitializeProgress(FreshProgress);
-	}
+	return Progress;
 }
 
-void AFeatureGameState::SaveSession(bool bQuitAfter)
+bool AFeatureGameState::IsSessionInitialized() const
 {
-	GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>()->RequestSave(Progress, bQuitAfter);
+	return bSessionInitialized;
 }
 
 void AFeatureGameState::BeginPlay()
 {
 	Super::BeginPlay();
-	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
-	Saves->OnLoaded.AddUObject(this, &AFeatureGameState::InitializeProgress);
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: BeginPlay (Total bounces: %d)"), *GetName(), Progress.TotalBounces);
 }
 
 void AFeatureGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
-	Saves->OnLoaded.RemoveAll(this);
-	Saves->CancelOperation();
-	// Editor Stop/forced teardown cannot be deferred for a live HUD; retain a synchronous fallback.
-	if (bSessionInitialized && !Saves->HasSavedForQuit())
-	{
-		FFeatureSaveGameStorage::SaveProgress(Progress);
-	}
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameState [%s]: EndPlay (Total bounces: %d)"), *GetName(), Progress.TotalBounces);
 	Super::EndPlay(EndPlayReason);
 }

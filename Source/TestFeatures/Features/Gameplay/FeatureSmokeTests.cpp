@@ -16,6 +16,15 @@
 #include "Misc/AutomationTest.h"
 #include "TimerManager.h"
 
+// Initializes a fresh state fixture without involving persistence or a game instance.
+// State is borrowed and Level is copied; the state copies the helper's local progress values.
+static void InitializeFreshSession(AFeatureGameState& State, int32 Level)
+{
+	FFeatureGameProgress Progress;
+	Progress.CurrentLevel = Level;
+	State.InitializeSession(Progress);
+}
+
 // Checks the actions and Escape behavior exposed by each menu view.
 // The automation framework owns the test instance; no pointer or reference ownership is transferred.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFeatureMenuSmokeTest, "Feature.Smoke.MenuViews",
@@ -57,7 +66,9 @@ bool FFeatureSessionSmokeTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AFeatureGameState* State = World->SpawnActor<AFeatureGameState>();
-	State->StartSession(false, 1);
+	TestFalse(TEXT("Newly created state has no initialized session"), State->IsSessionInitialized());
+	InitializeFreshSession(*State, 1);
+	TestTrue(TEXT("Supplying progress initializes the session"), State->IsSessionInitialized());
 	State->RecordBounce();
 	State->RecordPlayerBallCollision();
 
@@ -74,10 +85,19 @@ bool FFeatureSessionSmokeTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Victory is recorded"), State->GetGameplaySessions().Last().Result == EFeatureGameplaySessionResult::Victory);
 
 	AFeatureGameState* DefeatState = World->SpawnActor<AFeatureGameState>();
-	DefeatState->StartSession(false, 3);
+	InitializeFreshSession(*DefeatState, 3);
 	DefeatState->RecordSessionResult(false);
 	TestEqual(TEXT("Defeat retains a later level"), DefeatState->GetCurrentLevel(), 3);
 	TestTrue(TEXT("Defeat is recorded"), DefeatState->GetGameplaySessions().Last().Result == EFeatureGameplaySessionResult::Defeat);
+
+	FFeatureGameProgress RestoredProgress;
+	RestoredProgress.CurrentLevel = 4;
+	RestoredProgress.TotalBounces = 21;
+	RestoredProgress.Sessions.AddDefaulted_GetRef().Result = EFeatureGameplaySessionResult::Victory;
+	State->InitializeSession(RestoredProgress);
+	TestEqual(TEXT("Initialization updates the borrowed snapshot for save-after-load"), RestoredProgress.Sessions.Num(), 2);
+	TestEqual(TEXT("State retains the initialized session history"), State->GetProgress().Sessions.Num(), 2);
+	TestEqual(TEXT("Restored aggregate remains authoritative"), State->GetTotalBounces(), 21);
 	World->DestroyWorld(false);
 	return true;
 }
@@ -110,13 +130,13 @@ bool FFeatureLossLimitSmokeTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("An unfinished result retains the current level"),
 		Rules->NextLevel(9, EFeatureGameplaySessionResult::InProgress), 9);
 
-	State->StartSession(false, 1);
+	InitializeFreshSession(*State, 1);
 	TestEqual(TEXT("The script returns the configured level-one win target"), Session->GetPlayerContactsToWin(), 10);
 	TestEqual(TEXT("Level one uses the new 100-bounce base target"), Session->GetSessionBouncesToLose(), 100);
-	State->StartSession(false, 2);
+	InitializeFreshSession(*State, 2);
 	TestEqual(TEXT("The script increases the win target at level two"), Session->GetPlayerContactsToWin(), 11);
 	TestEqual(TEXT("The target decreases by one at level two"), Session->GetSessionBouncesToLose(), 99);
-	State->StartSession(false, 52);
+	InitializeFreshSession(*State, 52);
 	TestEqual(TEXT("The target stops at the configured 50-bounce minimum"), Session->GetSessionBouncesToLose(), 50);
 
 	World->DestroyWorld(false);

@@ -69,7 +69,7 @@ A victory or defeat pauses gameplay, saves the session, and presents the matchin
 
 ### Debug HUD and save diagnostics
 
-The non-Shipping debug HUD shows the live bounce count, the save slot and file path, and the I/O history. Its **Save game** button writes a snapshot while keeping the session open. **Save and quit** exits after a successful write.
+The non-Shipping debug HUD shows the live bounce count, the save slot and file path, and the I/O history. Its **Save game** button requests a snapshot through [the progress binding](../Source/TestFeatures/Features/GameWorkflow/FeatureProgressPersistence.cpp) while keeping the session open. **Save and quit** exits after a successful write. The same binding owns loaded-state subscriptions, cancellation, and the synchronous fallback at actor teardown; the game state exposes values and mutations rather than persistence operations.
 
 Gameplay remains paused until asynchronous save or load I/O finishes.
 

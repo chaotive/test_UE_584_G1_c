@@ -5,6 +5,7 @@
 #include "Features_GameLogic/FeaturePlayerRules.h"
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
+#include "Features/GameWorkflow/FeatureProgressPersistence.h"
 #include "Features/UI/Archetypes/FeatureMainMenu.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
@@ -42,6 +43,7 @@ void Atest_UE_584_G1_cGameMode::InitGameState()
 	}
 
 	GameplaySession = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
+	UFeatureProgressPersistence::AttachTo(*GetGameState<AFeatureGameState>());
 	GameplaySession->BindGameState(*GetGameState<AFeatureGameState>(), FeaturePlayerContactsToWin, FeatureSessionBouncesToLose,
 		FeatureContactsIncreasePerLevel, FeatureBouncesDecreasePerLevel, FeatureMinimumSessionBouncesToLose);
 	GameplaySession->OnStarted.AddUObject(this, &Atest_UE_584_G1_cGameMode::HandleGameplaySessionStarted);
@@ -187,7 +189,7 @@ void Atest_UE_584_G1_cGameMode::HandleMenuAction(EFeatureMenuAction Action)
 		}
 		else
 		{
-			GetGameState<AFeatureGameState>()->SaveSession(true);
+			GetGameState<AFeatureGameState>()->FindComponentByClass<UFeatureProgressPersistence>()->SaveSession(true);
 		}
 		break;
 	}

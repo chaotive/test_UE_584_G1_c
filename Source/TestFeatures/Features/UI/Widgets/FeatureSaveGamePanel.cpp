@@ -1,9 +1,10 @@
 #include "FeatureSaveGamePanel.h"
-#include "Features/Gameplay/FeatureGameState.h"
+#include "Features/GameWorkflow/FeatureProgressPersistence.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Engine/GameViewportClient.h"
+#include "GameFramework/GameStateBase.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
@@ -22,7 +23,7 @@ void UFeatureSaveGamePanel::NativeOnInitialized()
 void UFeatureSaveGamePanel::NativeConstruct()
 {
 	Super::NativeConstruct();
-	ObservedState = GetWorld()->GetGameState<AFeatureGameState>();
+	ObservedProgress = GetWorld()->GetGameState()->FindComponentByClass<UFeatureProgressPersistence>();
 	UFeatureSaveGameSubsystem* Saves = GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
 	ObservedSaves = Saves;
 	Saves->OnStatusChanged.AddUObject(this, &UFeatureSaveGamePanel::RefreshSaveStatus);
@@ -38,7 +39,7 @@ void UFeatureSaveGamePanel::NativeDestruct()
 	}
 	if (UFeatureSaveGameSubsystem* Saves = ObservedSaves.Get()) { Saves->OnStatusChanged.RemoveAll(this); }
 	ObservedSaves.Reset();
-	ObservedState.Reset();
+	ObservedProgress.Reset();
 	Super::NativeDestruct();
 }
 
@@ -92,12 +93,12 @@ void UFeatureSaveGamePanel::RefreshSaveStatus(const FString& Status, bool bBusy)
 
 void UFeatureSaveGamePanel::HandleSaveClicked()
 {
-	ObservedState->SaveSession(false);
+	ObservedProgress->SaveSession(false);
 }
 
 void UFeatureSaveGamePanel::HandleSaveAndQuitClicked()
 {
-	ObservedState->SaveSession(true);
+	ObservedProgress->SaveSession(true);
 }
 
 bool UFeatureSaveGamePanel::HandleWindowCloseRequested()

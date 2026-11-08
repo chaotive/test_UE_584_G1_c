@@ -53,7 +53,7 @@ Consider keeping the current phase/result separate from a bounded recent-history
 
 Measure save size and game-thread preparation with increasing session counts. A retention/archive policy or summary-oriented layout would change persistence behavior and needs a deliberate decision. Avoid an independently maintained second source of truth for totals.
 
-[State teardown](../Source/TestFeatures/Features/Gameplay/FeatureGameState.cpp) saves synchronously unless a quit save already completed. A result can therefore save asynchronously and again on later teardown. Measure duration and frequency before considering dirty-state tracking, preserving the intended teardown behavior.
+[The progress binding's teardown](../Source/TestFeatures/Features/GameWorkflow/FeatureProgressPersistence.cpp) saves initialized progress synchronously unless a quit save already completed. A result can therefore save asynchronously and again on later teardown. Moving this workflow out of game state does not remove that I/O; measure duration and frequency before considering dirty-state tracking, preserving the intended teardown behavior.
 
 ## Script calls and HUD updates
 

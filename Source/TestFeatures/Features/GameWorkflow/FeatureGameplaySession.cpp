@@ -4,6 +4,7 @@
 #include "Features/Gameplay/FeatureGameStateController.h"
 #include "Features/Gameplay/FeatureLevelBounds.h"
 #include "FeatureSaveGameSubsystem.h"
+#include "FeatureProgressPersistence.h"
 #include "Features_GameLogic/FeatureLevelRules.h"
 #include "Features_GameLogic/FeatureBallRules.h"
 #include "Engine/GameInstance.h"
@@ -117,7 +118,7 @@ void UFeatureGameplaySession::OnGameplaySessionStart(bool bContinue, int32 Initi
 	AFeatureLevelBounds* Bounds = World.SpawnActor<AFeatureLevelBounds>(LevelBounds.GetCenter(), FRotator::ZeroRotator);
 	Bounds->SetHalfExtent(LevelBounds.GetExtent());
 	OnStarted.Broadcast();
-	State.StartSession(bContinue, InitialLevel);
+	State.FindComponentByClass<UFeatureProgressPersistence>()->StartSession(bContinue, InitialLevel);
 	BallSpawner.Prewarm(World, BallCount);
 	BallSpawner.SpawnMultiple(World, BallCount, SpawnBounds.Min, SpawnBounds.Max);
 	UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: Started with bounds center %s, half-extent %s"),
@@ -156,7 +157,7 @@ void UFeatureGameplaySession::OnGameplaySessionEnded(bool bVictory)
 		PendingBallReplacements = 0;
 		GameState->RecordSessionResult(bVictory);
 		OnEnded.Broadcast(bVictory);
-		GameState->SaveSession();
+		GameState->FindComponentByClass<UFeatureProgressPersistence>()->SaveSession();
 		UE_LOG(LogTestFeatures, Log, TEXT("FeatureGameplaySession: Ended (%s)"), bVictory ? TEXT("Victory") : TEXT("Defeat"));
 	}
 }

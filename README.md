@@ -126,9 +126,9 @@ Source: [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [
 
 ### Session and persistence architecture
 
-![Square session architecture diagram: game mode, gameplay session, progress state, save coordinator, storage and snapshot.](docs/images/feature-workflow-flow.png)
+![Square session architecture diagram: the gameplay session requests operations through a progress-binding component; game state owns values, while the coordinator and storage handle I/O.](docs/images/feature-workflow-flow.png)
 
-A small enum-based state machine makes round transitions explicit. World and game-instance subsystems separate round lifetime from persistence coordination, while value snapshots separate saved progress from live actors. The game state requests save/load operations, and the save subsystem publishes restored data and I/O status. This example explores lifecycle ownership and observable operations with a deliberately small set of states.
+A small enum-based state machine makes round transitions explicit. GameMode attaches a focused persistence component to the game state: the component connects restored snapshots, routes load/save requests, and owns cancellation and teardown saving. The state owns progress, mutations, and notifications without storage or save-subsystem dependencies. World and game-instance lifetimes remain separate, and the save subsystem publishes restored data and I/O status.
 
 <details>
 <summary>Class reference</summary>
@@ -138,13 +138,14 @@ A small enum-based state machine makes round transitions explicit. World and gam
 | Game mode | `Atest_UE_584_G1_cGameMode` | Extends `AGameModeBase` |
 | Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem` |
 | Game state | `AFeatureGameState` | Extends `AGameStateBase` |
+| Progress binding | `UFeatureProgressPersistence` | Extends `UActorComponent`; attached to game state by GameMode |
 | Save coordinator | `UFeatureSaveGameSubsystem` | Extends `UGameInstanceSubsystem` |
 | Save storage | `FFeatureSaveGameStorage` | Creates `UFeatureSaveGame` for `UFeatureSaveGameSubsystem` |
 | Save snapshot | `UFeatureSaveGame` | Extends `USaveGame` |
 
 </details>
 
-Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [save coordinator](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) · [storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [snapshot](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
+Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [progress binding](Source/TestFeatures/Features/GameWorkflow/FeatureProgressPersistence.cpp) · [save coordinator](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) · [storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [snapshot](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
 
 ### Game logic architecture
 

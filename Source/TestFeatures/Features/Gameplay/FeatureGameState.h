@@ -56,34 +56,33 @@ public:
 	UFUNCTION(BlueprintPure, Category="Training_Ball")
 	int32 GetTotalBounces() const;
 
-	// Requests an in-game save and optionally an orderly quit after completion.
-	// bQuitAfter is passed by value; no actor or widget ownership is transferred.
-	UFUNCTION(BlueprintCallable, Category="Training_Ball")
-	void SaveSession(bool bQuitAfter = false);
+	// Appends the current session to a supplied progress snapshot and notifies observers.
+	// Snapshot is a borrowed mutable reference so a queued save-after-load receives the initialized values.
+	void InitializeSession(FFeatureGameProgress& Snapshot);
 
-	// Starts a fresh saved game or loads progress before appending the current session.
-	// bContinue and InitialLevel are passed by value without pointer or reference ownership.
-	void StartSession(bool bContinue, int32 InitialLevel);
+	// Exposes current progress for inspection and snapshot copying by workflow consumers.
+	// Returns a borrowed const reference to state-owned values without transferring ownership.
+	const FFeatureGameProgress& GetProgress() const;
+
+	// Reports whether progress includes a session initialized for this world.
+	// Returns bool by value without pointers or references.
+	bool IsSessionInitialized() const;
 
 protected:
 
-	// Subscribes to restored state before the player starts a session.
+	// Logs state startup while workflow bindings initialize independently.
 	// No pointer or reference parameters or return value; operates on this world-owned game state.
 	virtual void BeginPlay() override;
 
-	// Saves and logs the final bounce count when the level or game session ends.
+	// Logs the final bounce count and dispatches native actor teardown.
 	// EndPlayReason is passed by value; no pointer or reference ownership is transferred.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 
-	// Allows teardown saving once a new or continued session has initialized progress.
+	// Distinguishes initialized session records from the state's default values.
 	// bool records session readiness by value without pointer ownership.
 	bool bSessionInitialized = false;
-
-	// Appends the current session to a fresh or restored snapshot and notifies observers.
-	// Snapshot is a mutable borrowed reference so queued save-after-load uses initialized progress.
-	void InitializeProgress(FFeatureGameProgress& Snapshot);
 
 	// Retains the aggregate bounce total and every started session's statistics.
 	// The reflected struct owns its values and array; UPROPERTY exposes read-only Blueprint inspection.
