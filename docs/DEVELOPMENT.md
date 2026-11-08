@@ -7,7 +7,7 @@ This guide covers running and testing Crazy balls, changing its implementation, 
 - **Run, test, and deliver:** [Build and run](#build-and-run) · [Smoke checks](#smoke-checks) · [Package for Win64](#package-for-win64) · [Unreal Editor MCP](#local-unreal-editor-mcp).
 - **Gameplay and diagnostics:** [Game-mode configuration](#game-mode-configuration) · [Arena collision bounds](#arena-collision-bounds) · [Session results](#session-results) · [Debug HUD and save diagnostics](#debug-hud-and-save-diagnostics).
 - **Change game logic:** [Game-logic workflow](../Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md) · [Script loading](#angelscript-rules) · [Library versioning and updates](../Source/ThirdParty/FeatureAngelScriptRuntime/README.ANGELSCRIPT.md).
-- **Implementation references:** [Feature walkthrough](../Source/TestFeatures/Features/README.FEATURES.md) · [Non-UE helpers](../Source/TestFeatures/Features_NonUE/README.NON_UE.md) · [Historical performance review](PERFORMANCE_IDEAS.md).
+- **Implementation references:** [Feature walkthrough](../Source/TestFeatures/Features/README.FEATURES.md) · [Non-UE helpers](../Source/TestFeatures/Features_NonUE/README.NON_UE.md) · [Performance review](PERFORMANCE_IDEAS.md).
 
 ## Run, test, and deliver
 
@@ -51,11 +51,11 @@ The trusted project's `.codex/config.toml` points Codex at `http://127.0.0.1:800
 
 ### Game-mode configuration
 
-The game-mode defaults expose the base player speed multiplier, contact speed multiplier, stacking option, and contact boost duration under `Feature Player Speed`. They also expose the initial level, initial ball count, per-level objective adjustments, rebounds before retirement, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; its default size and the initial ball count are both five. A size or speed multiplier of 1 preserves the default ball size or launch speed. The [game-mode declarations](../Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.h) define the exposed properties.
+The game-mode defaults expose the base player speed multiplier, contact speed multiplier, stacking option, and contact boost duration under `Feature Player Speed`. They also expose the initial level, initial ball count, per-level objective adjustments, rebounds before retirement, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; the C++ default initial count is five. Blueprint game-mode defaults can override these values: November 8's capture used two balls, ten rebounds per ball, and level-one targets of four contacts and 100 bounces. Check the level's active game mode when changing settings. A size or speed multiplier of 1 preserves the default ball size or launch speed. The [game-mode declarations](../Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.h) define the exposed properties.
 
 ### Arena collision bounds
 
-Gameplay creates one `AFeatureLevelBounds` actor with six wireframe collision faces visible in game. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after their configured rebound limit or player contact and are replaced while the session is active.
+Gameplay creates one `AFeatureLevelBounds` actor with six wireframe collision faces visible in game. The C++ defaults span 120 × 120 × 60 meters around a center 20 meters above the world origin. Level overrides can differ: November 8's runtime log recorded half-extents of 19.2 × 19.2 × 30 meters, giving a 38.4 × 38.4 × 60-meter interior. Edit `Feature Bounds` in the active game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after their configured rebound limit or player contact and are replaced while the session is active.
 
 ### Session results
 

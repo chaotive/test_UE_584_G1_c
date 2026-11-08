@@ -2,13 +2,13 @@
 
 **Features test on Unreal 5.8.4**
 
-## Game
-
-Crazy balls is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round starts with five balls launched from random positions in random directions.
-
 ### Latest release
 
 [Download the latest release build](https://github.com/chaotive/test_UE_584_G1_c/releases/download/0.1/Build.zip) (`0.1`, Win64 Development, DebugGame, and Shipping).
+
+## Game
+
+Crazy balls is a third-person ball-contact game. Move around the arena and intercept the bouncing balls before too many of their other impacts are counted. Each round launches its configured number of balls from random positions in random directions.
 
 ![Crazy balls logo](Content/FeatureBrand/FeatureCrazyBallsLogo.png)
 
@@ -24,9 +24,9 @@ Choose **New Game** for a fresh game at the configured initial level (level 1 by
 
 The startup menu shows your saved level, total bounces, session count, and the latest session’s result and counts. The pause menu shows your last saved bounce total. On the startup menu, **Esc** exits. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
 
-![Crazy balls startup menu](docs/images/crazy-startup.png)
+![Crazy balls startup menu](docs/images/2026-11-08-startup-saved.png)
 
-*November 7, 2026: the startup menu shows the logo, subtitle, saved level, and bounce total.*
+*November 8, 2026: the startup menu shows the logo, saved level, aggregate total, session count, and latest session details.*
 
 ### How to play
 
@@ -44,6 +44,8 @@ Each ball has its own lifetime: after its configured number of non-player bounce
 
 By default, every new game begins at level 1; the initial level is configurable in the game mode. Winning advances the saved level by one; losing keeps the same level. Each new session resets its two objective counters, while the saved aggregate bounce total and session history continue across sessions.
 
+The table shows configuration defaults; a level's game mode can override them. The gameplay HUD shows the active targets.
+
 | Level | Player contacts to win | Non-player bounces to lose |
 | --- | ---: | ---: |
 | 1 | 10 | 100 |
@@ -59,9 +61,9 @@ The defaults follow `10 + (level - 1)` for the win target and `max(50, 100 - (le
 
 During a session, **Esc** opens the pause menu. Choose **Resume Game** or press **Esc** again to continue the same session; **Main Menu** returns to the startup screen, and **Exit** saves and quits. Saving or loading pauses play during I/O. Non-Shipping builds also include a [debug HUD](docs/DEVELOPMENT.md#debug-hud-and-save-diagnostics) for inspecting live state and save operations.
 
-![Crazy balls pause menu](docs/images/crazy-pause.png)
+![Crazy balls pause menu](docs/images/2026-11-08-pause.png)
 
-*November 7, 2026: the pause menu, opened through the editor console, shows the shared logo and session controls.*
+*November 8, 2026: the pause menu, opened through the editor console, shows the shared logo, session controls, and last saved total.*
 
 The save contains the current level, aggregate non-player bounce total, and a chronological session history with start times, counters, and results. The gameplay HUD's counters are for the current session; the debug HUD's total includes the saved history. A result screen requests a save automatically.
 
@@ -201,7 +203,7 @@ Open the project in Unreal Engine 5.8.4, build the Development Editor target, op
 
 Edit native systems in [Source/TestFeatures](Source/TestFeatures) and rebuild the editor target for C++ changes. The [feature walkthrough](Source/TestFeatures/Features/README.FEATURES.md) explains the code and lifecycle; the [helper guide](Source/TestFeatures/Features_NonUE/README.NON_UE.md) covers plain C++ ownership boundaries. For script-only logic changes, follow the [game-logic workflow](Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md#change-a-rule): stop PIE, save the rule edit, and start PIE again without rebuilding C++. Native binding changes still need a C++ build.
 
-Use [game-mode configuration](docs/DEVELOPMENT.md#game-mode-configuration) for spawning and movement settings, and [arena collision bounds](docs/DEVELOPMENT.md#arena-collision-bounds) to resize the play area. Use [session-result details](docs/DEVELOPMENT.md#session-results) when changing win, loss, or retry behavior, and the [debug HUD and diagnostics](docs/DEVELOPMENT.md#debug-hud-and-save-diagnostics) to inspect state and persistence. The [historical performance review](docs/PERFORMANCE_IDEAS.md) records investigation ideas and their evidence limits.
+Use [game-mode configuration](docs/DEVELOPMENT.md#game-mode-configuration) for spawning and movement settings, and [arena collision bounds](docs/DEVELOPMENT.md#arena-collision-bounds) to resize the play area. Use [session-result details](docs/DEVELOPMENT.md#session-results) when changing win, loss, or retry behavior, and the [debug HUD and diagnostics](docs/DEVELOPMENT.md#debug-hud-and-save-diagnostics) to inspect state and persistence. The [performance review](docs/PERFORMANCE_IDEAS.md) identifies current investigation ideas, their source evidence, and measurements needed before optimizing.
 
 ### Project tools and delivery
 

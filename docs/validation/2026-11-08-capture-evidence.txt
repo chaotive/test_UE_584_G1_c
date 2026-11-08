@@ -1,0 +1,80 @@
+Documentation capture session: November 8, 2026
+Base revision: 869ca0a
+Method: Unreal Editor MCP, floating in-process PIE, current project binaries and scripts.
+These are focused documentation captures, not a benchmark or a Gauntlet run.
+
+Observed level overrides: initial balls=2, per-ball rebound limit=10,
+win target at level 1=4, loss target at level 1=100,
+level 2 targets=5 contacts and 98 bounces.
+C++ defaults differ; no source, Blueprint, or configuration assets were changed.
+
+Startup saved summary was captured before clearing the slot through Delete Save.
+New Game, Save game, Continue, Defeat, Retry, and Victory Continue were exercised.
+Defeat arose naturally at the configured bounce threshold.
+Pause was invoked through the existing PauseSession API using the MCP console.
+Victory was invoked through FinishSession(true) using the MCP console;
+this demonstrates presentation, saving and next-level flow, not winning by contacts.
+The save slot was reset and updated during this authorized development session.
+
+Selected runtime log lines follow. Full local log: Saved/Logs/test_UE_584_G1_c.log
+[2026.11.08-13.54.15:677][466]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Pool grew to 2 balls
+[2026.11.08-13.54.15:677][466]LogTestFeatures: FeatureBallSpawner: Spawning 2 balls (Min: X=-500.000 Y=-300.000 Z=400.000, Max: X=500.000 Y=700.000 Z=700.000)
+[2026.11.08-13.54.15:677][466]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.54.15:678][466]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.54.15:678][466]LogTestFeatures: FeatureGameplaySession: Started with bounds center X=0.000 Y=0.000 Z=2000.000, half-extent X=1920.000 Y=1920.000 Z=3000.000
+[2026.11.08-13.54.38:444][541]LogTestFeatures: FeatureSaveGameSubsystem: Saved successfully
+[2026.11.08-13.56.11:454][820]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Pool grew to 2 balls
+[2026.11.08-13.56.11:454][820]LogTestFeatures: FeatureBallSpawner: Spawning 2 balls (Min: X=-500.000 Y=-300.000 Z=400.000, Max: X=500.000 Y=700.000 Z=700.000)
+[2026.11.08-13.56.11:454][820]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.56.11:454][820]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.56.11:454][820]LogTestFeatures: FeatureGameplaySession: Started with bounds center X=0.000 Y=0.000 Z=2000.000, half-extent X=1920.000 Y=1920.000 Z=3000.000
+[2026.11.08-13.56.11:455][820]LogTestFeatures: FeatureSaveGameSubsystem: Loaded 0 total bounces
+[2026.11.08-13.57.15:838][316]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.57.16:172][336]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.57.27:585][ 11]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.57.28:702][ 78]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.57.38:153][643]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.57.38:887][687]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.57.48:804][282]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.57.54:507][624]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.57.58:196][811]Logtest_UE_584_G1_c: Game flow: EFeatureGameFlow::PauseMenu
+[2026.11.08-13.57.59:013][859]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.58.02:664][ 78]Logtest_UE_584_G1_c: Game flow: EFeatureGameFlow::Lose
+[2026.11.08-13.58.02:692][ 78]LogTestFeatures: FeatureGameplaySession: Ended (Defeat)
+[2026.11.08-13.58.02:697][ 78]LogTestFeatures: FeatureSaveGameSubsystem: Saved successfully
+[2026.11.08-13.58.25:813][452]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Pool grew to 2 balls
+[2026.11.08-13.58.25:813][452]LogTestFeatures: FeatureBallSpawner: Spawning 2 balls (Min: X=-500.000 Y=-300.000 Z=400.000, Max: X=500.000 Y=700.000 Z=700.000)
+[2026.11.08-13.58.25:813][452]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.58.25:814][452]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.58.25:814][452]LogTestFeatures: FeatureGameplaySession: Started with bounds center X=0.000 Y=0.000 Z=2000.000, half-extent X=1920.000 Y=1920.000 Z=3000.000
+[2026.11.08-13.58.25:824][452]LogTestFeatures: FeatureSaveGameSubsystem: Loaded 100 total bounces
+[2026.11.08-13.58.34:995][  2]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.58.37:929][178]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.58.46:579][697]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.58.50:346][923]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.59.39:251][573]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Pool grew to 2 balls
+[2026.11.08-13.59.39:251][573]LogTestFeatures: FeatureBallSpawner: Spawning 2 balls (Min: X=-500.000 Y=-300.000 Z=400.000, Max: X=500.000 Y=700.000 Z=700.000)
+[2026.11.08-13.59.39:251][573]LogTestFeatures: FeatureBallSpawner [Training_Ball_0]: Reusing pooled ball
+[2026.11.08-13.59.39:251][573]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+[2026.11.08-13.59.39:251][573]LogTestFeatures: FeatureGameplaySession: Started with bounds center X=0.000 Y=0.000 Z=2000.000, half-extent X=1920.000 Y=1920.000 Z=3000.000
+[2026.11.08-13.59.39:253][573]LogTestFeatures: FeatureSaveGameSubsystem: Loaded 142 total bounces
+[2026.11.08-13.59.46:857][ 30]LogTestFeatures: FeatureBallSpawner [Training_Ball_1]: Reusing pooled ball
+
+Result/progression log excerpts:
+[2026.11.08-13.54.38:444][541]LogTestFeatures: FeatureSaveGameSubsystem: Saved successfully
+[2026.11.08-13.57.58:196][811]Logtest_UE_584_G1_c: Game flow: EFeatureGameFlow::PauseMenu
+[2026.11.08-13.58.02:664][ 78]Logtest_UE_584_G1_c: Game flow: EFeatureGameFlow::Lose
+[2026.11.08-13.58.02:692][ 78]LogTestFeatures: FeatureGameplaySession: Ended (Defeat)
+[2026.11.08-13.58.02:697][ 78]LogTestFeatures: FeatureSaveGameSubsystem: Saved successfully
+[2026.11.08-14.00.34:816][895]Logtest_UE_584_G1_c: Game flow: EFeatureGameFlow::Lose
+[2026.11.08-14.00.34:848][895]LogTestFeatures: FeatureGameplaySession: Ended (Defeat)
+[2026.11.08-14.00.34:853][895]LogTestFeatures: FeatureSaveGameSubsystem: Saved successfully
+[2026.11.08-14.02.05:275][273]Logtest_UE_584_G1_c: Game flow: EFeatureGameFlow::PauseMenu
+[2026.11.08-14.02.21:496][212]Cmd: py import unreal; unreal.GameplayStatics.get_game_mode(unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_game_world()).finish_session(True)
+[2026.11.08-14.02.21:499][212]Logtest_UE_584_G1_c: Game flow: EFeatureGameFlow::Victory
+[2026.11.08-14.02.21:525][212]LogTestFeatures: FeatureGameplaySession: Ended (Victory)
+[2026.11.08-14.02.21:527][212]LogTestFeatures: FeatureSaveGameSubsystem: Saved successfully
+[2026.11.08-14.02.33:462][916]LogTestFeatures: FeatureSaveGameSubsystem: Loaded 338 total bounces
+
+Threshold event excerpt:
+[2026.11.08-13.58.02:692][ 78]LogTestFeatures: FeatureGameState [FeatureGameState_0]: Total bounces: 100

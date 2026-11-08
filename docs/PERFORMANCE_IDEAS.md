@@ -1,157 +1,70 @@
 # Performance and design improvement ideas
 
-Historical review: the later in-game HUD refactor replaces the sleep/flush/modal implementation discussed below with paused gameplay, core-ticker previews, and asynchronous I/O. Those observations describe the earlier snapshot, not the current implementation. See the [feature walkthrough](../Source/TestFeatures/Features/README.FEATURES.md) for the current flow.
+Reviewed against project source on November 8, 2026. This is a source review, not a benchmark. These are investigation ideas, not implemented optimizations or approved implementation tasks. See the [development guide](DEVELOPMENT.md) for running and testing the project.
 
-Task 17 follow-up: feature source links now point into the independent TestFeatures runtime module; this build boundary does not establish a runtime performance gain.
+## Current baseline
 
-Current follow-up (2026-11-01): asynchronous disk access and nonblocking preview timing are implemented, so those recommendations below are historical rather than outstanding work. A runtime loading smoke test verified rendering and resume ordering after the specialized save-panel extraction. Save/quit interactions and failure/teardown cases still need verification. Preview duration is still fixed, diagnostic history still grows across operations, and serialization/object creation still consume game-thread time. The additional child widget organizes responsibilities; no performance improvement has been measured from that extraction.
+The session prewarms five actors and activates five balls by default. Retirement schedules replacement through the same pool on the next tick, after either player contact or the configured non-player rebound limit. The old three-times prewarm ratio is historical. Inactive actors are hidden with physics and collision disabled; mesh and visual material assets are shared. Each ball has its own physical-material subobject.
 
-Review date: 2026-11-01. Scope: our feature classes, non-UObject helpers, and their game mode/player controller integration, including the pending task 16 preview delays.
+State and HUD updates use events, with subscriptions attached at actor creation rather than on every reuse. Preserve those boundaries: removing delegates or merging UI with gameplay has no demonstrated performance benefit.
 
-**This is a source review, not a benchmark.** No implementation changes, new game runs, save-file writes, or profiling captures were made for this review. Suggested changes below are ideas, not approved implementation tasks. Existing uncommitted task 16 code is left intact.
+Normal persistence already uses asynchronous disk access, pausing gameplay until completion. The old sleep delays, ticker previews, and modal painting handshake are absent from the current subsystem. Progress contains the level, aggregate count, and chronological sessions, rather than one integer. Forced teardown retains a synchronous save fallback.
 
-## Overall assessment
-
-For the default five-ball learning sandbox, the implementation favors readable flow and is reasonably economical in several places. That does not establish a frame-rate target or a supported maximum ball count. Physics, rendering, hardware, editor overhead, and enabled logging must be measured before assigning a numerical performance rating.
-
-The most obvious user-visible delay is intentional: the UI sleeps one second before I/O and another after completion. A normal load followed later by a save adds approximately four seconds of preview waiting in total, excluding disk and rendering time. That is a teaching feature, not evidence that serializing one integer is slow.
-
-### Choices worth keeping
-
-- Gameplay and HUD counts update through events, not a custom per-frame polling loop.
-- Each pooled ball is constructed once; reuse resets its state and preserves subscriptions.
-- Inactive balls are hidden with simulation and collision disabled.
-- The sphere mesh asset is shared; its geometry is not cloned per ball.
-- The cached mesh component makes reuse straightforward. Its getter was already cheap, so the cache should not be advertised as a major optimization.
-- Storage snapshots contain a scalar, not an actor graph or UI references.
-- UI rendering stays in UI classes; the persistence coordinator publishes state and events.
+AngelScript compiles once per world initialization and reuses its context and function handles. The prebuilt library avoids rebuilding SDK sources during ordinary builds; script compilation and interpreter execution still happen at runtime. Starting a new PIE world intentionally picks up saved script edits.
 
 ## Suggested order of investigation
 
-| Priority | Idea | Why investigate it? | Evidence level |
+| Priority | Opportunity | Source evidence | Measure before changing |
 | --- | --- | --- | --- |
-| 1 | Make preview waiting an explicit optional teaching setting. | Two seconds per operation are deliberately spent sleeping. | Directly visible in code; elapsed user experience not measured here. |
-| 1 | Verify initialization/teardown and persistence behavior in actual game runs. | Compilation alone does not demonstrate correct modal presentation, shutdown ordering, or disk recovery. | Runtime verification is still incomplete for the latest work. |
-| 2 | Profile with detailed logs enabled and reduced. | Several messages and formatted strings accompany each spawn/bounce. | Enabled work is visible; its relative cost is unmeasured. |
-| 2 | Bound diagnostic history and avoid rebuilding an ever-growing string. | History and total formatting work grow with repeated operations. | Algorithmic growth is visible. |
-| 3 | Add an available-ball list if pool searches become expensive. | Current requests scan all pool entries, often repeatedly. | Worst-case complexity is visible. |
-| 3 | Evaluate pool limits, material sharing, and spawn density. | Memory retention and physics work increase with the workload. | Retention/creation behavior is visible; exact costs need measurement. |
-| Later | Consider asynchronous persistence and a gated transition flow. | Enables responsive presentation and larger saves without blocking the game thread. | A design alternative, not a demonstrated need for this tiny save. |
+| First | Reduce detailed logging during performance comparisons. | Spawn, bounce, bridge, and state paths emit ordinary Log messages. | Frame and event-handler time with logging enabled and suppressed. |
+| First | Bound diagnostic history and avoid full-history text rebuilds. | Every phase appends a string; every panel refresh joins all entries. | History length, formatting/layout time, retained text memory. |
+| First | Track saved-session growth. | Snapshot copies and menu summary loads include every session. | Save bytes, snapshot/serialization time, menu-load time. |
+| When scaling | Replace repeated pool scans with available-entry bookkeeping. | Every acquisition starts at the first pool entry. | Scan length, creation time, active and retained actor counts. |
+| When scaling | Investigate physics and rendering separately. | Active balls simulate and can collide with each other; random placement permits overlap. | Physics/contact cost, GPU time, collision density, replacement bursts. |
+| If visible in traces | Cache derived limits and reduce redundant HUD formatting. | Evaluation and display each call both script functions. | Script executions per event and time in execution/text layout. |
 
-## 1. Pool searches can become quadratic across a batch
+At five balls, additional queues, caches, and scheduling may add more complexity than they save. No frame-rate target or maximum supported ball count has been established.
 
-Read [FeatureBallSpawner.cpp](../Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp), especially `SpawnMultiple()`, `Spawn()`, and `FindAvailableBall()`.
+## Pool acquisition and retained actors
 
-Every request scans the list from its beginning. Creating an initial batch of N active balls examines about `0 + 1 + ... + (N - 1)` existing entries before deciding to create more: **O(N squared)** search work over that batch. This excludes actor creation itself. Reusing many inactive balls can show a similar pattern as early entries become active again.
+[The spawner](../Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) scans its creation-order weak-reference list from the beginning for every acquisition. Activating N prewarmed balls visits roughly 1 + 2 + ... + N entries: O(N²) acquisition work, excluding construction. Each replacement can scan O(P) entries for a pool of P actors.
 
-At five balls the bookkeeping is small. At large counts, an available-entry stack or queue could make acquiring a reusable ball **O(1) amortized**, while the existing creation-order list still supplies stable names. A release event could return a ball to that list without making the ball know the spawner class.
+If measured costs justify it, maintain a free-entry stack or queue alongside the creation-order list, populated through retirement observation. Preserve stable names and creation-time subscriptions. The extra collection must accurately represent availability; reserving array capacity alone does not remove scans.
 
-Tradeoff: an available list adds state to maintain. It must not admit duplicate releases, destroyed entries, or still-active actors. Measure the scan before adding this bookkeeping. Reserving TArray capacity can reduce array reallocations during known bursts, but does not fix repeated scans or actor creation cost.
+The pool has no trimming policy. Inactive world actors remain allocated, and externally destroyed actors can leave unused weak-reference slots. Normal fixed-size replacement should reuse the initial actors, so growth is a future workload concern rather than an established leak. Track peak active and retained counts before introducing caps or trimming. A shared physical material may reduce per-ball allocations if settings remain identical, but measure whether that memory matters.
 
-## 2. Pooling trades creation work for retained memory
+## Physics, rendering, and logging
 
-The pool has no cap or trimming policy. A temporary peak in demand can leave many inactive world actors for the rest of the session. Weak pool references do not keep actors alive by themselves, but hiding a world actor does not destroy it either. Components and per-ball physical-material subobjects remain allocated.
+[Ball activation and hit handling](../Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) enable simulation and publish contacts synchronously. AlwaysSpawn and independently randomized positions permit initial overlap. At larger counts, contact density can grow much faster than actor count. Spacing and collision filtering are options only if they preserve intended gameplay: ball-to-ball impacts currently contribute to the non-player count.
 
-If actors are destroyed externally, invalid weak entries remain in the creation-order list. They do not keep destroyed actors alive, but they retain list slots and increase future scan work. Stable names currently depend on list length, so simply removing slots would also change naming semantics.
+The counter accepts nonzero-impulse hit callbacks, rather than separately detecting a complete visual rebound. The default retirement limit is five. A collision cooldown or discarded impacts would change rules, not merely optimize them. Physical-material application now occurs in BeginPlay; the old constructor-application concern is no longer a current recommendation.
 
-Possible improvements:
+Several ordinary-verbosity messages accompany each bounce through the ball, [event bridge](../Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp), and [state](../Source/TestFeatures/Features/Gameplay/FeatureGameState.cpp). If profiling shows a cost, move repetitive detail to configurable verbosity while retaining lifecycle summaries. Build-time and category filtering affect which log work executes.
 
-- Track active, available, invalid, and total-created counts before choosing a memory policy.
-- Separate stable identifiers from array positions if compaction becomes useful.
-- Trim unusually large idle pools at a safe transition point, rather than destroying actors on every release.
-- Share a physical material if all balls truly use identical settings. Today each ball creates its own material; the mesh asset is already shared.
+Physics bodies, shadows, materials, and the scene itself may dominate CPU or GPU time. Measure those separately from pool lookup and event dispatch.
 
-Prewarming a pool can move creation work away from gameplay bursts, but increases startup work and initial memory. It is not free. The current initial batch is created once, so pooling only pays for reuse when later requests actually occur.
+## Persistence and diagnostic history
 
-## 3. Physics and bounce meaning deserve attention before micro-optimizations
+[The persistence subsystem](../Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) retains every status line for its game-instance lifetime. [The save panel](../Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp) joins the entire array and recomputes the path whenever status changes. For H similar-length entries, each refresh is O(H); rebuilding after every append accumulates O(H²) text work. A scroll box does not virtualize a single large text block.
 
-Read `ConfigureBouncing()`, `Activate()`, and `OnBallHit()` in [FeatureBall.cpp](../Source/TestFeatures/Features/Gameplay/FeatureBall.cpp).
+Consider keeping the current phase/result separate from a bounded recent-history buffer, with full details in logs. Cache stable slot/path presentation only if useful. This also keeps diagnostics readable.
 
-Active physics bodies and dense contact pairs may dominate a large-ball scenario. `AlwaysSpawn` plus independent random positions allows overlapping starts. Those overlaps can cause immediate contact resolution and hit notifications. Collision filtering, a larger spawn volume, or spaced placement could reduce unnecessary contacts if the intended behavior permits it.
+[Saved progress](../Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h) contains a chronological session array without a retention limit. [Storage](../Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) copies progress into a save object; loading and state initialization also copy snapshots. Asynchronous disk access does not make all object creation, snapshot copying, or serialization asynchronous. [The startup menu](../Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) loads full progress to show level and aggregate total.
 
-The counter measures accepted nonzero-impulse hit callbacks, not a separately detected complete visual rebound. Multiple contact notifications or ball-to-ball impacts can consume the two-hit lifetime quickly. Both balls can legitimately contribute to the shared total for one collision pair under the current definition.
+Measure save size and game-thread preparation with increasing session counts. A retention/archive policy or summary-oriented layout would change persistence behavior and needs a deliberate decision. Avoid an independently maintained second source of truth for totals.
 
-Before optimizing, decide whether the rule means every impact, floor-only rebounds, or distinct separated contacts. A contact-separation rule or minimum impact criterion would change behavior and needs tests; a time cooldown can wrongly discard real rapid impacts.
+[State teardown](../Source/TestFeatures/Features/Gameplay/FeatureGameState.cpp) saves synchronously unless a quit save already completed. A result can therefore save asynchronously and again on later teardown. Measure duration and frequency before considering dirty-state tracking, preserving the intended teardown behavior.
 
-Earlier offscreen testing reported physics-material access errors during native class-default-object construction. `ConfigureBouncing()` still assigns the material from the constructor. Investigate the exact triggering calls and move engine-dependent runtime application to an appropriate initialized lifecycle point if confirmed. This is a previously observed diagnostic, not a new reproduction or a measured performance bottleneck.
+## Script calls and HUD updates
 
-## 4. Events are appropriate here, but their listeners are synchronous
+[Session evaluation](../Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) calls two script-backed getters on a stats event. [The gameplay HUD](../Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) calls both again for display, normally totaling four script executions per active-play stats update. Other callers and transitions can differ. Context and function handles are already reused.
 
-The bounce path is ball -> game-state controller -> shared state -> HUD. Native delegate dispatch and the counter increment are likely modest for this small listener set, but this review does not quantify them. Keeping the event boundary is useful; removing it solely to save a function call would spread dependencies again.
+The formulas are small; interpreter entry may cost more than their arithmetic, but that remains unmeasured. If warranted, compute derived limits when level/configuration changes and share results between evaluation and presentation. AngelScript must remain the single implementation of the formulas. A C++ result cache must refresh on all relevant changes, including victory level advancement.
 
-Listeners execute on the publisher's call path. Expensive future listeners will extend the collision handler. The save coordinator also invokes UI listeners synchronously: `OnBeforeIO` is an explicit handshake that lets UI painting and preview waiting complete before disk access starts. Thus the coordinator contains no rendering code, but its elapsed call duration still includes UI work.
+Both objective lines are formatted on every stats update even when only one counter changes. If traces show text/layout cost, update changed fields or coalesce presentation refreshes while recording every gameplay event and evaluating results immediately. Preserve HUD-owned subscriptions and initial synchronization.
 
-If bounce rates become high, coalesce only the **display refreshes** at a chosen cadence while recording every gameplay bounce immediately. That trades visual freshness for less text/layout work without losing the total. It is not needed merely because the design uses delegates.
+## Measurement plan
 
-Subscription lifetimes should be tested: create once, deactivate/reactivate repeatedly, remove/re-add a HUD, and travel between levels. One event should cause exactly one count update and one update per attached HUD. Normal code intends this already; public observation methods could still be called repeatedly by future callers.
+For a future authorized profiling session, compare the same Win64 build, map, resolution, and logging settings. Record frame-time distributions plus game-thread, physics, Slate, and GPU contributions. Vary ball count, contact density, diagnostic operations, and saved-session count separately; include startup, steady play, replacement bursts, and save/teardown.
 
-## 5. Logging may outweigh small pieces of gameplay bookkeeping
-
-Spawn, activation, movement, bounce, controller handling, state updates, and lifecycle steps produce logs. When these messages are enabled, formatting names, vectors, integers, and writing output has a cost. A thousand events per second is a different workload from five short-lived balls.
-
-An improvement idea is to keep lifecycle summaries at ordinary verbosity and move per-ball detail to a more verbose level or separately configurable category. Summarize aggregate activity during stress tests. Do not remove diagnostic logs before using them to validate behavior, and do not claim disabled logs necessarily evaluate all message expressions: macro and build filtering matter.
-
-Compare the same scene with detailed logging enabled and reduced before spending time on accessor or pointer micro-optimizations.
-
-## 6. Diagnostic history is unbounded and repeatedly reformatted
-
-Read `PublishStatus()` in [FeatureSaveGameSubsystem.cpp](../Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) and `FormatSaveDiagnostics()` in [FeatureSaveGamePanel.cpp](../Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
-
-Each phase appends an FString to a game-instance-lifetime array. Every refresh joins the entire history and recomputes the desktop path. For H similarly sized entries, one rebuild is **O(H)** text work. Rebuilding after each append can accumulate **O(H squared)** work over a long session. Actual string lengths also matter.
-
-The HUD and modal can each request formatting for a transition. The HUD uses one large wrapped text block inside a scroll box: scrolling does not virtualize the text or bound stored history. The fixed-size modal can clip long diagnostic content; showing the current state first helps but does not make every historical line visible there.
-
-Ideas: keep current state/result separately, retain a bounded recent-history ring, and send the full history to logs when needed. Cache stable slot/path metadata in a diagnostic snapshot. Consider a virtualized list only if histories are genuinely large enough to justify extra UI classes. Prefer one shared UI formatter or diagnostic view model over making the modal depend on the concrete HUD class purely for a static formatting function.
-
-## 7. UI is event-driven, but text changes still cost layout work
-
-`SetTotalBounces()` uses FText formatting on each accepted bounce. Diagnostic changes can replace a longer wrapped string. These actions can invalidate text measurement/layout; event-driven does not mean zero rendering cost.
-
-The current small hierarchy is reasonable for a debug panel. A large canvas or one additional helper function is not automatically a bottleneck. Profile Slate/UMG updates before introducing retainer textures or several invalidation layers; caching and offscreen rendering also have memory and update costs.
-
-The 700 x 290 HUD and 760 x 260 modal should be checked at small resolutions and UI scales. Layout clipping is first a usability issue, not proof of slow rendering. Keep long file paths and diagnostic histories readable while avoiding frequent rebuilds of the widget tree.
-
-## 8. Preview sleeps and render flushes are deliberate stalls
-
-`PresentPhaseForPreview()` calls Slate Tick, renderer Sync, FlushRenderingCommands, and `Sleep(1.0f)`. It runs before I/O and again when the result arrives. Disk timing should be measured **inside storage**, separately from these UI delays. Otherwise a fast save will misleadingly appear to take about two seconds.
-
-For everyday use, make the teaching preview optional while retaining its default when demonstrating task 16. For responsive progress, schedule a UI hold across frames instead of sleeping on the game thread. That requires an explicit loading/saving phase that blocks gameplay and defers normal travel/exit until completion; simply replacing Sleep with a timer would let the current synchronous caller continue too early.
-
-Manual Slate ticks and rendering flushes from initialization or EndPlay should be exercised in PIE, standalone, level travel, and editor stop. Check for reentrancy, pending window destruction, unavailable viewports, and renderer shutdown ordering. These are lifecycle concerns to verify, not asserted crashes in this review. An engine-supported loading-screen flow may be appropriate for a packaged game, but evaluate editor support before replacing a solution intended to work in both modes.
-
-## 9. Save reliability is more urgent than saving a few allocations
-
-The snapshot currently contains one integer. Allocating a USaveGame object once at shutdown is unlikely to be worth complicating the design without measurements. Synchronous startup/shutdown I/O is a simple tradeoff at this payload size; asynchronous APIs are an option for larger payloads, not an automatic improvement.
-
-Current behaviors to review:
-
-- A failed read falls back to zero. A later save can overwrite the same slot with that new total. Decide whether unreadable saves should instead be preserved for recovery.
-- A write failure is reported, but normal teardown continues. Decide whether task requirements mean “operation finished” or “successfully persisted”; these are not equivalent.
-- EndPlay is already teardown. An asynchronous save cannot safely be started there without retaining the required data and deferring the transition earlier.
-- All PIE sessions and levels share one slot and user index. Concurrent instances may overwrite one another. Session-specific development slots or explicit save ownership may be needed.
-- The displayed absolute path describes the default desktop backend. It is not a portable guarantee for cloud/platform save systems.
-- Abrupt process termination cannot run the normal save path. A checkpoint strategy would improve recovery, at the cost of more writes.
-
-These are policy and lifecycle questions, not reasons to add a large defensive framework to the sandbox. Agree on expected behavior before implementing retries, backups, schema versions, or asynchronous coordination.
-
-## Measurement and validation plan
-
-Keep this as a proposed plan; it was not executed during this review.
-
-1. Validate functionality first: one bounce -> one total increment; two accepted hits -> inactive ball; reuse -> reset local count; HUD remove/re-add -> no duplicate callbacks; load -> correct initial HUD; save failure -> agreed exit behavior.
-2. Test the default count, then controlled larger counts such as 50 and 500 if the machine can support them. These are test points, not promised supported capacities. Keep resolution, spawn volume, and logging settings recorded.
-3. Measure initial creation separately from reusing an already-filled pool. Capture search probes, active/idle counts, pool high-water mark, actor allocations, and retained memory.
-4. Compare sparse and deliberately dense spawn volumes to identify collision pressure rather than attributing every slowdown to the pool.
-5. Trace gameplay CPU, physics, Slate work, and allocations. Separate first-load shader/asset work from steady-state operation and editor work from standalone runs.
-6. Measure real load/save calls separately from the one-second preview holds and render synchronization. Exercise missing/unreadable saves and failed writes in an isolated test slot, protecting real progress.
-7. Change one thing at a time; record timings and behavior before/after. Use average and tail frame times, not FPS alone.
-
-### Unreal documentation for deeper investigation
-
-- [Unreal Insights](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-insights-in-unreal-engine): capture timelines and inspect where time is spent.
-- [UMG optimization guidelines](https://dev.epicgames.com/documentation/en-us/unreal-engine/optimization-guidelines-for-umg-in-unreal-engine): event-driven updates, layout invalidation, and widget costs.
-- [Saving and loading](https://dev.epicgames.com/documentation/en-us/unreal-engine/saving-and-loading-your-game-in-unreal-engine): SaveGame snapshots and synchronous/asynchronous persistence options.
-
-## What not to optimize yet
-
-Do not replace the event architecture with direct gameplay-to-UI calls, introduce Mass solely for five actors, build a generic pool framework before its contract is clear, or replace readable value types with pointers to avoid tiny copies. Class/file separation changes organization, not inherently frame time. Preserve the teaching value and fix measured costs or verified lifecycle problems first.
+No performance gains are claimed by this review. The latest recorded Gauntlet attempt failed during editor initialization and executed no checks; that is separate from profiling. See the [smoke-check guidance](DEVELOPMENT.md#smoke-checks) and [tracked bug](../AGENTS.MD#bugs).
