@@ -119,7 +119,7 @@ Gameplay remains paused until asynchronous save or load I/O finishes.
 
 ### Architecture
 
-The diagrams below show the actual project types and their Unreal Engine integration. **Extends** means C++ inheritance; **event** means a native delegate broadcast. Other arrows are calls, ownership, or data flow as labeled. Blue nodes are Unreal Engine systems; green nodes are project systems.
+The [square architecture diagrams](docs/feature-architecture.md) summarize gameplay, UI, and session/persistence, with expandable class references. Detailed runtime flow diagrams follow. **Extends** means C++ inheritance; **event** means a native delegate broadcast. Other arrows are calls, ownership, or data flow as labeled. Blue nodes are Unreal Engine systems; green nodes are project systems.
 
 #### Gameplay systems
 
