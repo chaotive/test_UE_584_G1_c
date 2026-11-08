@@ -34,14 +34,6 @@ Each session is a race between two counters:
 
 Each ball has its own lifetime: after its configured number of non-player bounces (five by default), it returns to the pool. A ball that touches the player is also retired immediately. In either case, a replacement is scheduled while the session is active.
 
-```mermaid
-flowchart LR
-    Ball(("Ball in play")) -->|"Touches the player"| Contact["+1 player contact<br/>toward Victory"]
-    Contact --> Replace["Ball retires;<br/>replacement launches"]
-    Ball -->|"Hits the arena or another ball"| Bounce["+1 non-player bounce<br/>toward Defeat"]
-    Bounce -->|"Ball reaches its rebound limit"| Retire["Ball retires;<br/>replacement launches"]
-```
-
 ### Levels and results
 
 By default, every new game begins at level 1; the initial level is configurable in the game mode. Winning advances the saved level by one; losing keeps the same level. Each new session resets its two objective counters, while the saved aggregate bounce total and session history continue across sessions.
@@ -119,160 +111,79 @@ Gameplay remains paused until asynchronous save or load I/O finishes.
 
 ### Architecture
 
-The [square architecture diagrams](docs/feature-architecture.md) summarize gameplay, UI, and session/persistence, with expandable class references. Detailed runtime flow diagrams follow. **Extends** means C++ inheritance; **event** means a native delegate broadcast. Other arrows are calls, ownership, or data flow as labeled. Blue nodes are Unreal Engine systems; green nodes are project systems.
+Three square diagrams summarize responsibilities, dependencies, and patterns. Solid arrows show calls or data flow; the dashed arrow shows state observation. Expand the class references for full names and base types. These are architecture illustrations, not runtime captures.
 
-#### Gameplay systems
+#### Gameplay architecture
 
-```mermaid
-flowchart LR
-    subgraph UE["Unreal Engine"]
-        World["UWorld"]
-        StaticActor["AStaticMeshActor"]
-        StateBase["AGameStateBase"]
-        ActorBase["AActor"]
-        WorldSub["UWorldSubsystem"]
-        Pawn["ACharacter / player pawn"]
-        Physics["UStaticMeshComponent<br/>Chaos physics and hit callbacks"]
-    end
-    subgraph Game["TestFeatures gameplay"]
-        Session["UFeatureGameplaySession"]
-        Pool["FFeatureBallSpawner<br/>pool and spawn"]
-        Ball["AFeatureBall"]
-        Bounds["AFeatureLevelBounds<br/>six UBoxComponents"]
-        Bridge["UFeatureGameStateController<br/>UObject event bridge"]
-        State["AFeatureGameState"]
-    end
-    WorldSub -->|"base class"| Session
-    StaticActor -->|"base class"| Ball
-    StateBase -->|"base class"| State
-    ActorBase -->|"base class"| Bounds
-    World -->|"owns actors and subsystem"| Session
-    Session -->|"prewarm / spawn"| Pool
-    Session -->|"spawn"| Bounds
-    Pool -->|"SpawnActor / reuse"| Ball
-    Ball -->|"cached component"| Physics
-    Physics -->|"OnComponentHit"| Ball
-    Pawn -->|"blocking contact"| Physics
-    Ball -->|"OnBounced / OnContact events"| Bridge
-    Bridge -->|"record bounce or player contact"| State
-    Ball -->|"OnContact / OnRetired events"| Session
-    Session -->|"retire and schedule replacement"| Pool
-    State -->|"OnSessionStatsChanged event"| Session
-    classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554
-    classDef feature fill:#dcfce7,stroke:#16a34a,color:#14532d
-    class World,StaticActor,StateBase,ActorBase,WorldSub,Pawn,Physics engine
-    class Session,Pool,Ball,Bounds,Bridge,State feature
-```
+![Square gameplay architecture diagram: session, arena, pool, ball, state bridge and shared state.](docs/images/feature-gameplay-flow.png)
 
-The spawner is a plain C++ value owned by the world subsystem; actors remain world-owned and are observed through weak pointers. Ball callbacks publish events rather than directly updating the game state. The session listens to state changes to evaluate limits and handles replacement after a player contact. See [ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp), [spawner](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp), [state controller](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp), and [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp).
+Object pooling reuses actors. Observer events connect balls to the state bridge and shared state without a direct ball-to-state dependency. Both player contact and the rebound limit retire a ball and schedule a replacement while playing.
 
-#### UI systems
+<details>
+<summary>Class reference</summary>
 
-```mermaid
-flowchart LR
-    subgraph UE["Unreal Engine"]
-        PCBase["APlayerController"]
-        WidgetBase["UUserWidget / UMG"]
-        Input["InputComponent and Slate input"]
-        Viewport["Player viewport"]
-    end
-    subgraph FeatureUI["Project UI and bindings"]
-        PC["Project player controller"]
-        Mode["Project game mode"]
-        Views["FFeatureMenuViews<br/>four declarative views"]
-        Menu["UFeatureMainMenu"]
-        HUD["UFeatureGameplayHUD"]
-        Debug["UFeatureDebugHUD<br/>non-Shipping"]
-        BallPanel["UFeatureBallPanel"]
-        SavePanel["UFeatureSaveGamePanel"]
-    end
-    State["AFeatureGameState"]
-    Saves["UFeatureSaveGameSubsystem"]
-    Session["UFeatureGameplaySession"]
-    PCBase -->|"base class"| PC
-    WidgetBase -->|"base class"| Menu
-    WidgetBase -->|"base class"| HUD
-    WidgetBase -->|"base class"| Debug
-    WidgetBase -->|"base class"| BallPanel
-    WidgetBase -->|"base class"| SavePanel
-    Input -->|"Escape / UI input"| PC
-    Input -->|"menu key preview"| Menu
-    PC -->|"create / remove"| HUD
-    PC -->|"create / remove"| Debug
-    Mode -->|"present / dismiss"| Menu
-    Views -->|"view data"| Menu
-    Menu -->|"action event"| Mode
-    Menu -->|"add to viewport"| Viewport
-    HUD -->|"add to player screen"| Viewport
-    Debug -->|"owns"| BallPanel
-    Debug -->|"owns"| SavePanel
-    State -->|"stats / level events"| HUD
-    State -->|"total / level events"| BallPanel
-    Session -->|"read current limits"| HUD
-    Saves -->|"status events"| SavePanel
-    SavePanel -->|"save request"| Saves
-    classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554
-    classDef feature fill:#dcfce7,stroke:#16a34a,color:#14532d
-    class PCBase,WidgetBase,Input,Viewport engine
-    class PC,Mode,Views,Menu,HUD,Debug,BallPanel,SavePanel,State,Saves,Session feature
-```
+| Diagram role | Class | Base or primary consumer |
+| --- | --- | --- |
+| Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem` |
+| Arena bounds | `AFeatureLevelBounds` | Extends `AActor` |
+| Ball pool | `FFeatureBallSpawner` | Creates `AFeatureBall` for `UFeatureGameplaySession` |
+| Physics ball | `AFeatureBall` | Extends `AStaticMeshActor` |
+| State event bridge | `UFeatureGameStateController` | Extends `UObject` |
+| Game state | `AFeatureGameState` | Extends `AGameStateBase` |
 
-The menu and HUDs derive from `UUserWidget` and build their widget trees in C++. All menu views share the Crazy balls logo and the title and subtitle from project settings. The logo is loaded from `Content/FeatureBrand` and included in packaged builds as UFS content. The player controller creates and removes HUDs; each widget owns its own state subscriptions and initial synchronization. The debug save panel observes persistence status. See [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp), [gameplay HUD](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp), and [save panel](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
+</details>
 
-#### Game workflow and persistence
+Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [pool](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) · [ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [state bridge](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp).
 
-```mermaid
-flowchart LR
-    subgraph UE["Unreal Engine"]
-        World["UWorld"]
-        ModeBase["AGameModeBase"]
-        WorldSub["UWorldSubsystem"]
-        InstanceSub["UGameInstanceSubsystem"]
-        SaveBase["USaveGame"]
-        Statics["UGameplayStatics<br/>pause, async save/load, level travel"]
-    end
-    subgraph FeatureFlow["Project workflow"]
-        Mode["Project game mode<br/>menu and player lifecycle"]
-        Session["UFeatureGameplaySession<br/>start / pause / resume / end"]
-        State["AFeatureGameState<br/>progress and session history"]
-        Saves["UFeatureSaveGameSubsystem<br/>I/O gate and status"]
-        Storage["FFeatureSaveGameStorage"]
-        Snapshot["UFeatureSaveGame<br/>progress snapshot"]
-        Menu["UFeatureMainMenu"]
-    end
-    Slot[("CrazyBalls save slot")]
-    ModeBase -->|"base class"| Mode
-    WorldSub -->|"base class"| Session
-    InstanceSub -->|"base class"| Saves
-    SaveBase -->|"base class"| Snapshot
-    World -->|"world and actor lifecycle"| Mode
-    Mode -->|"start / pause / resume"| Session
-    Session -->|"lifecycle events"| Mode
-    Mode -->|"present / dismiss"| Menu
-    Menu -->|"action event"| Mode
-    Session -->|"start / record result"| State
-    State -->|"stats event"| Session
-    State -->|"save / load request"| Saves
-    Saves -->|"snapshot I/O"| Storage
-    Storage -->|"create / read"| Snapshot
-    Storage -->|"async save / load"| Statics
-    Statics <-->|"read / write"| Slot
-    Session -->|"pause / resume"| Statics
-    Mode -->|"return to menu / retry"| Statics
-    classDef engine fill:#dbeafe,stroke:#2563eb,color:#172554
-    classDef feature fill:#dcfce7,stroke:#16a34a,color:#14532d
-    class World,ModeBase,WorldSub,InstanceSub,SaveBase,Statics engine
-    class Mode,Session,State,Saves,Storage,Snapshot,Menu,Slot feature
-```
+#### UI architecture
 
-`AGameModeBase` presents the current flow and responds to session events. The world subsystem starts and ends sessions; the game-instance subsystem serializes save/load requests and keeps the world paused during I/O. `USaveGame` holds the level, aggregate count, and chronological session records. See [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp), [save subsystem](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp), and [save data](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
+![Square UI architecture diagram: declarative menu definitions, shared menu, gameplay HUD and composed debug panels.](docs/images/feature-ui-flow.png)
+
+Declarative views share one menu implementation. The game mode manages menus; the player controller manages HUD lifetime. Widgets own their Observer bindings.
+
+<details>
+<summary>Class reference</summary>
+
+| Diagram role | Class | Base or primary consumer |
+| --- | --- | --- |
+| Menu definitions | `FFeatureMenuViews` | Creates `FFeatureMenuView` values for `UFeatureMainMenu` |
+| Shared menu | `UFeatureMainMenu` | Extends `UUserWidget` |
+| Gameplay HUD | `UFeatureGameplayHUD` | Extends `UUserWidget` |
+| Debug HUD | `UFeatureDebugHUD` | Extends `UUserWidget` |
+| Ball panel | `UFeatureBallPanel` | Extends `UUserWidget` |
+| Save panel | `UFeatureSaveGamePanel` | Extends `UUserWidget` |
+
+</details>
+
+Source: [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [HUDs](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) · [panels](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
+
+#### Session and persistence architecture
+
+![Square session architecture diagram: game mode, gameplay session, progress state, save coordinator, storage and snapshot.](docs/images/feature-workflow-flow.png)
+
+An enum-based state machine controls round transitions in the world subsystem. The game-instance subsystem coordinates persistence; storage creates a value snapshot from current state. The game state requests save/load operations, and the save subsystem publishes restored data and I/O status.
+
+<details>
+<summary>Class reference</summary>
+
+| Diagram role | Class | Base or primary consumer |
+| --- | --- | --- |
+| Game mode | `Atest_UE_584_G1_cGameMode` | Extends `AGameModeBase` |
+| Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem` |
+| Game state | `AFeatureGameState` | Extends `AGameStateBase` |
+| Save coordinator | `UFeatureSaveGameSubsystem` | Extends `UGameInstanceSubsystem` |
+| Save storage | `FFeatureSaveGameStorage` | Creates `UFeatureSaveGame` for `UFeatureSaveGameSubsystem` |
+| Save snapshot | `UFeatureSaveGame` | Extends `USaveGame` |
+
+</details>
+
+Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [save coordinator](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGameSubsystem.cpp) · [storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [snapshot](Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h).
 
 The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript remains a project goal.
 
 Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. Plain C++ spawning and storage helpers live in the sibling `Features_NonUE` folder.
 
 - [Gameplay systems and HUD](Source/TestFeatures/Features/README.md)
-- [Gameplay, UI, and workflow diagrams](docs/feature-flows.md)
 - [Runtime helpers](Source/TestFeatures/Features_NonUE/README.md)
 - [Project objectives and technical requirements](AGENTS.MD)
 - [Completed tasks and capture index](CHANGES.md)
