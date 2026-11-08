@@ -1,8 +1,8 @@
-# Feature Sandbox changes
+# Crazy balls changes
 
-This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source links document implementation details that screenshots cannot establish. These captures were taken in the current Unreal Editor play session on November 7, 2026.
+This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source links document implementation details that screenshots cannot establish. The latest verified runtime captures below were taken in the Unreal Editor on November 7, 2026.
 
-## Current game captures
+## Latest verified game captures
 
 ![Startup menu with a saved level and total](docs/images/current-startup.png)
 
@@ -11,6 +11,8 @@ This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source 
 ![Gameplay showing balls and both HUDs](docs/images/current-gameplay.png)
 
 *Continue restored the saved total; gameplay shows the current level, both objective counters, and airborne balls.*
+
+These captures predate the current documentation and smoke-check updates; fresh editor captures were not available for this update.
 
 ## Completed tasks
 
@@ -26,7 +28,7 @@ This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source 
 | 21–24 | Delete saves, disable Continue for an empty slot, exit, and pause with Escape. | [Menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [Game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
 | 29–30 | Exit from the initial menu with Escape; display saved totals or an empty-slot message. | [Menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) |
 | 31–32 | Provide `Feature.NewGame` and limit the debug HUD to non-Shipping builds. | [Console command](Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp) · [Player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp) |
-| 33 | Add menu, session-state, pool, and save-serialization smoke checks through Gauntlet's editor automation runner. | [Smoke tests](Source/TestFeatures/Features/Gameplay/FeatureSmokeTests.cpp) · [Runner](Run-FeatureSmoke.ps1) |
+| 33 | Add Gauntlet checks for menu, session state, pool reuse, save serialization, loss-limit progression, player-contact replacement, and speed boosts. Eight `Feature.Smoke` checks are defined across the two test files. | [Feature smoke tests](Source/TestFeatures/Features/Gameplay/FeatureSmokeTests.cpp) · [Player speed smoke test](Source/test_UE_584_G1_c/FeatureGameplaySmokeTests.cpp) · [Runner](Run-FeatureSmoke.ps1) |
 | 34–35 | Package Win64 configurations and create a configurable collision enclosure. | [Packaging guide](README.md#package-for-win64) · [Level bounds](Source/TestFeatures/Features/Gameplay/FeatureLevelBounds.cpp) |
 | 36 | Retire balls after five non-player bounces; player contact retires the ball and schedules a replacement. | [Ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
 | 37–38 | Record Victory or Defeat and show the corresponding result screen. | [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [Menu views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) |
@@ -37,6 +39,9 @@ This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source 
 | 46–47 | Offer Retry after defeat and save progress when either result is reached. | [Menu views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) |
 | 49–50 | Declare menu views in code and organize UI archetypes and panel widgets. | [Views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [Archetypes](Source/TestFeatures/Features/UI/Archetypes) · [Widgets](Source/TestFeatures/Features/UI/Widgets) |
 | 51 | Document gameplay, UI, and game workflow connections with diagrams. | [System flows](docs/feature-flows.md) |
+| 52 | Retire a player-contact ball and replace it through the pool. | [Session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [Gauntlet check](Source/TestFeatures/Features/Gameplay/FeatureSmokeTests.cpp) |
+| 53 | Configure the minimum loss limit; the level-one base target is 100 and the default floor is 50. | [Session limits](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.h) · [Gauntlet check](Source/TestFeatures/Features/Gameplay/FeatureSmokeTests.cpp) |
+| 54 | Configure player speed and temporary contact boosts, with optional stacking. | [Character](Source/test_UE_584_G1_c/test_UE_584_G1_cCharacter.cpp) · [Gauntlet check](Source/test_UE_584_G1_c/FeatureGameplaySmokeTests.cpp) |
 | 1001601 | Automate three-configuration Win64 packaging with a reusable archive ID. | [Build script](Build-Win64.ps1) · [Packaging guide](README.md#package-for-win64) |
 
 ## Game evolution
@@ -46,3 +51,7 @@ This index follows the completed task numbers in [AGENTS.MD](AGENTS.MD). Source 
 *Historical capture from November 7, 2026, before task 46: the defeat screen offered Continue. The current defeat screen offers Retry and Exit.*
 
 The remaining work is tracked in [the backlog](AGENTS.MD#to-do).
+
+## Validation note
+
+The latest Gauntlet invocation ended with `Engine initialization failed (InitializationFailure, ExitCode=-1)` before an editor log was created, so it executed no checks. Compile validation also could not complete in this sandbox. See [the tracked bug](AGENTS.MD#bugs).

@@ -100,6 +100,9 @@ public:
 	virtual void DoJumpEnd();
 
 private:
+	// Grants the focused automation check access to contact-speed timer behavior.
+	// The test class retains no character or movement-component ownership.
+	friend class FFeaturePlayerSpeedBoostSmokeTest;
 
 	// Applies or refreshes the temporary boost when this player contacts a ball.
 	// Pawn is a borrowed world-owned reference without ownership transfer.

@@ -77,6 +77,11 @@ public:
 	int32 GetSessionBouncesToLose() const;
 
 private:
+	// Grants focused automation checks access to loss-limit and contact-replacement behavior.
+	// The test classes retain no runtime objects and are compiled only with development automation.
+	friend class FFeatureLossLimitSmokeTest;
+	friend class FFeaturePlayerBallReplacementSmokeTest;
+
 	enum class ESessionState : uint8 { Ready, Playing, Paused, Ended };
 
 	// Tracks which lifecycle requests the session can accept.

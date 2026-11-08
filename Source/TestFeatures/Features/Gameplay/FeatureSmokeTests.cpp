@@ -2,10 +2,13 @@
 
 #include "FeatureGameState.h"
 #include "FeatureBall.h"
+#include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
 #include "Features_NonUE/FeatureBallSpawner.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/AutomationTest.h"
 
@@ -71,6 +74,64 @@ bool FFeatureSessionSmokeTest::RunTest(const FString& Parameters)
 	DefeatState->RecordSessionResult(false);
 	TestEqual(TEXT("Defeat retains the level"), DefeatState->GetCurrentLevel(), 1);
 	TestTrue(TEXT("Defeat is recorded"), DefeatState->GetGameplaySessions().Last().Result == EFeatureGameplaySessionResult::Defeat);
+	World->DestroyWorld(false);
+	return true;
+}
+
+// Checks the configured level-one loss target and its minimum across progression levels.
+// The automation framework owns the test; its temporary world owns the game-state actor and subsystem.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFeatureLossLimitSmokeTest, "Feature.Smoke.SessionLossLimit",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFeatureLossLimitSmokeTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
+	AFeatureGameState* State = World->SpawnActor<AFeatureGameState>();
+	UFeatureGameplaySession* Session = World->GetSubsystem<UFeatureGameplaySession>();
+	Session->GameState = State;
+
+	State->StartSession(false, 1);
+	TestEqual(TEXT("Level one uses the new 100-bounce base target"), Session->GetSessionBouncesToLose(), 100);
+	State->StartSession(false, 2);
+	TestEqual(TEXT("The target decreases by one at level two"), Session->GetSessionBouncesToLose(), 99);
+	State->StartSession(false, 52);
+	TestEqual(TEXT("The target stops at the configured 50-bounce minimum"), Session->GetSessionBouncesToLose(), 50);
+
+	World->DestroyWorld(false);
+	return true;
+}
+
+// Checks that player contact retires the ball and routes it through the replacement pool.
+// The automation framework owns the test; the temporary world owns the pawn, controller, and pooled balls.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFeaturePlayerBallReplacementSmokeTest, "Feature.Smoke.PlayerBallReplacement",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
+	UFeatureGameplaySession* Session = World->GetSubsystem<UFeatureGameplaySession>();
+	Session->SessionState = UFeatureGameplaySession::ESessionState::Playing;
+	Session->BallSpawnBounds = FBox(FVector(-100.0f), FVector(100.0f));
+	Session->BallSpawner.Prewarm(*World, 1);
+	AFeatureBall* Ball = Session->BallSpawner.Spawn(*World, FVector(0.0f, 0.0f, 500.0f));
+	Session->ObserveBall(*Ball);
+	APawn* PlayerPawn = World->SpawnActor<APawn>();
+	APlayerController* PlayerController = World->SpawnActor<APlayerController>();
+	PlayerController->Possess(PlayerPawn);
+	bool bPlayerContactAnnounced = false;
+	Session->OnPlayerBallContact.AddLambda([&bPlayerContactAnnounced, PlayerPawn](APawn& ContactedPawn)
+	{
+		bPlayerContactAnnounced = &ContactedPawn == PlayerPawn;
+	});
+
+	Session->HandleBallContact(*Ball, *PlayerPawn);
+	TestTrue(TEXT("Player contact is published"), bPlayerContactAnnounced);
+	TestFalse(TEXT("The contacted ball is retired"), Ball->IsActive());
+	TestEqual(TEXT("Retirement schedules one replacement"), Session->PendingBallReplacements, 1);
+	Session->SpawnReplacementBall();
+	TestTrue(TEXT("The replacement reuses the retired ball"), Ball->IsActive());
+	TestEqual(TEXT("Replacement does not grow the prewarmed pool"), Session->BallSpawner.GetSpawnedBalls().Num(), 1);
+
 	World->DestroyWorld(false);
 	return true;
 }

@@ -79,7 +79,7 @@ The renamed game uses a `CrazyBalls` save slot. Saves from the former `FeatureSa
 
 ### Smoke checks
 
-After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for the `Feature.Smoke` tests, which check menu definitions, session-state counters and outcomes, ball-pool reuse, and save serialization. Reports and logs are stored under `Intermediate/FeatureSmoke`. These checks do not replace a playthrough or exercise the rendered UI.
+After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for the `Feature.Smoke` checks: menu definitions, session state, ball-pool reuse and player-contact replacement, loss-limit progression and minimum, save serialization, and temporary player-speed boosts including timer expiry and stacking. Reports and logs are stored under `Intermediate/FeatureSmoke`. These checks do not replace a playthrough or exercise the rendered UI.
 
 ### Package for Win64
 

@@ -136,4 +136,4 @@ These goals will guide future tasks:
 
 ### To do
 
-1. Gauntlet's editor startup logs repeated "LogAutomationTest: Error: Condition failed" messages before the project smoke tests start. All four Feature.Smoke tests pass; the source of the startup messages is not yet identified.
+1. Gauntlet automation is currently blocked by editor startup. Earlier, four `Feature.Smoke` checks passed while repeated `LogAutomationTest: Error: Condition failed` messages appeared before them. On November 8, 2026, the runner exited with `Engine initialization failed (InitializationFailure, ExitCode=-1)` before creating the editor log, so no tests ran. The cause remains unknown.
