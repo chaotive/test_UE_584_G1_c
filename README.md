@@ -105,6 +105,8 @@ Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySessi
 
 The four menu views demonstrate declarative differences over shared construction: common layout and behavior have one implementation, and each view supplies its heading and actions. The game mode manages menus; the player controller manages HUD lifetime. Widgets own their Observer bindings, so display changes stay within UI code and controllers do not need to know which state events update which labels.
 
+The [saved-progress panel](Source/TestFeatures/Features/UI/Widgets/FeatureSavedProgressPanel.cpp) owns asynchronous preview loading, summary formatting, and deletion observation. The menu composes it and updates Continue/Delete Save from its saved-level and slot-availability events, with an initial read when the binding is attached.
+
 <details>
 <summary>Class reference</summary>
 
@@ -112,6 +114,7 @@ The four menu views demonstrate declarative differences over shared construction
 | --- | --- | --- |
 | Menu definitions | `FFeatureMenuViews` | Creates `FFeatureMenuView` values for `UFeatureMainMenu` |
 | Shared menu | `UFeatureMainMenu` | Extends `UUserWidget` |
+| Saved-progress preview | `UFeatureSavedProgressPanel` | Extends `UUserWidget`; composed by the menu |
 | Gameplay HUD | `UFeatureGameplayHUD` | Extends `UUserWidget` |
 | Debug HUD | `UFeatureDebugHUD` | Extends `UUserWidget` |
 | Ball panel | `UFeatureBallPanel` | Extends `UUserWidget` |

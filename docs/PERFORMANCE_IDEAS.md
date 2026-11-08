@@ -49,7 +49,7 @@ Physics bodies, shadows, materials, and the scene itself may dominate CPU or GPU
 
 Consider keeping the current phase/result separate from a bounded recent-history buffer, with full details in logs. Cache stable slot/path presentation only if useful. This also keeps diagnostics readable.
 
-[Saved progress](../Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h) contains a chronological session array without a retention limit. [Storage](../Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) copies progress into a save object; loading and state initialization also copy snapshots. Asynchronous disk access does not make all object creation, snapshot copying, or serialization asynchronous. [The startup menu](../Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) loads full progress to show level and aggregate total.
+[Saved progress](../Source/TestFeatures/Features/GameWorkflow/FeatureSaveGame.h) contains a chronological session array without a retention limit. [Storage](../Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) copies progress into a save object; loading and state initialization also copy snapshots. Asynchronous disk access does not make all object creation, snapshot copying, or serialization asynchronous. [The saved-progress panel](../Source/TestFeatures/Features/UI/Widgets/FeatureSavedProgressPanel.cpp) loads full progress for the menu summary; moving that responsibility out of the menu does not reduce the data loaded.
 
 Measure save size and game-thread preparation with increasing session counts. A retention/archive policy or summary-oriented layout would change persistence behavior and needs a deliberate decision. Avoid an independently maintained second source of truth for totals.
 

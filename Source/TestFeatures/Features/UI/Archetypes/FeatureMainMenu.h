@@ -2,11 +2,12 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
+#include "Misc/Optional.h"
 #include "FeatureMainMenu.generated.h"
 
 class UButton;
 class UGameInstance;
-class UTextBlock;
+class UFeatureSavedProgressPanel;
 class UTexture2D;
 class UVerticalBox;
 
@@ -32,12 +33,12 @@ public:
 	void Dismiss();
 
 protected:
-	// Observes save deletion while this menu is displayed.
-	// No pointer or reference parameters or return value; the subsystem is owned by the game instance.
+	// Binds save-related buttons to the child panel's current preview.
+	// No pointer or reference parameters; the menu owns its child widget and weak native event binding.
 	virtual void NativeConstruct() override;
 
-	// Stops observing save deletion when the menu is removed.
-	// No pointer or reference parameters or return value; releases the weak event binding.
+	// Removes the preview binding when the menu is detached.
+	// No pointer or reference parameters or return value; releases the weak native event binding.
 	virtual void NativeDestruct() override;
 
 	// Routes Escape to Resume or Exit for the pause and initial menus.
@@ -54,8 +55,8 @@ private:
 	void BuildHeader(UVerticalBox& Rows, const FFeatureMenuView& View);
 
 	// Adds the saved game summary below the menu actions.
-	// Rows is borrowed; the save and initial-menu flags are passed by value.
-	void AddSaveSummary(UVerticalBox& Rows, bool bHasSave, bool bInitialMenu);
+	// Rows is borrowed and the initial-menu flag is copied; the child widget owns preview loading and presentation.
+	void AddSaveSummary(UVerticalBox& Rows, bool bInitialMenu);
 
 	// Retains the startup Continue button while its saved level is read.
 	// UPROPERTY tracks a strong widget-tree-owned button pointer for garbage collection.
@@ -67,19 +68,19 @@ private:
 	UPROPERTY()
 	TObjectPtr<UButton> DeleteSaveButton;
 
-	// Retains the save summary while the menu is visible.
-	// UPROPERTY tracks a strong widget-tree-owned text pointer for garbage collection.
+	// Retains the child that owns saved-progress loading and summary presentation.
+	// UPROPERTY tracks the strong child-widget pointer for garbage collection.
 	UPROPERTY()
-	TObjectPtr<UTextBlock> SaveSummary;
+	TObjectPtr<UFeatureSavedProgressPanel> SavedProgressPanel;
+
+	// Retains the declarative Continue caption used when no readable level is available.
+	// FText owns a localized value copied from the view definition without widget ownership.
+	FText DefaultContinueLabel;
 
 	// Keeps the generated logo texture available while this menu is displayed.
 	// UPROPERTY tracks the strong TObjectPtr to the transient texture for garbage collection.
 	UPROPERTY()
 	TObjectPtr<UTexture2D> LogoTexture;
-
-	// Identifies the latest save preview so deleted data cannot reappear in the menu.
-	// uint32 stores a generation token by value without pointer ownership.
-	uint32 PreviewGeneration = 0;
 
 	// Identifies whether this menu supports Escape to resume.
 	// bool stores the input behavior by value.
@@ -94,8 +95,8 @@ private:
 	UButton* AddAction(UVerticalBox& Rows, const FText& Label);
 
 	// Creates a view-defined button and connects its menu action.
-	// Rows and Item are borrowed references; bHasSave is passed by value and the widget tree owns the button.
-	void AddViewAction(UVerticalBox& Rows, const FFeatureMenuItem& Item, bool bHasSave);
+	// Rows and Item are borrowed references; the widget tree owns the button.
+	void AddViewAction(UVerticalBox& Rows, const FFeatureMenuItem& Item);
 
 	// Publishes the New Game selection.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.
@@ -122,14 +123,14 @@ private:
 	UFUNCTION()
 	void HandleRetry();
 
-	// Requests deletion of the saved game from the persistence subsystem.
+	// Routes the Delete Save action to the child that owns its preview.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.
 	UFUNCTION()
 	void HandleDeleteSave();
 
-	// Refreshes menu controls after a save deletion attempt.
-	// bSucceeded is passed by value without pointers or references.
-	void HandleSaveDeleted(bool bSucceeded);
+	// Updates Continue and Delete Save from the child's narrow preview state.
+	// SavedLevel is a borrowed const optional reference and bHasSave is copied; no storage data is retained.
+	void UpdateSaveActions(const TOptional<int32>& SavedLevel, bool bHasSave);
 
 	// Publishes the Exit selection.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.
