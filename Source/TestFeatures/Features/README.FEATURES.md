@@ -14,7 +14,7 @@ Start with the startup flow below. The later sections explain the event connecti
 
 | Folder | Classes and types |
 | --- | --- |
-| `Gameplay` | Ball, level bounds, bounce game state, and the ball-to-state event controller |
+| `Gameplay` | Ball manager, ball, level bounds, bounce game state, and the ball-to-state event controller |
 | `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
 | `UI` | Menu and HUD archetypes, action definitions grouped by purpose in `UI/Controllers`, declarative menu views, and panel widgets |
 
@@ -33,7 +33,7 @@ The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) conta
 | `UFeatureLevelRules` | Bridges scripted limits, session outcomes, and level progression. | [FeatureLevelRules.cpp](../Features_GameLogic/FeatureLevelRules.cpp) |
 | `UFeatureBallRules` | Bridges scripted contact effects and replacement eligibility. | [FeatureBallRules.cpp](../Features_GameLogic/FeatureBallRules.cpp) |
 | `UFeaturePlayerRules` | Connects scripted player-speed rules to movement, contacts, and expiry timers. | [FeaturePlayerRules.cpp](../Features_GameLogic/FeaturePlayerRules.cpp) |
-| `FFeatureBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) |
+| `UFeatureBallManager` | Creates, configures, and reuses balls; schedules replacements. | [FeatureBallManager.cpp](Gameplay/FeatureBallManager.cpp) |
 | `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](Gameplay/FeatureBall.cpp) |
 | `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](Gameplay/FeatureLevelBounds.cpp) |
 | `AFeatureGameState` | Stores the shared bounce total and chronological session records. | [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp) |
@@ -49,7 +49,7 @@ The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) conta
 
 An **Actor** is an object that lives in Unreal's world. It need not be visible: balls and the game state are both actors. A **component** supplies part of an actor's behavior; our mesh component provides the sphere's visible shape and physical body.
 
-The state controller and gameplay session are Unreal objects with no position or physics. The `F` spawner is a plain C++ helper stored directly inside the gameplay session.
+The state controller and gameplay session are Unreal objects with no position or physics. The ball manager is a world subsystem that owns weak references to its pooled actors.
 
 We keep dependency knowledge close to the relationship that needs it. Balls publish events without knowing the shared state; the game-state controller translates those events into state changes. The HUD owns its own state subscription, while the player controller only manages the HUD's presence on screen. This is the general decoupling rule in `AGENTS.MD`: avoid spreading one feature's relationships into unrelated classes, without adding abstraction solely for its own sake.
 
@@ -74,14 +74,14 @@ Unreal creates `UFeatureGameplaySession` as a world subsystem. Our `InitGameStat
 ```cpp
 GameStateController = NewObject<UFeatureGameStateController>(this);
 GameStateController->Initialize(State);
-BallSpawner.OnBallCreated.AddUObject(GameStateController.Get(), &UFeatureGameStateController::ObserveBall);
+BallManager->OnBallCreated.AddUObject(GameStateController.Get(), &UFeatureGameStateController::ObserveBall);
 ```
 
 Read those lines as:
 
 1. Create a controller object, using the gameplay session as its **Outer**, its containing Unreal object.
 2. Give it the existing game state to update.
-3. Tell the spawner to notify that controller whenever it creates a ball.
+3. Tell the ball manager to notify that controller whenever a pool entry is created.
 
 The world owns the session subsystem, and the session retains its controller through `UPROPERTY`. Other features retrieve the session with `World.GetSubsystem<UFeatureGameplaySession>()` to subscribe without depending on the game-mode class.
 
@@ -89,12 +89,12 @@ The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureG
 
 The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. It publishes `OnStarted`, `OnResumed`, `OnPaused`, and `OnEnded(bVictory)`. The game mode subscribes during initialization and removes its bindings during `EndPlay`. New Game and Continue start the session. Resume returns from the pause menu. A successful `PauseSession()` request publishes the pause event. `FinishSession(bVictory)` publishes the result when a gameplay objective supplies an outcome.
 
-On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then creates the initial batch. Continue keeps the world paused until loading finishes.
+On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then asks [the ball manager](Gameplay/FeatureBallManager.cpp) to create the initial batch. Continue keeps the world paused until loading finishes.
 
 In non-Shipping builds, `FFeatureConsoleCommands` registers `Feature.NewGame` and routes it to the same action as the New Game button when the command's world is at the startup menu. It clears the existing slot before starting at zero. [Command registration and handler](../../test_UE_584_G1_c/FeatureConsoleCommands.cpp)
 
 ```cpp
-BallSpawner.SpawnMultiple(World, BallCount, SpawnBounds.Min, SpawnBounds.Max);
+BallManager->SpawnMultiple(BallCount, SpawnBounds);
 ```
 
 The startup order is **create state → bind session and state controller → present menu → create enclosure → spawn pawn and HUD → initialize progress and spawn balls**.
@@ -132,7 +132,7 @@ AFeatureBall* Ball = World.SpawnActor<AFeatureBall>(Location, FRotator::ZeroRota
 
 Unreal constructs the actor and its inherited mesh component. The ball constructor caches that component once, loads the built-in sphere, prepares physics, and creates its bouncy material. The ball applies the material in `BeginPlay()`, when physics can update the mesh. Initially, the ball is hidden and inactive.
 
-The spawner assigns `Training_Ball_0`, then `Training_Ball_1`, and so on, using the pool list index. It sets both the internal object name and the editor's Outliner label. It adds the actor to `SpawnedBalls` and broadcasts `OnBallCreated` before activation.
+The manager assigns `Training_Ball_0`, then `Training_Ball_1`, and so on, using the pool list index. It sets both the internal object name and the editor's Outliner label. It adds the actor to `SpawnedBalls` and broadcasts `OnBallCreated` before activation.
 
 The controller's `ObserveBall()` subscribes to that actor's bounce event. Reusing the actor skips `CreateBall()`, so it also skips this subscription step. Each actor retains its original name, list slot, and listener connection.
 
@@ -214,13 +214,13 @@ Go deeper: [Multicast Delegates](https://dev.epicgames.com/documentation/en-us/u
 
 ## 5. Retirement: return to the pool
 
-After broadcasting the configured number of non-player bounces (five by default), the ball calls `Deactivate()`. A player contact also deactivates the ball. Either retirement notifies the session, which schedules a replacement for the next tick while gameplay remains active. Deactivation clears linear and angular velocity, disables physics and collision, and hides the ball.
+After broadcasting the configured number of non-player bounces (five by default), the ball calls `Deactivate()`. A player contact also deactivates the ball. Either retirement notifies the ball manager, which schedules a replacement for the next tick while gameplay remains active. Deactivation clears linear and angular velocity, disables physics and collision, and hides the ball.
 
 It still exists in the world and in the pool. Task 8 replaced task 7's earlier `Destroy()` behavior with this return-for-reuse behavior. `EndPlay()` is not called just because a ball is deactivated.
 
 A later `Spawn()` request finds that inactive actor and calls `Activate()` again. No new actor, material, or event subscription is needed for that reuse.
 
-The session prewarms one pool entry per initial ball, then requests the initial batch once. Retirement after either player contact or the rebound limit triggers a replacement while the session is active.
+The ball manager prewarms one pool entry per initial ball, then requests the initial batch once. Retirement after either player contact or the rebound limit triggers a replacement while the session is active.
 
 ### Example to try: prove that an actor is reused
 
@@ -228,9 +228,9 @@ Inside a gameplay-session method, the following experiment exercises explicit re
 
 ```cpp
 UWorld& World = *GameState->GetWorld();
-AFeatureBall* First = BallSpawner.Spawn(World, FVector(0.0f, 200.0f, 500.0f));
+AFeatureBall* First = BallManager->Spawn(FVector(0.0f, 200.0f, 500.0f));
 First->Deactivate();
-AFeatureBall* Reused = BallSpawner.Spawn(World, FVector(300.0f, 200.0f, 500.0f));
+AFeatureBall* Reused = BallManager->Spawn(FVector(300.0f, 200.0f, 500.0f));
 ```
 
 With no other available ball earlier in the pool, `First` and `Reused` point to the same actor. Its name stays the same, its location changes, and the log reports `Reusing pooled ball`. This is a temporary experiment.
@@ -241,7 +241,7 @@ Stopping the session ends the world actors' play. Balls and the game state log `
 
 The controller is a `UObject`, so it has no actor `BeginPlay()` or `EndPlay()` callbacks. It is initialized explicitly. Unreal's object lifetime system cleans it up when it is no longer referenced. Weak delegate bindings do not prolong that lifetime.
 
-A new Play session gets a new game-mode instance, its own spawner list, a new controller, and a game state whose total is restored during paused in-game loading. The HUD remains rendered and operative during asynchronous disk operations.
+A new Play session gets a new game-mode instance, a world-owned ball manager and pool, a new controller, and a game state whose total is restored during paused in-game loading. The HUD remains rendered and operative during asynchronous disk operations.
 
 The player controller removes its debug widget in EndPlay. Interactive Save game / Save and quit operations happen before teardown so the HUD can stay operative. Editor Stop and forced teardown use a synchronous fallback.
 
@@ -255,7 +255,7 @@ The local Third Person player controller requests the overlay after New Game or 
 DebugHUD = FFeatureDebugHUDSpawner::Spawn(*this);
 ```
 
-This local-player check is meaningful: the screen belongs to a player on this machine, not to a remote player's controller. The helper has no dependency on the ball spawner, ball events, or game state.
+This local-player check is meaningful: the screen belongs to a player on this machine, not to a remote player's controller. The helper has no dependency on the ball manager, ball events, or game state.
 
 `FFeatureDebugHUDSpawner::Spawn()` calls `CreateWidget<UFeatureDebugHUD>()` with the player controller as the owning player. It then calls `AddToPlayerScreen(10)` and returns the widget. The controller stores it in a `UPROPERTY`-tracked `TObjectPtr` so it remains reachable throughout the player's session. See Epic's [AddToPlayerScreen](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/UMG/UUserWidget/AddToPlayerScreen?lang=en-US) reference for player-specific viewport placement and layering.
 
@@ -300,7 +300,7 @@ The panel displays TRAINING DEBUG HUD, Crazy balls, the current level, Total bou
 | `AFeatureBall* Ball` | A raw pointer to a world actor; it does not mean the caller should delete it. |
 | `UPROPERTY() TObjectPtr<UStaticMeshComponent> BallMesh` | A persistent Unreal-tracked reference to the existing component. |
 | `TArray<TWeakObjectPtr<AFeatureBall>> SpawnedBalls` | A growable list that observes actors without keeping them alive through its references. |
-| `const TArray<...>& GetSpawnedBalls() const` | Read the existing list without copying it or modifying the spawner through this method. |
+| `const TArray<...>& GetSpawnedBalls() const` | Read the existing list without copying it or modifying the manager through this method. |
 
 `TObjectPtr` with `UPROPERTY` participates in garbage-collection tracking. A weak pointer can become invalid when its actor is destroyed; `FindAvailableBall()` checks the result of `Get()` before using it. Inactive pooled actors remain world actors even though our list is weak. Explicit actor destruction is still possible.
 
@@ -319,7 +319,7 @@ These are tradeoffs visible in the implementation, not benchmark results. The cu
 | Disable physics and collision while inactive | Returned balls stop simulating and colliding. | Active balls still require physics work; pooling does not make their simulation cheaper. |
 | Cache `BallMesh` | Makes the dependency explicit and avoids repeated accessor calls. | `GetStaticMeshComponent()` is already a simple accessor, not a world search. Do not assume this change gives a meaningful frame-rate gain. |
 
-The controller adds an event dispatch and a function call to each accepted bounce. Broadcasting runs listeners on the same call path; an expensive listener would delay the physics-hit handler too. We bind once per actor creation, which avoids accumulating duplicate callbacks on pool reuse. Neither the controller nor the spawner adds a polling tick loop.
+The controller adds an event dispatch and a function call to each accepted bounce. Broadcasting runs listeners on the same call path; an expensive listener would delay the physics-hit handler too. We bind once per actor creation, which avoids accumulating duplicate callbacks on pool reuse. Neither the controller nor the manager adds a polling tick loop.
 
 The debug overlay builds its widget tree once per local player controller. It has no custom tick or per-frame state polling; only the bounce text changes when a state event arrives. UMG still has layout and rendering costs, and each local player gets a separate widget. Building UI in C++ does not automatically make the same underlying controls faster than a Widget Blueprint; here it makes creation explicit and keeps the example self-contained. The HUD visibility mode controls pointer routing, not UI drawing costs.
 
@@ -339,13 +339,13 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 
 1. Use the Third Person game mode. In its Blueprint Class Defaults, find `Training_Ball` and adjust count and minimum/maximum spawn corners. Coordinates are world centimeters; minimum must not exceed maximum on any axis.
 2. Press Play, choose **New Game**, and search the World Outliner for `Training_Ball_`. Inactive pooled actors can remain listed while hidden in the game view.
-3. Filter Output Log by `FeatureBallSpawner`, `FeatureBall`, `FeatureGameStateController`, or `FeatureGameState` to follow each part of the flow.
+3. Filter Output Log by `FeatureBallManager`, `FeatureBall`, `FeatureGameStateController`, or `FeatureGameState` to follow each part of the flow.
 4. Look for the dark `TRAINING DEBUG HUD` panel in the top-left corner. It appears during Play through the Third Person player controller; there is no widget asset to place in the level.
 5. Read the total through `GetTotalBounces()` or inspect `Progress` on the game-state actor. Expand its `Sessions` array to inspect session statistics. The debug panel displays the aggregate bounce total through state-change events.
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) → [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) → [FeatureBall.cpp](Gameplay/FeatureBall.cpp) → [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) → [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) → [FeatureBallManager.cpp](Gameplay/FeatureBallManager.cpp) → [FeatureBall.cpp](Gameplay/FeatureBall.cpp) → [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) → [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp).
 
 ## In-game load/save (tasks 14–16)
 
@@ -398,7 +398,7 @@ This refactor changes ownership boundaries and function size, not the intended p
 
 `AFeatureGameState::Progress` owns the saved game's aggregate bounce total and chronological `Sessions` array. Each record stores `StartedAtUtc`, `TotalBounces`, `PlayerBallCollisions`, and `Result`. The result is `InProgress`, `Victory`, or `Defeat`. New Game resets progress; Continue restores it before adding the active session. Pause and resume use the existing record.
 
-Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. [FeatureBallRules.as](../Features_GameLogic/FeatureBallRules.as) decides bounce counting, retirement, and replacement eligibility: a player-hit ball retires without counting that contact as a bounce, and the gameplay session schedules its replacement while playing. The native ball applies those decisions. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
+Balls publish blocking contacts separately from impulse-based bounces. The state controller counts contacts with player-controlled pawns, including character sweeps that report zero impulse. [FeatureBallRules.as](../Features_GameLogic/FeatureBallRules.as) decides bounce counting, retirement, and replacement eligibility: a player-hit ball retires without counting that contact as a bounce, and the ball manager schedules its replacement while playing. The native ball applies those decisions. Ball and player capsule collision responses explicitly block one another. Counts represent hit callbacks. Existing save and teardown paths persist the complete progress snapshot. Copying a snapshot costs memory and time proportional to the session-history length.
 
 The session observes `OnSessionStatsChanged` to check its current record against the configured limits. Level-one defaults are ten player-ball hit callbacks for victory and one hundred non-player bounces for defeat. The saved `CurrentLevel` starts at the game-mode initial level (1 by default) and advances once on victory; defeat and Retry keep it unchanged. The limits are calculated by [FeatureLevelRules.as](../Features_GameLogic/FeatureLevelRules.as) through `UFeatureLevelRules`; configuration and saved progress stay in C++. The configured per-level changes and minimum defeat limit (50 by default) are inputs to that script. New Game deletes the slot and initializes fresh progress. Reaching either target calls `OnGameplaySessionEnded`, which pauses the world, records the outcome, freezes further statistics, publishes `OnEnded`, and requests a save. The game mode presents the fullscreen Victory or Defeat menu. Victory's Continue reloads the arena and starts the next saved level; defeat's Retry reloads it and starts a continued session at the same level. Persistence completion and manual resume recheck deferred statistics.
 

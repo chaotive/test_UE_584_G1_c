@@ -2,11 +2,11 @@
 
 #include "FeatureGameState.h"
 #include "FeatureBall.h"
+#include "FeatureBallManager.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
 #include "Features/UI/Controllers/FeatureMenuActions.h"
-#include "Features_NonUE/FeatureBallSpawner.h"
 #include "Features_GameLogic/FeatureLevelRules.h"
 #include "Engine/World.h"
 #include "Engine/HitResult.h"
@@ -152,19 +152,16 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFeaturePlayerBallReplacementSmokeTest, "Featur
 bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
-	UFeatureGameplaySession* Session = World->GetSubsystem<UFeatureGameplaySession>();
-	Session->SessionState = UFeatureGameplaySession::ESessionState::Playing;
-	Session->BallSpawnBounds = FBox(FVector(-100.0f), FVector(100.0f));
-	Session->BallSpawner.Prewarm(*World, 1);
-	AFeatureBall* Ball = Session->BallSpawner.Spawn(*World, FVector(0.0f, 0.0f, 500.0f));
-	Session->ObserveBall(*Ball);
+	UFeatureBallManager* Manager = World->GetSubsystem<UFeatureBallManager>();
+	Manager->Start(1, 1.0f, 1.0f, 5, FBox(FVector(-100.0f), FVector(100.0f)));
+	AFeatureBall* Ball = Manager->GetSpawnedBalls()[0].Get();
 	APawn* PlayerPawn = World->SpawnActor<APawn>();
 	APlayerController* PlayerController = World->SpawnActor<APlayerController>();
 	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
 	PlayerController->Possess(PlayerPawn);
 	TestTrue(TEXT("The possessed pawn has a non-bot player state"), PlayerPawn->IsPlayerControlled());
 	bool bPlayerContactAnnounced = false;
-	Session->OnPlayerBallContact.AddLambda([&bPlayerContactAnnounced, PlayerPawn](APawn& ContactedPawn)
+	Manager->OnPlayerBallContact.AddLambda([&bPlayerContactAnnounced, PlayerPawn](APawn& ContactedPawn)
 	{
 		bPlayerContactAnnounced = &ContactedPawn == PlayerPawn;
 	});
@@ -172,12 +169,12 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 	Ball->OnBallHit(nullptr, PlayerPawn, nullptr, FVector::ZeroVector, FHitResult());
 	TestTrue(TEXT("Player contact is published"), bPlayerContactAnnounced);
 	TestFalse(TEXT("The contacted ball is retired"), Ball->IsActive());
-	TestEqual(TEXT("Retirement schedules one replacement"), Session->PendingBallReplacements, 1);
+	TestEqual(TEXT("Retirement schedules one replacement"), Manager->PendingBallReplacements, 1);
 	TestEqual(TEXT("A swept player contact does not count as a non-player bounce"), Ball->BounceCount, 0);
 	World->GetTimerManager().Tick(0.01f);
 	TestTrue(TEXT("The replacement reuses the retired ball"), Ball->IsActive());
-	TestEqual(TEXT("Replacement does not grow the prewarmed pool"), Session->BallSpawner.GetSpawnedBalls().Num(), 1);
-	TestEqual(TEXT("The scheduled replacement is consumed"), Session->PendingBallReplacements, 0);
+	TestEqual(TEXT("Replacement does not grow the prewarmed pool"), Manager->GetSpawnedBalls().Num(), 1);
+	TestEqual(TEXT("The scheduled replacement is consumed"), Manager->PendingBallReplacements, 0);
 
 	Ball->Configure(1.0f, 1.0f, 2);
 	Ball->OnBallHit(nullptr, nullptr, nullptr, FVector::ZeroVector, FHitResult());
@@ -189,40 +186,39 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 	Ball->OnBallHit(nullptr, nullptr, nullptr, FVector::UpVector, FHitResult());
 	TestEqual(TEXT("The rebound limit counts the last bounce"), Ball->BounceCount, 2);
 	TestFalse(TEXT("The scripted rebound limit retires the ball"), Ball->IsActive());
-	TestEqual(TEXT("Non-player retirement also schedules replacement"), Session->PendingBallReplacements, 1);
+	TestEqual(TEXT("Non-player retirement also schedules replacement"), Manager->PendingBallReplacements, 1);
 
-	Session->SessionState = UFeatureGameplaySession::ESessionState::Paused;
-	Session->SpawnReplacementBall();
+	Manager->Pause();
+	Manager->SpawnReplacementBall();
 	TestFalse(TEXT("The script defers replacement while paused"), Ball->IsActive());
-	TestEqual(TEXT("Deferred replacement remains queued"), Session->PendingBallReplacements, 1);
-	Session->SessionState = UFeatureGameplaySession::ESessionState::Playing;
-	Session->SpawnReplacementBall();
+	TestEqual(TEXT("Deferred replacement remains queued"), Manager->PendingBallReplacements, 1);
+	Manager->Resume();
 	TestTrue(TEXT("Active gameplay permits replacement again"), Ball->IsActive());
-	Session->SessionState = UFeatureGameplaySession::ESessionState::Ended;
+	Manager->Stop();
 	Ball->Deactivate();
-	TestEqual(TEXT("Retirement after the session ends schedules no replacement"), Session->PendingBallReplacements, 0);
+	TestEqual(TEXT("Retirement after the session ends schedules no replacement"), Manager->PendingBallReplacements, 0);
 
 	World->DestroyWorld(false);
 	return true;
 }
 
 // Checks that prewarmed balls are activated and reused rather than duplicated.
-// The test owns the spawner by value; the temporary world owns its ball actors.
+// The temporary world owns the manager and its pooled ball actors.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFeatureBallPoolSmokeTest, "Feature.Smoke.BallPool",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FFeatureBallPoolSmokeTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
-	FFeatureBallSpawner Spawner;
-	Spawner.Prewarm(*World, 3);
-	TestEqual(TEXT("Prewarm creates the requested pool size"), Spawner.GetSpawnedBalls().Num(), 3);
+	UFeatureBallManager* Manager = World->GetSubsystem<UFeatureBallManager>();
+	Manager->Prewarm(3);
+	TestEqual(TEXT("Prewarm creates the requested pool size"), Manager->GetSpawnedBalls().Num(), 3);
 
-	AFeatureBall* First = Spawner.Spawn(*World, FVector(0.0f, 0.0f, 500.0f));
+	AFeatureBall* First = Manager->Spawn(FVector(0.0f, 0.0f, 500.0f));
 	TestTrue(TEXT("Spawn activates a prewarmed ball"), First->IsActive());
-	TestEqual(TEXT("Spawn reuses the prewarmed pool"), Spawner.GetSpawnedBalls().Num(), 3);
+	TestEqual(TEXT("Spawn reuses the prewarmed pool"), Manager->GetSpawnedBalls().Num(), 3);
 	First->Deactivate();
-	AFeatureBall* Reused = Spawner.Spawn(*World, FVector(0.0f, 0.0f, 600.0f));
+	AFeatureBall* Reused = Manager->Spawn(FVector(0.0f, 0.0f, 600.0f));
 	TestTrue(TEXT("Retired ball is reused"), Reused == First && Reused->IsActive());
 	World->DestroyWorld(false);
 	return true;

@@ -1,14 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Features_NonUE/FeatureBallSpawner.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "FeatureGameplaySession.generated.h"
 
 class AFeatureGameState;
-class AFeatureBall;
-class AActor;
-class APawn;
+class UFeatureBallManager;
 class UFeatureGameStateController;
 class UFeatureSaveGameSubsystem;
 struct FFeatureGameplaySessionRecord;
@@ -22,7 +19,6 @@ class TESTFEATURES_API UFeatureGameplaySession : public UWorldSubsystem
 public:
 	DECLARE_EVENT(UFeatureGameplaySession, FSessionEvent);
 	DECLARE_EVENT_OneParam(UFeatureGameplaySession, FSessionEndedEvent, bool);
-	DECLARE_EVENT_OneParam(UFeatureGameplaySession, FPlayerBallContactEvent, APawn&);
 
 	// Announces that gameplay can provision the local player and HUD.
 	// Native multicast event stores weak UObject bindings; no pointer or reference arguments.
@@ -39,10 +35,6 @@ public:
 	// Announces the gameplay result so observers can present the end screen.
 	// Native multicast event passes the victory bool by value and stores weak UObject bindings.
 	FSessionEndedEvent OnEnded;
-
-	// Announces player contact with a ball to gameplay features.
-	// The native event borrows the world-owned player pawn without transferring ownership.
-	FPlayerBallContactEvent OnPlayerBallContact;
 
 	// Connects gameplay events and configures the level-one victory and defeat limits.
 	// State is borrowed; limits and per-level adjustments are passed by value.
@@ -77,10 +69,9 @@ public:
 	int32 GetSessionBouncesToLose() const;
 
 private:
-	// Grants focused automation checks access to loss-limit and contact-replacement behavior.
+	// Grants focused automation checks access to loss-limit behavior.
 	// The test classes retain no runtime objects and are compiled only with development automation.
 	friend class FFeatureLossLimitSmokeTest;
-	friend class FFeaturePlayerBallReplacementSmokeTest;
 
 	enum class ESessionState : uint8 { Ready, Playing, Paused, Ended };
 
@@ -108,18 +99,6 @@ private:
 	// int32 stores the decrement by value.
 	int32 BouncesDecreasePerLevel = 0;
 
-	// Stores the uniform scale for newly created pooled balls.
-	// float stores the scale by value.
-	float BallSize = 1.0f;
-
-	// Stores the launch speed multiplier for newly created pooled balls.
-	// float stores the multiplier by value.
-	float BallSpeedMultiplier = 1.0f;
-
-	// Stores the rebound limit for newly created pooled balls.
-	// int32 stores the positive limit by value.
-	int32 BallReboundLimit = 5;
-
 	// Ends the current session once it reaches its victory or defeat limit.
 	// Stats borrows a read-only state-owned session record without transferring ownership.
 	void EvaluateSessionLimits(const FFeatureGameplaySessionRecord& Stats);
@@ -127,30 +106,6 @@ private:
 	// Rechecks deferred statistics once persistence releases its gameplay pause.
 	// Status is a borrowed string reference and bBusy is passed by value without ownership.
 	void HandlePersistenceStatusChanged(const FString& Status, bool bBusy);
-
-	// Subscribes the session to player contacts for each ball created by the pool.
-	// Ball is a borrowed world-owned actor reference; the event holds a weak UObject binding.
-	void ObserveBall(AFeatureBall& Ball);
-
-	// Publishes player contacts for independent reactions such as movement bonuses.
-	// Ball and OtherActor are borrowed world-owned references without ownership transfer.
-	void HandleBallContact(AFeatureBall& Ball, AActor& OtherActor);
-
-	// Schedules a replacement after any ball retires during gameplay.
-	// Ball is a borrowed world-owned actor reference without ownership transfer.
-	void HandleBallRetired(AFeatureBall& Ball);
-
-	// Launches a replacement from the session's configured spawn bounds on the next tick.
-	// No pointer or reference parameters or return value; the world owns the spawned actor.
-	void SpawnReplacementBall();
-
-	// Retains the spawn region for replacements throughout the gameplay session.
-	// FBox stores the bounds by value without pointer ownership.
-	FBox BallSpawnBounds;
-
-	// Tracks retired-ball replacements until they can launch during gameplay.
-	// int32 stores the pending count by value without pointer ownership.
-	int32 PendingBallReplacements = 0;
 
 	// Observes the world's shared bounce state throughout the session.
 	// A weak UObject pointer observes the world-owned actor without retaining its lifetime.
@@ -165,9 +120,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<UFeatureGameStateController> GameStateController;
 
-	// Creates balls and retains the pool's actor observations.
-	// The non-UObject spawner is stored by value and owns its list of weak actor pointers.
-	FFeatureBallSpawner BallSpawner;
+	// Coordinates the world-owned ball manager through session lifecycle requests.
+	// TWeakObjectPtr observes the world subsystem without retaining its lifetime.
+	TWeakObjectPtr<UFeatureBallManager> BallManager;
 
 	// Reports whether persistence currently owns the world's pause state.
 	// Returns bool by value with no pointer or reference parameters.
@@ -176,8 +131,4 @@ private:
 	// Reports whether gameplay can accept a pause or end request.
 	// Returns bool by value with no pointer or reference parameters.
 	bool CanLeaveGameplay() const;
-
-	// Queries the scripted replacement policy using the current native session phase.
-	// Returns bool by value with no pointer or reference parameters.
-	bool CanReplaceBalls() const;
 };

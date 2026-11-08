@@ -79,7 +79,7 @@ Each view highlights its own boundary: gameplay events, UI construction, session
 
 ### Gameplay architecture
 
-![Square gameplay architecture diagram: session, arena, pool, ball, state bridge and shared state.](docs/images/feature-gameplay-flow.png)
+![Square gameplay architecture diagram: session, arena, ball manager, ball, state bridge and shared state.](docs/images/feature-gameplay-flow.png)
 
 The ball cycle demonstrates Observer events and event-to-state translation. Balls report contacts and bounces; a focused bridge gives those events meaning as session statistics. The session observes the resulting score changes. This keeps physics behavior independent of shared state and UI. Pool ownership and reuse are detailed in the [non-UE helper view](#non-ue-helper-architecture).
 
@@ -90,14 +90,14 @@ The ball cycle demonstrates Observer events and event-to-state translation. Ball
 | --- | --- | --- |
 | Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem` |
 | Arena bounds | `AFeatureLevelBounds` | Extends `AActor` |
-| Ball pool | `FFeatureBallSpawner` | Creates `AFeatureBall` for `UFeatureGameplaySession` |
+| Ball manager | `UFeatureBallManager` | Extends `UWorldSubsystem`; owns pooling, contacts, and replacement scheduling |
 | Physics ball | `AFeatureBall` | Extends `AStaticMeshActor` |
 | State event bridge | `UFeatureGameStateController` | Extends `UObject` |
 | Game state | `AFeatureGameState` | Extends `AGameStateBase` |
 
 </details>
 
-Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [pool](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) · [ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [state bridge](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp).
+Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [ball manager](Source/TestFeatures/Features/Gameplay/FeatureBallManager.cpp) · [ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [state bridge](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp).
 
 ### UI architecture
 
@@ -177,17 +177,15 @@ Source: [AS rules](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) 
 
 ### Non-UE helper architecture
 
-![Square non-UE helper architecture diagram: session, save coordinator and player controller call ball-pool, storage and debug-HUD factory helpers.](docs/images/feature-nonue-flow.png)
+![Square non-UE helper architecture diagram: save coordinator and player controller call storage and debug-HUD factory helpers.](docs/images/feature-nonue-flow.png)
 
-This view focuses on ownership and narrow helper APIs. The session owns its pool by value; weak references observe world-owned actors without retaining them. Storage and HUD factory helpers contain the engine API details needed by their callers. These are plain C++ classes using Unreal types, with no UObject lifetime of their own. Event scoring belongs to the gameplay view, rendered composition to the UI view, and pause/result coordination to the session view.
+This view focuses on ownership and narrow helper APIs. Storage and HUD factory helpers contain the engine API details needed by their callers. These are plain C++ classes using Unreal types, with no UObject lifetime of their own. Event scoring belongs to the gameplay view, rendered composition to the UI view, and pause/result coordination to the session view.
 
 <details>
 <summary>Class and ownership reference</summary>
 
 | Diagram role | Class | Base or primary consumer |
 | --- | --- | --- |
-| Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem`; owns the pool helper by value |
-| Ball pool helper | `FFeatureBallSpawner` | Creates `AFeatureBall` for `UFeatureGameplaySession`; world owns actors |
 | Save coordinator | `UFeatureSaveGameSubsystem` | Extends `UGameInstanceSubsystem`; coordinates persistence |
 | Save storage helper | `FFeatureSaveGameStorage` | Creates `UFeatureSaveGame` snapshots for the save coordinator; also serves menu previews |
 | Player controller | `Atest_UE_584_G1_cPlayerController` | Extends `APlayerController`; retains and removes HUD widgets |
@@ -195,11 +193,11 @@ This view focuses on ownership and narrow helper APIs. The session owns its pool
 
 </details>
 
-Source: [ball pool](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) · [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [HUD factory](Source/TestFeatures/Features_NonUE/FeatureDebugHUDSpawner.cpp) · [player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp).
+Source: [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [HUD factory](Source/TestFeatures/Features_NonUE/FeatureDebugHUDSpawner.cpp) · [player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp).
 
 The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements level, player, and ball rules through an embedded standalone runtime.
 
-Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. Plain C++ spawning, storage, and HUD factory helpers live in `Features_NonUE`.
+Within `TestFeatures/Features`, `Gameplay` contains the ball manager, balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. Plain C++ spawning, storage, and HUD factory helpers live in `Features_NonUE`.
 
 
 ## Development

@@ -8,7 +8,7 @@
 
 class APawn;
 class UCharacterMovementComponent;
-class UFeatureGameplaySession;
+class UFeatureBallManager;
 
 /** Connects player-character script rules to native movement, contacts, and gameplay timers. */
 UCLASS()
@@ -63,9 +63,9 @@ private:
     // Non-owning pointer borrows a function retained by Runtime.
     AngelScript::asIScriptFunction* SpeedRule = nullptr;
 
-    // Observes the session that publishes character contacts.
+    // Observes the ball manager that publishes character contacts.
     // TWeakObjectPtr does not retain the world-owned subsystem.
-    TWeakObjectPtr<UFeatureGameplaySession> Session;
+    TWeakObjectPtr<UFeatureBallManager> BallManager;
 
     // Retains the movement component receiving scripted speed results.
     // UPROPERTY tracks the actor-owned UObject reference for garbage collection.

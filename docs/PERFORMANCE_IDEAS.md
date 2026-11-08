@@ -4,7 +4,7 @@ Reviewed against project source on November 8, 2026. This is a source review, no
 
 ## Current baseline
 
-The session prewarms five actors and activates five balls by default. Retirement schedules replacement through the same pool on the next tick, after either player contact or the configured non-player rebound limit. The old three-times prewarm ratio is historical. Inactive actors are hidden with physics and collision disabled; mesh and visual material assets are shared. Each ball has its own physical-material subobject.
+The ball manager prewarms five actors and activates five balls by default. Retirement schedules replacement through the same pool on the next tick, after either player contact or the configured non-player rebound limit. The old three-times prewarm ratio is historical. Inactive actors are hidden with physics and collision disabled; mesh and visual material assets are shared. Each ball has its own physical-material subobject.
 
 State and HUD updates use events, with subscriptions attached at actor creation rather than on every reuse. Preserve those boundaries: removing delegates or merging UI with gameplay has no demonstrated performance benefit.
 
@@ -27,7 +27,7 @@ At five balls, additional queues, caches, and scheduling may add more complexity
 
 ## Pool acquisition and retained actors
 
-[The spawner](../Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) scans its creation-order weak-reference list from the beginning for every acquisition. Activating N prewarmed balls visits roughly 1 + 2 + ... + N entries: O(N²) acquisition work, excluding construction. Each replacement can scan O(P) entries for a pool of P actors.
+[The ball manager](../Source/TestFeatures/Features/Gameplay/FeatureBallManager.cpp) scans its creation-order weak-reference list from the beginning for every acquisition. Activating N prewarmed balls visits roughly 1 + 2 + ... + N entries: O(N²) acquisition work, excluding construction. Each replacement can scan O(P) entries for a pool of P actors.
 
 If measured costs justify it, maintain a free-entry stack or queue alongside the creation-order list, populated through retirement observation. Preserve stable names and creation-time subscriptions. The extra collection must accurately represent availability; reserving array capacity alone does not remove scans.
 

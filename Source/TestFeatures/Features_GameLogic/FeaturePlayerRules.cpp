@@ -1,5 +1,5 @@
 #include "FeaturePlayerRules.h"
-#include "Features/GameWorkflow/FeatureGameplaySession.h"
+#include "Features/Gameplay/FeatureBallManager.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
@@ -28,13 +28,13 @@ void UFeaturePlayerRules::ConfigureSpeed(float BaseMultiplier, float ContactMult
 void UFeaturePlayerRules::BeginPlay()
 {
     Super::BeginPlay();
-    Session = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
-    Session->OnPlayerBallContact.AddUObject(this, &UFeaturePlayerRules::HandleBallContact);
+    BallManager = GetWorld()->GetSubsystem<UFeatureBallManager>();
+    BallManager->OnPlayerBallContact.AddUObject(this, &UFeaturePlayerRules::HandleBallContact);
 }
 
 void UFeaturePlayerRules::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    Session->OnPlayerBallContact.RemoveAll(this);
+    BallManager->OnPlayerBallContact.RemoveAll(this);
     GetWorld()->GetTimerManager().ClearTimer(SpeedTimer);
     Runtime.Reset();
     Super::EndPlay(EndPlayReason);
