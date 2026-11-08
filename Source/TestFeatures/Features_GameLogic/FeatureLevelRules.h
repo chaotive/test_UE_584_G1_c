@@ -6,6 +6,8 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "FeatureLevelRules.generated.h"
 
+enum class EFeatureGameplaySessionResult : uint8;
+
 /** Hosts value-only gameplay rules without exposing world objects to scripts. */
 UCLASS()
 class TESTFEATURES_API UFeatureLevelRules : public UWorldSubsystem
@@ -29,7 +31,19 @@ public:
     // All int32 inputs and the result are copied values without pointers or references.
     int32 SessionBouncesToLose(int32 Level, int32 BaseBounces, int32 DecreasePerLevel, int32 MinimumBounces) const;
 
+    // Chooses the current session result, including simultaneous-limit precedence.
+    // Counts, limits, and the native result enum are passed by value without pointers or references.
+    EFeatureGameplaySessionResult SessionOutcome(int32 PlayerContacts, int32 Bounces, int32 WinLimit, int32 LossLimit) const;
+
+    // Calculates the saved level after recording a session result.
+    // Level, Result, and the returned int32 are copied values without pointers or references.
+    int32 NextLevel(int32 Level, EFeatureGameplaySessionResult Result) const;
+
 private:
+    // Makes the native result enum available to the script without mirrored numeric definitions.
+    // Engine is a borrowed SDK reference; enum values remain defined by EFeatureGameplaySessionResult.
+    static void RegisterTypes(AngelScript::asIScriptEngine& Engine);
+
     // Passes integer arguments to a compiled script function and reads its integer result.
     // Function is borrowed from the engine; TConstArrayView borrows a contiguous input array without copying it.
     int32 Execute(AngelScript::asIScriptFunction& Function, TConstArrayView<int32> Arguments) const;
@@ -45,4 +59,12 @@ private:
     // Identifies the script function for the defeat threshold.
     // Non-owning native pointer borrows a function retained by the script module.
     AngelScript::asIScriptFunction* LossRule = nullptr;
+
+    // Identifies the script entry point that chooses a session outcome.
+    // Non-owning native pointer borrows a function retained by Runtime.
+    AngelScript::asIScriptFunction* OutcomeRule = nullptr;
+
+    // Identifies the script entry point that advances or retains the saved level.
+    // Non-owning native pointer borrows a function retained by Runtime.
+    AngelScript::asIScriptFunction* ProgressionRule = nullptr;
 };

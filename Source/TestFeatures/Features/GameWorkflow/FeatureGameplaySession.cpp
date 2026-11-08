@@ -5,6 +5,7 @@
 #include "Features/Gameplay/FeatureLevelBounds.h"
 #include "FeatureSaveGameSubsystem.h"
 #include "Features_GameLogic/FeatureLevelRules.h"
+#include "Features_GameLogic/FeatureBallRules.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
@@ -49,11 +50,11 @@ void UFeatureGameplaySession::EvaluateSessionLimits(const FFeatureGameplaySessio
 		return;
 	}
 
-	const bool bVictory = Stats.PlayerBallCollisions >= GetPlayerContactsToWin();
-	const bool bDefeat = Stats.TotalBounces >= GetSessionBouncesToLose();
-	if (bVictory || bDefeat)
+	const EFeatureGameplaySessionResult Result = GetWorld()->GetSubsystem<UFeatureLevelRules>()->SessionOutcome(
+		Stats.PlayerBallCollisions, Stats.TotalBounces, GetPlayerContactsToWin(), GetSessionBouncesToLose());
+	if (Result != EFeatureGameplaySessionResult::InProgress)
 	{
-		OnGameplaySessionEnded(bVictory);
+		OnGameplaySessionEnded(Result == EFeatureGameplaySessionResult::Victory);
 	}
 }
 
@@ -72,19 +73,18 @@ void UFeatureGameplaySession::ObserveBall(AFeatureBall& Ball)
 	Ball.OnRetired.AddUObject(this, &UFeatureGameplaySession::HandleBallRetired);
 }
 
-void UFeatureGameplaySession::HandleBallContact(AFeatureBall& Ball, AActor& OtherActor)
+void UFeatureGameplaySession::HandleBallContact(AFeatureBall&, AActor& OtherActor)
 {
 	APawn* Pawn = Cast<APawn>(&OtherActor);
 	if (Pawn && Pawn->IsPlayerControlled())
 	{
 		OnPlayerBallContact.Broadcast(*Pawn);
-		Ball.Deactivate();
 	}
 }
 
 void UFeatureGameplaySession::HandleBallRetired(AFeatureBall& Ball)
 {
-	if (SessionState == ESessionState::Playing)
+	if (CanReplaceBalls())
 	{
 		++PendingBallReplacements;
 		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UFeatureGameplaySession::SpawnReplacementBall);
@@ -93,7 +93,7 @@ void UFeatureGameplaySession::HandleBallRetired(AFeatureBall& Ball)
 
 void UFeatureGameplaySession::SpawnReplacementBall()
 {
-	if (SessionState == ESessionState::Playing && PendingBallReplacements > 0)
+	if (CanReplaceBalls() && PendingBallReplacements > 0)
 	{
 		--PendingBallReplacements;
 		BallSpawner.Spawn(*GetWorld(), FMath::RandPointInBox(BallSpawnBounds));
@@ -132,7 +132,7 @@ void UFeatureGameplaySession::OnGameplaySessionResume()
 		SessionState = ESessionState::Playing;
 		OnResumed.Broadcast();
 		EvaluateSessionLimits(GameState->GetGameplaySessions().Last());
-		while (SessionState == ESessionState::Playing && PendingBallReplacements > 0)
+		while (CanReplaceBalls() && PendingBallReplacements > 0)
 		{
 			SpawnReplacementBall();
 		}
@@ -181,4 +181,9 @@ int32 UFeatureGameplaySession::GetSessionBouncesToLose() const
 bool UFeatureGameplaySession::CanLeaveGameplay() const
 {
 	return SessionState == ESessionState::Playing && !IsPersistenceBusy();
+}
+
+bool UFeatureGameplaySession::CanReplaceBalls() const
+{
+	return GetWorld()->GetSubsystem<UFeatureBallRules>()->ShouldReplaceBall(SessionState == ESessionState::Playing);
 }

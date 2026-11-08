@@ -63,6 +63,9 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
+	// Allows the replacement smoke check to deliver native collision callbacks.
+	// The test class retains no actor, component, or script-runtime ownership.
+	friend class FFeaturePlayerBallReplacementSmokeTest;
 
 	// Assigns the sphere mesh and prepares an inactive ball for later activation.
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
@@ -76,7 +79,7 @@ private:
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 
-	// Reports contacts, counts impulse-based bounces, and returns the ball to the pool at its rebound limit.
+	// Reports contacts and applies the script's bounce-count and retirement effects.
 	// Component and actor pointers are non-owning event inputs, NormalImpulse is by value, and Hit is a read-only reference.
 	UFUNCTION()
 	void OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,

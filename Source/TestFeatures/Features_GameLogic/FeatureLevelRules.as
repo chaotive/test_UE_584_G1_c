@@ -12,3 +12,25 @@ int SessionBouncesToLose(int Level, int BaseBounces, int DecreasePerLevel, int M
     int Limit = BaseBounces - DecreasePerLevel * (Level - 1);
     return Limit < MinimumBounces ? MinimumBounces : Limit;
 }
+
+// Chooses victory before defeat when both configured limits have been reached.
+// Counts, limits, and the C++-registered SessionResult enum are copied values; no pointers or references.
+SessionResult SessionOutcome(int PlayerContacts, int Bounces, int WinLimit, int LossLimit)
+{
+    if (PlayerContacts >= WinLimit)
+    {
+        return SessionResult::Victory;
+    }
+    if (Bounces >= LossLimit)
+    {
+        return SessionResult::Defeat;
+    }
+    return SessionResult::InProgress;
+}
+
+// Advances after victory and retains the level for other session results.
+// Level, the native result enum, and the returned int are copied values without pointers or references.
+int NextLevel(int Level, SessionResult Result)
+{
+    return Result == SessionResult::Victory ? Level + 1 : Level;
+}

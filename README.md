@@ -149,6 +149,8 @@ Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [sa
 
 The main driver for AngelScript is to change simple, code-based game logic without recompiling the C++ game. The two threshold functions demonstrate value-based bindings: a world-scoped host passes level and settings into AS, and the session and HUD share the returned limits. C++ owns configuration and saved state; AS owns the formulas. The [game-logic guide](Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md) covers work in `Features_GameLogic`, where the host and scripts stay together.
 
+Level rules also choose session outcomes and level progression. [Ball rules](Source/TestFeatures/Features_GameLogic/FeatureBallRules.as) decide which contacts count, when balls retire, and whether to replace them. C++ applies those results through events, physics, pooling, and persistence; registered native enums keep the outcome/action definitions shared.
+
 Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and compiles the latest saved script. That provides the edit-and-restart workflow shown above, with the existing C++ binary and editor. Live hot reload is a secondary convenience; changes to native bindings still require a C++ build. See [AngelScript rules](docs/DEVELOPMENT.md#angelscript-rules) for usage and packaging.
 
 [Player-character rules](Source/TestFeatures/Features_GameLogic/FeaturePlayerRules.as) use the same value-based boundary for baseline speed and contact bonuses. A focused `UFeaturePlayerRules` actor component handles contact observation, movement updates, and timer expiry, keeping that feature out of the character's movement/input class. Its script is read when a spawned character is configured; restarting PIE picks up edits to both examples.
@@ -161,6 +163,8 @@ Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and comp
 | Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem`; supplies level and configuration values |
 | C++ rules host | `UFeatureLevelRules` | Extends `UWorldSubsystem`; owns an `FFeatureScriptRuntime` for level rules |
 | AngelScript rules | `PlayerContactsToWin` / `SessionBouncesToLose` in `FeatureLevelRules.as` | Stateless functions called by `UFeatureLevelRules` |
+| Session and progression decisions | `SessionOutcome` / `NextLevel` in `FeatureLevelRules.as` | Applied by the gameplay session and game state |
+| Ball rules bridge | `UFeatureBallRules` | Extends `UWorldSubsystem`; translates collision facts and calls `FeatureBallRules.as` |
 | Player-character bridge | `UFeaturePlayerRules` | Extends `UActorComponent`; calls `FeaturePlayerRules.as` and owns native movement/timer integration |
 | AngelScript library | `FeatureAngelScriptRuntime` external module | Links the pinned Win64 static library into `TestFeatures` |
 | Calculated limits | `int32` return values | Consumed by session limit checks and the gameplay HUD |

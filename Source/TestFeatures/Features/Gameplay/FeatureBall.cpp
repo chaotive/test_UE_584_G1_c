@@ -1,7 +1,9 @@
 #include "FeatureBall.h"
+#include "Features_GameLogic/FeatureBallRules.h"
 #include "TestFeatures.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
 #include "Materials/MaterialInterface.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "UObject/ConstructorHelpers.h"
@@ -95,6 +97,10 @@ void AFeatureBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
 		return;
 	}
 
+	// The bridge translates collision facts; the script chooses counting and retirement effects.
+	const EFeatureBallContactAction Action = GetWorld()->GetSubsystem<UFeatureBallRules>()->EvaluateContact(
+		OtherActor, !NormalImpulse.IsNearlyZero(), BounceCount, ReboundsBeforeRetirement);
+
 	if (OtherActor)
 	{
 		OnContact.Broadcast(*this, *OtherActor);
@@ -103,18 +109,15 @@ void AFeatureBall::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
 	{
 		return;
 	}
-	// Character sweeps report contacts without a solver impulse.
-	if (NormalImpulse.IsNearlyZero())
+	if (EnumHasAnyFlags(Action, EFeatureBallContactAction::CountBounce))
 	{
-		return;
+		++BounceCount;
+		// Broadcast calls subscribed handlers immediately; the ball does not know which listeners update state.
+		OnBounced.Broadcast(*this);
+		UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: Bounce %d/%d"), *GetName(), BounceCount, ReboundsBeforeRetirement);
 	}
 
-	++BounceCount;
-	// Broadcast calls subscribed handlers immediately; the ball does not know which listeners update state.
-	OnBounced.Broadcast(*this);
-	UE_LOG(LogTestFeatures, Log, TEXT("FeatureBall [%s]: Bounce %d/%d"), *GetName(), BounceCount, ReboundsBeforeRetirement);
-
-	if (BounceCount >= ReboundsBeforeRetirement)
+	if (EnumHasAnyFlags(Action, EFeatureBallContactAction::Retire))
 	{
 		Deactivate();
 	}

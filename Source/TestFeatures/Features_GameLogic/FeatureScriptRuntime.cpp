@@ -7,7 +7,8 @@
 
 static_assert(ANGELSCRIPT_VERSION == FEATURE_ANGELSCRIPT_VERSION, "AngelScript header must match the pinned library version");
 
-FFeatureScriptRuntime::FFeatureScriptRuntime(const TCHAR* FileName)
+FFeatureScriptRuntime::FFeatureScriptRuntime(const TCHAR* FileName,
+    TFunctionRef<void(AngelScript::asIScriptEngine&)> RegisterTypes)
 {
     Engine = AngelScript::asCreateScriptEngine();
     if (!Engine)
@@ -15,6 +16,7 @@ FFeatureScriptRuntime::FFeatureScriptRuntime(const TCHAR* FileName)
         UE_LOG(LogTestFeatures, Fatal, TEXT("FeatureScriptRuntime: Could not create the AngelScript engine"));
     }
     Engine->SetMessageCallback(AngelScript::asFUNCTION(LogScriptMessage), nullptr, AngelScript::asCALL_CDECL);
+    RegisterTypes(*Engine);
 
     const FString ScriptPath = FPaths::Combine(FPaths::ProjectDir(), TEXT("Source/TestFeatures/Features_GameLogic"), FileName);
     FString Source;

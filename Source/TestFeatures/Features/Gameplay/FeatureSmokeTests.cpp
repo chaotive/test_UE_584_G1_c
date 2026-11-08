@@ -6,7 +6,9 @@
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
 #include "Features_NonUE/FeatureBallSpawner.h"
+#include "Features_GameLogic/FeatureLevelRules.h"
 #include "Engine/World.h"
+#include "Engine/HitResult.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
@@ -72,15 +74,15 @@ bool FFeatureSessionSmokeTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Victory is recorded"), State->GetGameplaySessions().Last().Result == EFeatureGameplaySessionResult::Victory);
 
 	AFeatureGameState* DefeatState = World->SpawnActor<AFeatureGameState>();
-	DefeatState->StartSession(false, 1);
+	DefeatState->StartSession(false, 3);
 	DefeatState->RecordSessionResult(false);
-	TestEqual(TEXT("Defeat retains the level"), DefeatState->GetCurrentLevel(), 1);
+	TestEqual(TEXT("Defeat retains a later level"), DefeatState->GetCurrentLevel(), 3);
 	TestTrue(TEXT("Defeat is recorded"), DefeatState->GetGameplaySessions().Last().Result == EFeatureGameplaySessionResult::Defeat);
 	World->DestroyWorld(false);
 	return true;
 }
 
-// Checks script-backed win and loss thresholds across progression levels.
+// Checks script-backed outcomes, precedence, and thresholds across progression levels.
 // The automation framework owns the test; its temporary world owns the game-state actor and subsystem.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFeatureLossLimitSmokeTest, "Feature.Smoke.SessionLossLimit",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -96,6 +98,17 @@ bool FFeatureLossLimitSmokeTest::RunTest(const FString& Parameters)
 	Session->SessionBouncesToLose = 100;
 	Session->BouncesDecreasePerLevel = 1;
 	Session->MinimumSessionBouncesToLose = 50;
+	UFeatureLevelRules* Rules = World->GetSubsystem<UFeatureLevelRules>();
+	TestTrue(TEXT("Below both limits the session remains in progress"),
+		Rules->SessionOutcome(9, 99, 10, 100) == EFeatureGameplaySessionResult::InProgress);
+	TestTrue(TEXT("Reaching the contact limit chooses victory"),
+		Rules->SessionOutcome(10, 99, 10, 100) == EFeatureGameplaySessionResult::Victory);
+	TestTrue(TEXT("Reaching the bounce limit chooses defeat"),
+		Rules->SessionOutcome(9, 100, 10, 100) == EFeatureGameplaySessionResult::Defeat);
+	TestTrue(TEXT("Victory takes precedence when both limits are reached"),
+		Rules->SessionOutcome(10, 100, 10, 100) == EFeatureGameplaySessionResult::Victory);
+	TestEqual(TEXT("An unfinished result retains the current level"),
+		Rules->NextLevel(9, EFeatureGameplaySessionResult::InProgress), 9);
 
 	State->StartSession(false, 1);
 	TestEqual(TEXT("The script returns the configured level-one win target"), Session->GetPlayerContactsToWin(), 10);
@@ -135,14 +148,38 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 		bPlayerContactAnnounced = &ContactedPawn == PlayerPawn;
 	});
 
-	Session->HandleBallContact(*Ball, *PlayerPawn);
+	Ball->OnBallHit(nullptr, PlayerPawn, nullptr, FVector::ZeroVector, FHitResult());
 	TestTrue(TEXT("Player contact is published"), bPlayerContactAnnounced);
 	TestFalse(TEXT("The contacted ball is retired"), Ball->IsActive());
 	TestEqual(TEXT("Retirement schedules one replacement"), Session->PendingBallReplacements, 1);
+	TestEqual(TEXT("A swept player contact does not count as a non-player bounce"), Ball->BounceCount, 0);
 	World->GetTimerManager().Tick(0.01f);
 	TestTrue(TEXT("The replacement reuses the retired ball"), Ball->IsActive());
 	TestEqual(TEXT("Replacement does not grow the prewarmed pool"), Session->BallSpawner.GetSpawnedBalls().Num(), 1);
 	TestEqual(TEXT("The scheduled replacement is consumed"), Session->PendingBallReplacements, 0);
+
+	Ball->Configure(1.0f, 1.0f, 2);
+	Ball->OnBallHit(nullptr, nullptr, nullptr, FVector::ZeroVector, FHitResult());
+	TestEqual(TEXT("A non-player contact without solver impulse is ignored"), Ball->BounceCount, 0);
+	TestTrue(TEXT("An ignored contact leaves the ball active"), Ball->IsActive());
+	Ball->OnBallHit(nullptr, nullptr, nullptr, FVector::UpVector, FHitResult());
+	TestEqual(TEXT("A solver impact counts one bounce"), Ball->BounceCount, 1);
+	TestTrue(TEXT("The ball remains active below its rebound limit"), Ball->IsActive());
+	Ball->OnBallHit(nullptr, nullptr, nullptr, FVector::UpVector, FHitResult());
+	TestEqual(TEXT("The rebound limit counts the last bounce"), Ball->BounceCount, 2);
+	TestFalse(TEXT("The scripted rebound limit retires the ball"), Ball->IsActive());
+	TestEqual(TEXT("Non-player retirement also schedules replacement"), Session->PendingBallReplacements, 1);
+
+	Session->SessionState = UFeatureGameplaySession::ESessionState::Paused;
+	Session->SpawnReplacementBall();
+	TestFalse(TEXT("The script defers replacement while paused"), Ball->IsActive());
+	TestEqual(TEXT("Deferred replacement remains queued"), Session->PendingBallReplacements, 1);
+	Session->SessionState = UFeatureGameplaySession::ESessionState::Playing;
+	Session->SpawnReplacementBall();
+	TestTrue(TEXT("Active gameplay permits replacement again"), Ball->IsActive());
+	Session->SessionState = UFeatureGameplaySession::ESessionState::Ended;
+	Ball->Deactivate();
+	TestEqual(TEXT("Retirement after the session ends schedules no replacement"), Session->PendingBallReplacements, 0);
 
 	World->DestroyWorld(false);
 	return true;

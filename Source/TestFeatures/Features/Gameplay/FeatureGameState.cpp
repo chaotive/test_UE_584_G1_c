@@ -1,7 +1,9 @@
 #include "FeatureGameState.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Features_NonUE/FeatureSaveGameStorage.h"
+#include "Features_GameLogic/FeatureLevelRules.h"
 #include "Engine/GameInstance.h"
+#include "Engine/World.h"
 #include "TestFeatures.h"
 
 void AFeatureGameState::RecordBounce()
@@ -34,9 +36,11 @@ void AFeatureGameState::RecordSessionResult(bool bVictory)
 		Progress.Sessions.Last().Result = bVictory
 			? EFeatureGameplaySessionResult::Victory
 			: EFeatureGameplaySessionResult::Defeat;
-		if (bVictory)
+		const int32 NextLevel = GetWorld()->GetSubsystem<UFeatureLevelRules>()->NextLevel(
+			Progress.CurrentLevel, Progress.Sessions.Last().Result);
+		if (NextLevel != Progress.CurrentLevel)
 		{
-			++Progress.CurrentLevel;
+			Progress.CurrentLevel = NextLevel;
 			OnCurrentLevelChanged.Broadcast(Progress.CurrentLevel);
 		}
 	}

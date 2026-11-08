@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Templates/Function.h"
 
 namespace AngelScript
 {
@@ -15,9 +16,10 @@ namespace AngelScript
 class FFeatureScriptRuntime
 {
 public:
-    // Compiles the named script from the contained game-logic directory.
-    // FileName borrows a null-terminated string; this instance owns the native engine and context.
-    explicit FFeatureScriptRuntime(const TCHAR* FileName);
+    // Registers bridge types and compiles the named script from the game-logic directory.
+    // FileName and TFunctionRef are borrowed only during construction; the callback avoids allocation and the runtime owns the engine/context.
+    explicit FFeatureScriptRuntime(const TCHAR* FileName,
+        TFunctionRef<void(AngelScript::asIScriptEngine&)> RegisterTypes = [](AngelScript::asIScriptEngine&) {});
 
     // Releases the context before its script engine.
     // No pointer or reference parameters; disposes exclusively owned native resources.

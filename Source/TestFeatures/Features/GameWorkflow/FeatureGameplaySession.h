@@ -132,7 +132,7 @@ private:
 	// Ball is a borrowed world-owned actor reference; the event holds a weak UObject binding.
 	void ObserveBall(AFeatureBall& Ball);
 
-	// Retires balls that contact the player.
+	// Publishes player contacts for independent reactions such as movement bonuses.
 	// Ball and OtherActor are borrowed world-owned references without ownership transfer.
 	void HandleBallContact(AFeatureBall& Ball, AActor& OtherActor);
 
@@ -176,4 +176,8 @@ private:
 	// Reports whether gameplay can accept a pause or end request.
 	// Returns bool by value with no pointer or reference parameters.
 	bool CanLeaveGameplay() const;
+
+	// Queries the scripted replacement policy using the current native session phase.
+	// Returns bool by value with no pointer or reference parameters.
+	bool CanReplaceBalls() const;
 };

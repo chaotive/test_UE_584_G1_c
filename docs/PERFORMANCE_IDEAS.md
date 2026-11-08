@@ -57,7 +57,7 @@ Measure save size and game-thread preparation with increasing session counts. A 
 
 ## Script calls and HUD updates
 
-[Session evaluation](../Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) calls two script-backed getters on a stats event. [The gameplay HUD](../Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) calls both again for display, normally totaling four script executions per active-play stats update. Other callers and transitions can differ. Context and function handles are already reused.
+[Session evaluation](../Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) calls two script-backed limit getters and the outcome rule on a stats event. [The gameplay HUD](../Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) calls both limit getters again for display, normally totaling five script executions per active-play stats update. Ball-contact classification, replacement eligibility, and result progression introduce separate event-driven calls. Other callers and transitions can differ. Context and function handles are already reused.
 
 The formulas are small; interpreter entry may cost more than their arithmetic, but that remains unmeasured. If warranted, compute derived limits when level/configuration changes and share results between evaluation and presentation. AngelScript must remain the single implementation of the formulas. A C++ result cache must refresh on all relevant changes, including victory level advancement.
 
