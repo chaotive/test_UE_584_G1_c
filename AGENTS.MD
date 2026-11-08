@@ -119,11 +119,12 @@ These goals will guide future tasks:
 50. UI: Move the ball and save-game panels to UI/Widgets.
 51. Documentation: Create infographics showing gameplay, UI, and game workflow system flows and connections.
 52. When the ball rebounds on the player, it is retired and respawns
+54. Gameplay: Configure the base player speed multiplier and a temporary speed multiplier and duration after ball contact.
 1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
 ### To do
 
-53. 
+53. Add a configurable minimum number of non player rebounds to lose, in order to avoid that these rebounds limit gets absurdly unatainable. The number of maximum non player rebounds should never go below this number, whose default will be 50.
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
 

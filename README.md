@@ -16,13 +16,15 @@ Choose **New Game** for a fresh game at the configured initial level (level 1 by
 
 ## Start fresh or pick up your count
 
-The startup and pause menus show your last saved bounce total. On the startup menu, **Esc** exits. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
+The startup menu shows your saved level, total bounces, session count, and the latest session’s result and counts. The pause menu shows your last saved bounce total. On the startup menu, **Esc** exits. When the slot is empty, the menu shows **No saved game.** and disables **Continue**. Choose **Delete Save** on the startup menu to clear the slot; **New Game** also clears it before starting.
 
 ![Crazy balls startup menu](docs/images/crazy-startup.png)
 
 *November 7, 2026: the startup menu shows the logo, subtitle, saved level, and bounce total.*
 
 ## How to play
+
+Each player-ball contact also doubles your configured base movement speed for five seconds by default. Another contact refreshes the boost, and pausing the game pauses its countdown. Optional stacking adds another bonus for each contact and resets the shared timer; with the default 2× bonus, consecutive contacts produce 2×, 3×, and 4× base speed until it expires.
 
 Each session is a race between two counters:
 
@@ -99,7 +101,7 @@ The asset manager registers the `GameFeatureData` cook rule required by the engi
 
 ### Arena collision bounds
 
-The game-mode defaults also expose the initial level, initial ball count, per-level objective adjustments, rebounds before retirement, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; its default size and the initial ball count are both five. A size or speed multiplier of 1 preserves the default ball size or launch speed.
+The game-mode defaults expose the base player speed multiplier, contact speed multiplier, stacking option, and contact boost duration under `Feature Player Speed`. They also expose the initial level, initial ball count, per-level objective adjustments, rebounds before retirement, ball size, and initial launch-speed multiplier. The pool prewarms one ball per initial ball; its default size and the initial ball count are both five. A size or speed multiplier of 1 preserves the default ball size or launch speed.
 
 Gameplay creates one `AFeatureLevelBounds` actor with six wireframe collision faces visible in game. The initial interior spans 120 × 120 × 60 meters around a center 20 meters above the world origin. Edit `Feature Bounds` in the game-mode defaults to change its center and half-size. The faces block physics balls. Balls return to the pool after their configured rebound limit or player contact and are replaced while the session is active.
 

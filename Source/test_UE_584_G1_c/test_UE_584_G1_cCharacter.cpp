@@ -2,6 +2,9 @@
 
 #include "test_UE_584_G1_cCharacter.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
+#include "Features/GameWorkflow/FeatureGameplaySession.h"
+#include "TimerManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -49,6 +52,48 @@ Atest_UE_584_G1_cCharacter::Atest_UE_584_G1_cCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void Atest_UE_584_G1_cCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	FeatureSession = GetWorld()->GetSubsystem<UFeatureGameplaySession>();
+	FeatureSession->OnPlayerBallContact.AddUObject(this, &Atest_UE_584_G1_cCharacter::HandleFeatureBallContact);
+}
+
+void Atest_UE_584_G1_cCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UFeatureGameplaySession* Session = FeatureSession.Get())
+	{
+		Session->OnPlayerBallContact.RemoveAll(this);
+	}
+	GetWorldTimerManager().ClearTimer(FeatureSpeedTimer);
+	Super::EndPlay(EndPlayReason);
+}
+
+void Atest_UE_584_G1_cCharacter::ConfigureFeatureSpeed(float BaseMultiplier, float ContactMultiplier, float Duration, bool bStackBonuses)
+{
+	FeatureBaseWalkSpeed = GetCharacterMovement()->MaxWalkSpeed * BaseMultiplier;
+	FeatureContactMultiplier = ContactMultiplier;
+	FeatureBoostDuration = Duration;
+	bFeatureStackSpeedBonuses = bStackBonuses;
+	ResetFeatureSpeed();
+}
+
+void Atest_UE_584_G1_cCharacter::HandleFeatureBallContact(APawn& Pawn)
+{
+	if (&Pawn == this && FeatureBoostDuration > 0.0f)
+	{
+		FeatureSpeedBonusCount = bFeatureStackSpeedBonuses ? FeatureSpeedBonusCount + 1 : 1;
+		GetCharacterMovement()->MaxWalkSpeed = FeatureBaseWalkSpeed * FMath::Max(0.0f, 1.0f + FeatureSpeedBonusCount * (FeatureContactMultiplier - 1.0f));
+		GetWorldTimerManager().SetTimer(FeatureSpeedTimer, this, &Atest_UE_584_G1_cCharacter::ResetFeatureSpeed, FeatureBoostDuration, false);
+	}
+}
+
+void Atest_UE_584_G1_cCharacter::ResetFeatureSpeed()
+{
+	FeatureSpeedBonusCount = 0;
+	GetCharacterMovement()->MaxWalkSpeed = FeatureBaseWalkSpeed;
 }
 
 void Atest_UE_584_G1_cCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

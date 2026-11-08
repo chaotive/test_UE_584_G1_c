@@ -2,6 +2,7 @@
 
 #include "test_UE_584_G1_cGameMode.h"
 #include "test_UE_584_G1_c.h"
+#include "test_UE_584_G1_cCharacter.h"
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/UI/Archetypes/FeatureMainMenu.h"
@@ -79,7 +80,10 @@ void Atest_UE_584_G1_cGameMode::BeginPlay()
 void Atest_UE_584_G1_cGameMode::HandleGameplaySessionStarted()
 {
 	SetFlow(EFeatureGameFlow::Gameplay);
-	RestartPlayer(GetGameInstance()->GetFirstLocalPlayerController());
+	APlayerController* Player = GetGameInstance()->GetFirstLocalPlayerController();
+	RestartPlayer(Player);
+	CastChecked<Atest_UE_584_G1_cCharacter>(Player->GetPawn())->ConfigureFeatureSpeed(
+		FeaturePlayerBaseSpeedMultiplier, FeaturePlayerContactSpeedMultiplier, FeaturePlayerContactBoostDuration, bFeaturePlayerContactBoostStacks);
 }
 
 void Atest_UE_584_G1_cGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)

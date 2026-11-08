@@ -8,6 +8,7 @@
 class AFeatureGameState;
 class AFeatureBall;
 class AActor;
+class APawn;
 class UFeatureGameStateController;
 class UFeatureSaveGameSubsystem;
 struct FFeatureGameplaySessionRecord;
@@ -21,6 +22,7 @@ class TESTFEATURES_API UFeatureGameplaySession : public UWorldSubsystem
 public:
 	DECLARE_EVENT(UFeatureGameplaySession, FSessionEvent);
 	DECLARE_EVENT_OneParam(UFeatureGameplaySession, FSessionEndedEvent, bool);
+	DECLARE_EVENT_OneParam(UFeatureGameplaySession, FPlayerBallContactEvent, APawn&);
 
 	// Announces that gameplay can provision the local player and HUD.
 	// Native multicast event stores weak UObject bindings; no pointer or reference arguments.
@@ -37,6 +39,10 @@ public:
 	// Announces the gameplay result so observers can present the end screen.
 	// Native multicast event passes the victory bool by value and stores weak UObject bindings.
 	FSessionEndedEvent OnEnded;
+
+	// Announces player contact with a ball to gameplay features.
+	// The native event borrows the world-owned player pawn without transferring ownership.
+	FPlayerBallContactEvent OnPlayerBallContact;
 
 	// Connects gameplay events and configures the level-one victory and defeat limits.
 	// State is borrowed; limits and per-level adjustments are passed by value.

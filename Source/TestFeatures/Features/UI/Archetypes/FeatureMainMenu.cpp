@@ -114,7 +114,7 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 	}
 	if (View.bShowSaveSummary)
 	{
-		AddSaveSummary(*Rows, bHasSave);
+		AddSaveSummary(*Rows, bHasSave, Flow == EFeatureGameFlow::StartupMenu);
 	}
 }
 
@@ -187,7 +187,7 @@ void UFeatureMainMenu::AddViewAction(UVerticalBox& Rows, const FFeatureMenuItem&
 	}
 }
 
-void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave)
+void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave, bool bInitialMenu)
 {
 	SaveSummary = WidgetTree->ConstructWidget<UTextBlock>();
 	SaveSummary->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));
@@ -203,7 +203,7 @@ void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave)
 	SaveSummary->SetText(LOCTEXT("ReadingSavedGame", "Reading saved game..."));
 	const uint32 RequestGeneration = ++PreviewGeneration;
 	const TWeakObjectPtr<UFeatureMainMenu> WeakMenu(this);
-	FFeatureSaveGameStorage::LoadAsync([WeakMenu, RequestGeneration](TOptional<FFeatureGameProgress> Progress, const FString&)
+	FFeatureSaveGameStorage::LoadAsync([WeakMenu, RequestGeneration, bInitialMenu](TOptional<FFeatureGameProgress> Progress, const FString&)
 	{
 		UFeatureMainMenu* Menu = WeakMenu.Get();
 		if (!Menu || Menu->PreviewGeneration != RequestGeneration)
@@ -212,9 +212,29 @@ void UFeatureMainMenu::AddSaveSummary(UVerticalBox& Rows, bool bHasSave)
 		}
 		if (UTextBlock* Label = Menu->SaveSummary.Get())
 		{
-			Label->SetText(Progress.IsSet()
-				? FText::Format(LOCTEXT("SavedTotalBounces", "Saved total bounces: {0}"), FText::AsNumber(Progress.GetValue().TotalBounces))
-				: LOCTEXT("UnreadableSavedGame", "Saved game could not be read."));
+			if (!Progress.IsSet())
+			{
+				Label->SetText(LOCTEXT("UnreadableSavedGame", "Saved game could not be read."));
+			}
+			else if (!bInitialMenu)
+			{
+				Label->SetText(FText::Format(LOCTEXT("SavedTotalBounces", "Saved total bounces: {0}"), FText::AsNumber(Progress->TotalBounces)));
+			}
+			else
+			{
+				FText Summary = FText::Format(LOCTEXT("SavedProgress", "Saved level: {0}\nTotal bounces: {1} | Sessions: {2}"),
+					FText::AsNumber(Progress->CurrentLevel), FText::AsNumber(Progress->TotalBounces), FText::AsNumber(Progress->Sessions.Num()));
+				if (!Progress->Sessions.IsEmpty())
+				{
+					const FFeatureGameplaySessionRecord& LastSession = Progress->Sessions.Last();
+					FText Result = LOCTEXT("SessionInProgress", "In progress");
+					if (LastSession.Result == EFeatureGameplaySessionResult::Victory) { Result = LOCTEXT("SessionVictory", "Victory"); }
+					else if (LastSession.Result == EFeatureGameplaySessionResult::Defeat) { Result = LOCTEXT("SessionDefeat", "Defeat"); }
+					Summary = FText::Format(LOCTEXT("SavedProgressWithSession", "{0}\nLast session: {1}\nPlayer contacts: {2} | Bounces: {3}"),
+						Summary, Result, FText::AsNumber(LastSession.PlayerBallCollisions), FText::AsNumber(LastSession.TotalBounces));
+				}
+				Label->SetText(Summary);
+			}
 		}
 		if (UButton* Button = Menu->ContinueButton.Get())
 		{

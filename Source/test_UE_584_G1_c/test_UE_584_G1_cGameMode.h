@@ -60,6 +60,26 @@ protected:
 	// NewPlayer is a borrowed engine-owned controller pointer.
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 
+	// Multiplies the character's configured walking speed throughout a session.
+	// float stores the non-negative multiplier by value.
+	UPROPERTY(EditAnywhere, Category="Feature Player Speed", meta=(ClampMin="0"))
+	float FeaturePlayerBaseSpeedMultiplier = 1.0f;
+
+	// Multiplies the base player speed after a ball contact.
+	// float stores the non-negative multiplier by value.
+	UPROPERTY(EditAnywhere, Category="Feature Player Speed", meta=(ClampMin="0"))
+	float FeaturePlayerContactSpeedMultiplier = 2.0f;
+
+	// Enables adding another speed bonus for each contact before the timer expires.
+	// bool stores the editor-configured stacking option by value.
+	UPROPERTY(EditAnywhere, Category="Feature Player Speed")
+	bool bFeaturePlayerContactBoostStacks = false;
+
+	// Sets how long the contact speed boost lasts in gameplay seconds.
+	// float stores the non-negative duration by value.
+	UPROPERTY(EditAnywhere, Category="Feature Player Speed", meta=(ClampMin="0"))
+	float FeaturePlayerContactBoostDuration = 5.0f;
+
 	// Number of training balls to create when play begins.
 	// int32 stores the ball count by value; UPROPERTY(EditAnywhere) exposes it for editor configuration without pointer ownership.
 	UPROPERTY(EditAnywhere, Category="Training_Ball", meta=(ClampMin="1"))

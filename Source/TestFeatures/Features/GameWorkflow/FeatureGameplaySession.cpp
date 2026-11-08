@@ -72,9 +72,10 @@ void UFeatureGameplaySession::ObserveBall(AFeatureBall& Ball)
 
 void UFeatureGameplaySession::HandleBallContact(AFeatureBall& Ball, AActor& OtherActor)
 {
-	const APawn* Pawn = Cast<APawn>(&OtherActor);
+	APawn* Pawn = Cast<APawn>(&OtherActor);
 	if (Pawn && Pawn->IsPlayerControlled())
 	{
+		OnPlayerBallContact.Broadcast(*Pawn);
 		Ball.Deactivate();
 	}
 }

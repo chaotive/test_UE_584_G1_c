@@ -54,8 +54,8 @@ private:
 	void BuildHeader(UVerticalBox& Rows, const FFeatureMenuView& View);
 
 	// Adds the saved game summary below the menu actions.
-	// Rows is a borrowed widget reference and bHasSave is passed by value.
-	void AddSaveSummary(UVerticalBox& Rows, bool bHasSave);
+	// Rows is borrowed; the save and initial-menu flags are passed by value.
+	void AddSaveSummary(UVerticalBox& Rows, bool bHasSave, bool bInitialMenu);
 
 	// Retains the startup Continue button while its saved level is read.
 	// UPROPERTY tracks a strong widget-tree-owned button pointer for garbage collection.
