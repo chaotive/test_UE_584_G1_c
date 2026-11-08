@@ -2,6 +2,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
+#include "Features/UI/Controllers/FeatureMenuActions.h"
 #include "Misc/Optional.h"
 #include "FeatureMainMenu.generated.h"
 
@@ -96,7 +97,7 @@ private:
 
 	// Creates a view-defined button and connects its menu action.
 	// Rows and Item are borrowed references; the widget tree owns the button.
-	void AddViewAction(UVerticalBox& Rows, const FFeatureMenuItem& Item);
+	void AddViewAction(UVerticalBox& Rows, const FFeatureMenuActionDefinition& Item);
 
 	// Publishes the New Game selection.
 	// No pointer or reference parameters or return value; bound to a widget-owned button.

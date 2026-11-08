@@ -112,6 +112,7 @@ The [saved-progress panel](Source/TestFeatures/Features/UI/Widgets/FeatureSavedP
 
 | Diagram role | Class | Base or primary consumer |
 | --- | --- | --- |
+| Action definitions | `FFeatureMenuSessionActions`, `FFeatureMenuPersistenceActions`, `FFeatureMenuNavigationActions` | Define operations and default captions in `UI/Controllers`, grouped by purpose |
 | Menu definitions | `FFeatureMenuViews` | Creates `FFeatureMenuView` values for `UFeatureMainMenu` |
 | Shared menu | `UFeatureMainMenu` | Extends `UUserWidget` |
 | Saved-progress preview | `UFeatureSavedProgressPanel` | Extends `UUserWidget`; composed by the menu |
@@ -122,7 +123,7 @@ The [saved-progress panel](Source/TestFeatures/Features/UI/Widgets/FeatureSavedP
 
 </details>
 
-Source: [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [HUDs](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) · [panels](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
+Source: [actions](Source/TestFeatures/Features/UI/Controllers/FeatureMenuActions.h) · [views](Source/TestFeatures/Features/UI/Views/FeatureMenuViews.cpp) · [menu](Source/TestFeatures/Features/UI/Archetypes/FeatureMainMenu.cpp) · [HUDs](Source/TestFeatures/Features/UI/Archetypes/FeatureGameplayHUD.cpp) · [panels](Source/TestFeatures/Features/UI/Widgets/FeatureSaveGamePanel.cpp).
 
 ### Session and persistence architecture
 

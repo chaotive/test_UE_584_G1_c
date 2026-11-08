@@ -1,30 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Features/UI/Controllers/FeatureMenuActions.h"
 #include "Features/GameWorkflow/FeatureGameFlow.h"
-
-enum class EFeatureMenuAction : uint8
-{
-	NewGame,
-	Continue,
-	Resume,
-	ReturnToMenu,
-	Retry,
-	DeleteSave,
-	Exit
-};
-
-/** Describes one menu button and the action it publishes. */
-struct FFeatureMenuItem
-{
-	// Selects the operation represented by this button.
-	// The enum is stored by value without pointer or reference ownership.
-	EFeatureMenuAction Action;
-
-	// Supplies the localized button caption.
-	// FText stores a localized value without widget ownership.
-	FText Label;
-};
 
 /** Describes the title, input behavior, and ordered controls for one menu. */
 struct FFeatureMenuView
@@ -47,7 +25,7 @@ struct FFeatureMenuView
 
 	// Lists the buttons in their presentation order.
 	// TArray owns the item values and their localized labels.
-	TArray<FFeatureMenuItem> Items;
+	TArray<FFeatureMenuActionDefinition> Items;
 };
 
 /** Supplies declarative menu definitions independently of widget construction. */

@@ -20,38 +20,38 @@ FFeatureMenuView FFeatureMenuViews::ForFlow(EFeatureGameFlow Flow)
 		View = InitialMenu();
 		break;
 	}
-	View.Items.Add({EFeatureMenuAction::Exit, LOCTEXT("Exit", "Exit")});
+	View.Items.Add(FFeatureMenuNavigationActions::Exit());
 	return View;
 }
 
 FFeatureMenuView FFeatureMenuViews::InitialMenu()
 {
 	return {FText::GetEmpty(), false, true, true, {
-		{EFeatureMenuAction::NewGame, LOCTEXT("NewGame", "New Game")},
-		{EFeatureMenuAction::Continue, LOCTEXT("ContinueLevelOne", "Continue on level 1")},
-		{EFeatureMenuAction::DeleteSave, LOCTEXT("DeleteSave", "Delete Save")}
+		FFeatureMenuSessionActions::NewGame(),
+		FFeatureMenuSessionActions::Continue(),
+		FFeatureMenuPersistenceActions::DeleteSave()
 	}};
 }
 
 FFeatureMenuView FFeatureMenuViews::PauseMenu()
 {
 	return {LOCTEXT("Paused", "Paused"), true, false, true, {
-		{EFeatureMenuAction::Resume, LOCTEXT("Resume", "Resume Game")},
-		{EFeatureMenuAction::ReturnToMenu, LOCTEXT("MainMenu", "Main Menu")}
+		FFeatureMenuSessionActions::Resume(),
+		FFeatureMenuNavigationActions::ReturnToMenu()
 	}};
 }
 
 FFeatureMenuView FFeatureMenuViews::VictoryMenu()
 {
 	return {LOCTEXT("Victory", "Victory"), false, false, false, {
-		{EFeatureMenuAction::Retry, LOCTEXT("Continue", "Continue")}
+		FFeatureMenuSessionActions::Retry().WithLabel(LOCTEXT("Continue", "Continue"))
 	}};
 }
 
 FFeatureMenuView FFeatureMenuViews::DefeatMenu()
 {
 	return {LOCTEXT("Defeat", "Defeat"), false, false, false, {
-		{EFeatureMenuAction::Retry, LOCTEXT("Retry", "Retry")}
+		FFeatureMenuSessionActions::Retry()
 	}};
 }
 

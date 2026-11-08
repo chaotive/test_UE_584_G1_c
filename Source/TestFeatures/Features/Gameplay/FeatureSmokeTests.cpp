@@ -5,6 +5,7 @@
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
+#include "Features/UI/Controllers/FeatureMenuActions.h"
 #include "Features_NonUE/FeatureBallSpawner.h"
 #include "Features_GameLogic/FeatureLevelRules.h"
 #include "Engine/World.h"

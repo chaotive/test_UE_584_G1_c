@@ -3,7 +3,7 @@
 #if !UE_BUILD_SHIPPING
 
 #include "Engine/World.h"
-#include "Features/UI/Archetypes/FeatureMainMenu.h"
+#include "Features/UI/Controllers/FeatureMenuActions.h"
 #include "HAL/IConsoleManager.h"
 #include "test_UE_584_G1_cGameMode.h"
 

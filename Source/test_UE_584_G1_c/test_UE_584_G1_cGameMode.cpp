@@ -7,6 +7,7 @@
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureProgressPersistence.h"
 #include "Features/UI/Archetypes/FeatureMainMenu.h"
+#include "Features/UI/Controllers/FeatureMenuActions.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"

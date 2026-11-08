@@ -16,7 +16,7 @@ Start with the startup flow below. The later sections explain the event connecti
 | --- | --- |
 | `Gameplay` | Ball, level bounds, bounce game state, and the ball-to-state event controller |
 | `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
-| `UI` | Menu and HUD archetypes, declarative menu views, and panel widgets |
+| `UI` | Menu and HUD archetypes, action definitions grouped by purpose in `UI/Controllers`, declarative menu views, and panel widgets |
 
 The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) contains level, player, and ball rules and their focused C++ bridges. AngelScript owns limits, outcomes, progression, speed calculations, and ball-lifetime decisions; native code applies the results. The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
 
@@ -85,7 +85,7 @@ Read those lines as:
 
 The world owns the session subsystem, and the session retains its controller through `UPROPERTY`. Other features retrieve the session with `World.GetSubsystem<UFeatureGameplaySession>()` to subscribe without depending on the game-mode class.
 
-The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](GameWorkflow/FeatureGameFlow.h). It starts in `StartupMenu` and asks [FeatureMainMenu](UI/Archetypes/FeatureMainMenu.cpp) to present a game-instance-owned widget. The four [menu views](UI/Views/FeatureMenuViews.cpp) declare their headings and ordered actions; the archetype supplies their shared layout and behavior. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
+The game mode owns the current phase, defined by `EFeatureGameFlow` in [FeatureGameFlow.h](GameWorkflow/FeatureGameFlow.h). It starts in `StartupMenu` and asks [FeatureMainMenu](UI/Archetypes/FeatureMainMenu.cpp) to present a game-instance-owned widget. The four [menu views](UI/Views/FeatureMenuViews.cpp) declare their headings and ordered actions from [session, persistence, and navigation definitions](UI/Controllers/FeatureMenuActions.h); the archetype supplies their shared layout and behavior. The widget reads the title from `ProjectName`, configures viewport focus, and publishes button selections. The engine's controller is available for input routing, and the game mode defers the playable pawn. The save slot is checked when the startup menu opens. Exit at startup closes the game before a session or save operation begins.
 
 The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResume`, `OnGameplaySessionPaused`, and `OnGameplaySessionEnded`. It publishes `OnStarted`, `OnResumed`, `OnPaused`, and `OnEnded(bVictory)`. The game mode subscribes during initialization and removes its bindings during `EndPlay`. New Game and Continue start the session. Resume returns from the pause menu. A successful `PauseSession()` request publishes the pause event. `FinishSession(bVictory)` publishes the result when a gameplay objective supplies an outcome.
 

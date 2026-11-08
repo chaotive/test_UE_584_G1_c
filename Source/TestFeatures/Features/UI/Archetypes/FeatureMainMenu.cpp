@@ -111,7 +111,7 @@ void UFeatureMainMenu::BuildMenu(EFeatureGameFlow Flow)
 
 	BuildHeader(*Rows, View);
 
-	for (const FFeatureMenuItem& Item : View.Items)
+	for (const FFeatureMenuActionDefinition& Item : View.Items)
 	{
 		AddViewAction(*Rows, Item);
 	}
@@ -157,7 +157,7 @@ void UFeatureMainMenu::BuildHeader(UVerticalBox& Rows, const FFeatureMenuView& V
 	}
 }
 
-void UFeatureMainMenu::AddViewAction(UVerticalBox& Rows, const FFeatureMenuItem& Item)
+void UFeatureMainMenu::AddViewAction(UVerticalBox& Rows, const FFeatureMenuActionDefinition& Item)
 {
 	UButton* Button = AddAction(Rows, Item.Label);
 	switch (Item.Action)
