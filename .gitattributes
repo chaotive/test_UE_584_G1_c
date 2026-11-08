@@ -1,0 +1,4 @@
+# Preserve checksum inputs across Git checkout configurations.
+Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json text eol=lf
+Source/ThirdParty/FeatureAngelScriptRuntime/*/BuildInfo.json text eol=lf
+Source/ThirdParty/FeatureAngelScriptRuntime/*/include/angelscript.h -text
