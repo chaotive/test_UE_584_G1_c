@@ -16,7 +16,7 @@ Artifact paths below are relative to `Source/ThirdParty/FeatureAngelScriptRuntim
 
 Ordinary Unreal builds only validate and link the supplied library. They do not download or compile the SDK, and a clean checkout does not require the SDK cache. The module checks the artifact hashes against `BuildInfo.json`; the C++ adapter also checks the header version at compile time.
 
-The library uses `AS_USE_NAMESPACE`, `AS_MAX_PORTABILITY` and `AS_NO_EXCEPTIONS`. No Unreal plugin, engine fork or AngelScript DLL is required. Our script API passes integer values; these build options are sufficient for that interface.
+The library uses `AS_USE_NAMESPACE`, `AS_MAX_PORTABILITY` and `AS_NO_EXCEPTIONS`. No Unreal plugin, engine fork or AngelScript DLL is required. The script API passes integers, floats, booleans, and registered native enums through execution-context argument and return-value methods. It exposes no Unreal objects to scripts.
 
 ## Build or restore the source
 

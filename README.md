@@ -145,20 +145,16 @@ Source: [game mode](Source/test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) · [sa
 
 ### Game logic architecture
 
-![Square game logic architecture diagram: C++ session values enter the rules host, AS functions calculate thresholds, and results return to the session.](docs/images/feature-gamelogic-flow.png)
+![Square game logic architecture diagram: native gameplay owners pass values through focused C++ bridges to level, player, and ball rules; Unreal applies the returned decisions.](docs/images/feature-gamelogic-flow.png)
 
-The main driver for AngelScript is to change simple, code-based game logic without recompiling the C++ game. The two threshold functions demonstrate value-based bindings: a world-scoped host passes level and settings into AS, and the session and HUD share the returned limits. C++ owns configuration and saved state; AS owns the formulas. The [game-logic guide](Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md) covers work in `Features_GameLogic`, where the host and scripts stay together.
+AngelScript lets simple, code-based gameplay decisions change without rebuilding C++. The current examples cover level limits, session outcomes and progression, player speed bonuses, and ball lifetime. Focused bridges pass values to the scripts and apply their results through Unreal APIs. C++ owns configuration, authoritative state, events, timers, physics, pooling, and persistence; registered native enums keep result and action definitions shared. The [game-logic guide](Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md) maps each script to its bridge and consumers.
 
-Level rules also choose session outcomes and level progression. [Ball rules](Source/TestFeatures/Features_GameLogic/FeatureBallRules.as) decide which contacts count, when balls retire, and whether to replace them. C++ applies those results through events, physics, pooling, and persistence; registered native enums keep the outcome/action definitions shared.
-
-Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and compiles the latest saved script. That provides the edit-and-restart workflow shown above, with the existing C++ binary and editor. Live hot reload is a secondary convenience; changes to native bindings still require a C++ build. See [AngelScript rules](docs/DEVELOPMENT.md#angelscript-rules) for usage and packaging.
-
-[Player-character rules](Source/TestFeatures/Features_GameLogic/FeaturePlayerRules.as) use the same value-based boundary for baseline speed and contact bonuses. A focused `UFeaturePlayerRules` actor component handles contact observation, movement updates, and timer expiry, keeping that feature out of the character's movement/input class. Its script is read when a spawned character is configured; restarting PIE picks up edits to both examples.
+Level and ball rules load once per world; player rules load when a spawned character's component is configured. Stop PIE, edit and save the relevant `.as` file, then start PIE to load the latest rules using the existing game binary and editor. Live hot reload is secondary; changing the native interface still requires a C++ build. See [AngelScript development](docs/DEVELOPMENT.md#angelscript-rules) for the workflow and packaging details.
 
 <details>
 <summary>Class and binding reference</summary>
 
-| Diagram role | Class or value | Base or primary consumer |
+| Responsibility | Class or value | Base or primary consumer |
 | --- | --- | --- |
 | Gameplay session | `UFeatureGameplaySession` | Extends `UWorldSubsystem`; supplies level and configuration values |
 | C++ rules host | `UFeatureLevelRules` | Extends `UWorldSubsystem`; owns an `FFeatureScriptRuntime` for level rules |
@@ -166,6 +162,7 @@ Each new PIE world creates a fresh `UFeatureLevelRules` host that reads and comp
 | Session and progression decisions | `SessionOutcome` / `NextLevel` in `FeatureLevelRules.as` | Applied by the gameplay session and game state |
 | Ball rules bridge | `UFeatureBallRules` | Extends `UWorldSubsystem`; translates collision facts and calls `FeatureBallRules.as` |
 | Player-character bridge | `UFeaturePlayerRules` | Extends `UActorComponent`; calls `FeaturePlayerRules.as` and owns native movement/timer integration |
+| Runtime implementation | `FFeatureScriptRuntime` | Owns an independent engine and context for each focused bridge |
 | AngelScript library | `FeatureAngelScriptRuntime` external module | Links the pinned Win64 static library into `TestFeatures` |
 | Calculated limits | `int32` return values | Consumed by session limit checks and the gameplay HUD |
 
@@ -195,7 +192,7 @@ This view focuses on ownership and narrow helper APIs. The session owns its pool
 
 Source: [ball pool](Source/TestFeatures/Features_NonUE/FeatureBallSpawner.cpp) · [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [HUD factory](Source/TestFeatures/Features_NonUE/FeatureDebugHUDSpawner.cpp) · [player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp).
 
-The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements the level-threshold rules through an embedded standalone runtime.
+The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements level, player, and ball rules through an embedded standalone runtime.
 
 Within `TestFeatures/Features`, `Gameplay` contains balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. Plain C++ spawning, storage, and HUD factory helpers live in `Features_NonUE`.
 

@@ -10,7 +10,7 @@ State and HUD updates use events, with subscriptions attached at actor creation 
 
 Normal persistence already uses asynchronous disk access, pausing gameplay until completion. The old sleep delays, ticker previews, and modal painting handshake are absent from the current subsystem. Progress contains the level, aggregate count, and chronological sessions, rather than one integer. Forced teardown retains a synchronous save fallback.
 
-AngelScript compiles once per world initialization and reuses its context and function handles. The prebuilt library avoids rebuilding SDK sources during ordinary builds; script compilation and interpreter execution still happen at runtime. Starting a new PIE world intentionally picks up saved script edits.
+Level and ball scripts compile once per world initialization; the player script compiles when each character's rule component is configured. Each bridge owns an independent runtime and reuses its context and function handles for event-driven calls. The prebuilt library avoids rebuilding SDK sources during ordinary builds; script compilation and interpreter execution still happen at runtime. Restarting PIE and starting gameplay intentionally picks up saved script edits.
 
 ## Suggested order of investigation
 

@@ -18,7 +18,7 @@ Start with the startup flow below. The later sections explain the event connecti
 | `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
 | `UI` | Menu and HUD archetypes, declarative menu views, and panel widgets |
 
-The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) contains the rules and their C++ hosts and bindings, including the level-threshold example currently implemented with AngelScript. The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
+The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) contains level, player, and ball rules and their focused C++ bridges. AngelScript owns limits, outcomes, progression, speed calculations, and ball-lifetime decisions; native code applies the results. The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
 
 ![Standalone gameplay after moving feature classes into responsibility folders](../../../docs/images/feature-organized-gameplay.png)
 
@@ -30,6 +30,9 @@ The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) conta
 | --- | --- | --- |
 | `Atest_UE_584_G1_cGameMode` | Creates the session and observes its events to manage screens and player spawning. | [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) |
 | `UFeatureGameplaySession` | Owns gameplay lifecycle, ball spawning, bounds creation, and the state-event bridge. | [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) |
+| `UFeatureLevelRules` | Bridges scripted limits, session outcomes, and level progression. | [FeatureLevelRules.cpp](../Features_GameLogic/FeatureLevelRules.cpp) |
+| `UFeatureBallRules` | Bridges scripted contact effects and replacement eligibility. | [FeatureBallRules.cpp](../Features_GameLogic/FeatureBallRules.cpp) |
+| `UFeaturePlayerRules` | Connects scripted player-speed rules to movement, contacts, and expiry timers. | [FeaturePlayerRules.cpp](../Features_GameLogic/FeaturePlayerRules.cpp) |
 | `FFeatureBallSpawner` | Finds an available ball or creates one, and remembers the pool. | [FeatureBallSpawner.cpp](../Features_NonUE/FeatureBallSpawner.cpp) |
 | `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](Gameplay/FeatureBall.cpp) |
 | `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](Gameplay/FeatureLevelBounds.cpp) |

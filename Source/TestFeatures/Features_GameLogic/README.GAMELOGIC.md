@@ -1,14 +1,14 @@
 # Game logic
 
-This folder contains the game's rule calculations and the C++ code that connects them to sessions and player movement. The focus is game-logic work; AngelScript is the current tool for expressing simple rules that can change without rebuilding C++.
+This folder contains the game's rule calculations and the C++ code that connects them to sessions, balls, and player movement. The focus is game-logic work; AngelScript is the current tool for expressing simple rules that can change without rebuilding C++.
 
 ## Responsibility and ownership
 
 - Level limits, session outcomes, and level progression have one implementation in [FeatureLevelRules.as](FeatureLevelRules.as); player speed and bonus transitions live in [FeaturePlayerRules.as](FeaturePlayerRules.as). [FeatureBallRules.as](FeatureBallRules.as) owns bounce classification, retirement, and replacement eligibility.
-- The [level host](FeatureLevelRules.cpp), `UFeatureLevelRules`, extends `UWorldSubsystem` and passes integer inputs and results across the boundary.
+- The [level host](FeatureLevelRules.cpp), `UFeatureLevelRules`, extends `UWorldSubsystem` and passes integer inputs and the registered session-result enum across the boundary.
 - The [player bridge](FeaturePlayerRules.cpp), `UFeaturePlayerRules`, extends `UActorComponent`. It owns contact subscriptions, native movement updates, the expiry timer, and transient bonus state. GameMode supplies its configuration; the character only creates the component alongside its movement and cameras.
 - The [ball bridge](FeatureBallRules.cpp), `UFeatureBallRules`, extends `UWorldSubsystem`. It translates native collision facts into values and returns scripted action flags. The ball applies count/retirement effects; the session operates the replacement queue and pool.
-- Both hosts use [FFeatureScriptRuntime](FeatureScriptRuntime.cpp) for compilation, function lookup, execution, and native resource ownership. Level rules load once per world; player rules load when each spawned character is configured, with an independent context and no per-frame script polling.
+- All three bridges use [FFeatureScriptRuntime](FeatureScriptRuntime.cpp) for compilation, function lookup, execution, and native resource ownership. Level and ball rules each load once per world; player rules load when each spawned character is configured. Each bridge owns an independent runtime and reusable context, with no per-frame script polling.
 - Game-mode configuration and saved progress remain owned by C++. The script receives values rather than retaining a second copy of game state.
 - The [gameplay session](../Features/GameWorkflow/FeatureGameplaySession.cpp) uses the returned limits for both outcome checks and the gameplay HUD.
 
@@ -22,9 +22,9 @@ The player-character example calculates baseline speed, whether a contact create
 
 1. Stop PIE.
 2. Edit the relevant function in `FeatureLevelRules.as`, `FeaturePlayerRules.as`, or `FeatureBallRules.as` and save the file.
-3. Start PIE again. The new world creates a fresh host, reads the saved script from disk, and compiles the updated rule.
+3. Start PIE again. The new world creates fresh level/ball hosts; starting gameplay configures the player bridge. Each reads and compiles its saved script.
 
-Script-only formula changes reuse the existing C++ game binary, editor, and runtime library. Live hot reload is optional future work; the stop/edit/start workflow already supports quick rule iteration.
+Script-only rule changes reuse the existing C++ game binary, editor, and runtime library. Live hot reload is optional future work; the stop/edit/start workflow already supports quick rule iteration.
 
 Keep existing entry-point argument and return types when changing a rule. The bridges pass integers, floats, booleans, and registered native enums. To add a new input or entry point, update the corresponding C++ bridge and caller, then rebuild C++. Keep the rule itself in one place instead of adding a parallel C++ implementation. When future behavior changes a property during gameplay, consider placing its decision or calculation here, as required by the [project's design rule](../../../AGENTS.MD#code-standards).
 
@@ -36,4 +36,4 @@ All authored `.as` source and project-specific C++ hosts and bindings stay toget
 
 ## Runtime dependency
 
-The host uses a prebuilt AngelScript library. Its [dependency guide](../../ThirdParty/FeatureAngelScriptRuntime/README.ANGELSCRIPT.md) covers the pinned version, source cache, library rebuilds, and upgrades. Those operations are separate from ordinary game-rule edits.
+The bridges use a prebuilt AngelScript library. Its [dependency guide](../../ThirdParty/FeatureAngelScriptRuntime/README.ANGELSCRIPT.md) covers the pinned version, source cache, library rebuilds, and upgrades. Those operations are separate from ordinary game-rule edits.
