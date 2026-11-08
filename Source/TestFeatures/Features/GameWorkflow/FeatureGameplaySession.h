@@ -46,7 +46,7 @@ public:
 
 	// Connects gameplay events and configures the level-one victory and defeat limits.
 	// State is borrowed; limits and per-level adjustments are passed by value.
-	void BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose, int32 ContactsIncrease, int32 BouncesDecrease);
+	void BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose, int32 ContactsIncrease, int32 BouncesDecrease, int32 MinimumBouncesToLose);
 
 	// Removes this subsystem's observation when its world shuts down.
 	// No pointer or reference parameters or return value; releases weak UObject subscriptions.
@@ -87,9 +87,13 @@ private:
 	// int32 stores the configured positive threshold by value without object ownership.
 	int32 PlayerContactsToWin = 10;
 
-	// Sets the level-one bounce limit, decreased per level with a minimum of one.
+	// Sets the level-one bounce limit, decreased per level down to the configured minimum.
 	// int32 stores the configured positive threshold by value without object ownership.
-	int32 SessionBouncesToLose = 50;
+	int32 SessionBouncesToLose = 100;
+
+	// Sets the lowest non-player bounce defeat limit for any level.
+	// int32 stores the positive configured floor by value.
+	int32 MinimumSessionBouncesToLose = 50;
 
 	// Sets the per-level increase in required player contacts.
 	// int32 stores the increment by value.

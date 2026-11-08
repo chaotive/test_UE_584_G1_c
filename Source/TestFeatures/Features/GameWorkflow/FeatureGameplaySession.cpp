@@ -11,12 +11,13 @@
 #include "TimerManager.h"
 #include "TestFeatures.h"
 
-void UFeatureGameplaySession::BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose, int32 ContactsIncrease, int32 BouncesDecrease)
+void UFeatureGameplaySession::BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose, int32 ContactsIncrease, int32 BouncesDecrease, int32 MinimumBouncesToLose)
 {
 	GameState = &State;
 	SaveSubsystem = State.GetGameInstance()->GetSubsystem<UFeatureSaveGameSubsystem>();
 	PlayerContactsToWin = ContactsToWin;
 	SessionBouncesToLose = BouncesToLose;
+	MinimumSessionBouncesToLose = MinimumBouncesToLose;
 	ContactsIncreasePerLevel = ContactsIncrease;
 	BouncesDecreasePerLevel = BouncesDecrease;
 	State.OnSessionStatsChanged.AddUObject(this, &UFeatureGameplaySession::EvaluateSessionLimits);
@@ -171,7 +172,7 @@ int32 UFeatureGameplaySession::GetPlayerContactsToWin() const
 
 int32 UFeatureGameplaySession::GetSessionBouncesToLose() const
 {
-	return FMath::Max(1, SessionBouncesToLose - BouncesDecreasePerLevel * (GameState->GetCurrentLevel() - 1));
+	return FMath::Max(MinimumSessionBouncesToLose, SessionBouncesToLose - BouncesDecreasePerLevel * (GameState->GetCurrentLevel() - 1));
 }
 
 bool UFeatureGameplaySession::CanLeaveGameplay() const

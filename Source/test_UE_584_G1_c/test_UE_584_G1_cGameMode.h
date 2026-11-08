@@ -113,7 +113,12 @@ protected:
 	// Sets how many ball bounces lose level one.
 	// int32 stores a positive threshold by value and exposes it in game-mode defaults.
 	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
-	int32 FeatureSessionBouncesToLose = 50;
+	int32 FeatureSessionBouncesToLose = 100;
+
+	// Sets the minimum allowed non-player bounce defeat limit at any level.
+	// int32 stores the positive floor by value for editor configuration.
+	UPROPERTY(EditAnywhere, Category="Feature Session Limits", meta=(ClampMin="1"))
+	int32 FeatureMinimumSessionBouncesToLose = 50;
 
 	// Adds this many required player contacts for each level above level one.
 	// int32 stores the non-negative increment by value.

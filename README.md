@@ -48,12 +48,12 @@ By default, every new game begins at level 1; the initial level is configurable 
 
 | Level | Player contacts to win | Non-player bounces to lose |
 | --- | ---: | ---: |
-| 1 | 10 | 50 |
-| 2 | 11 | 49 |
-| 3 | 12 | 48 |
-| 50 | 59 | 1 |
+| 1 | 10 | 100 |
+| 2 | 11 | 99 |
+| 3 | 12 | 98 |
+| 50 | 59 | 51 |
 
-The defaults follow `10 + (level - 1)` for the win target and `max(1, 50 - (level - 1))` for the loss limit. The game mode can change the base limits and per-level adjustments. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to start the next level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
+The defaults follow `10 + (level - 1)` for the win target and `max(50, 100 - (level - 1))` for the loss limit. The game mode can change the base limits, per-level adjustments, and minimum loss limit. The default loss limit starts at 100 and decreases by one per level until it reaches 50. On **Victory**, the game pauses, records the result, advances the saved level, and requests a save. Choose **Continue** to start the next level. On **Defeat**, the game records and saves the result without advancing; choose **Retry** to start another session at that level, or **Exit** to save and quit.
 
 ### Menus, pause, and saves
 

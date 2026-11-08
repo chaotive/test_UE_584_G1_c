@@ -119,12 +119,12 @@ These goals will guide future tasks:
 50. UI: Move the ball and save-game panels to UI/Widgets.
 51. Documentation: Create infographics showing gameplay, UI, and game workflow system flows and connections.
 52. When the ball rebounds on the player, it is retired and respawns
+53. Gameplay: Add a configurable minimum non-player rebound loss limit, defaulting to 50.
 54. Gameplay: Configure the base player speed multiplier and a temporary speed multiplier and duration after ball contact.
 1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
 ### To do
 
-53. Add a configurable minimum number of non player rebounds to lose, in order to avoid that these rebounds limit gets absurdly unatainable. The number of maximum non player rebounds should never go below this number, whose default will be 50.
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
 
@@ -137,4 +137,3 @@ These goals will guide future tasks:
 ### To do
 
 1. Gauntlet's editor startup logs repeated "LogAutomationTest: Error: Condition failed" messages before the project smoke tests start. All four Feature.Smoke tests pass; the source of the startup messages is not yet identified.
-2. When pressing on continue on victory, it takes you to the initial menu, while it should start the next gameplay level
