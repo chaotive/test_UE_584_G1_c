@@ -1,0 +1,56 @@
+{
+  "engine": "5.8.4",
+  "configuration": "Win64 Development Editor",
+  "filter": "Feature.Smoke",
+  "reportCreatedOn": "2026.11.09-00.13.53",
+  "exitCode": 0,
+  "succeeded": 7,
+  "succeededWithWarnings": 0,
+  "failed": 0,
+  "notRun": 0,
+  "startupConditionFailedMessages": 14,
+  "tests": [
+    {
+      "fullTestPath": "Feature.Smoke.BallPool",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "fullTestPath": "Feature.Smoke.MenuViews",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "fullTestPath": "Feature.Smoke.PlayerBallReplacement",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "fullTestPath": "Feature.Smoke.PlayerSpeedBoost",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "fullTestPath": "Feature.Smoke.SaveRoundTrip",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "fullTestPath": "Feature.Smoke.SessionLossLimit",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "fullTestPath": "Feature.Smoke.SessionState",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    }
+  ]
+}

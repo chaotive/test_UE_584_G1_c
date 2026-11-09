@@ -75,13 +75,13 @@ Earlier milestones and their runtime captures are recorded in the [change histor
 
 The flows below are small, purpose-built examples for this prototype. Each uses a concrete game feature to explore architectural benefits: clear ownership, localized dependencies, shared construction, and a single source of truth for rules and state. The patterns guide those boundaries; each implementation stays focused on its current use case and can grow when another use case needs it.
 
-Each view highlights its own boundary: gameplay events, UI construction, session lifecycle, script iteration, or helper ownership. Repeated class names provide context; their detailed responsibilities stay in the relevant view. Solid arrows show calls or data flow; the dashed arrow shows state observation. Expand the class references for full names and base types. These are architecture illustrations, not runtime captures.
+Each view highlights its own boundary: gameplay events, UI construction, session lifecycle, script iteration, or helper ownership. Repeated class names provide context; their detailed responsibilities stay in the relevant view. Solid arrows show calls or value flow. Dashed arrows show event delivery. Expand the class references for full names and base types. These are architecture illustrations, not runtime captures.
 
 ### Gameplay architecture
 
 ![Square gameplay architecture diagram: session, arena, ball manager, ball, state bridge and shared state.](docs/images/feature-gameplay-flow.png)
 
-The ball cycle demonstrates Observer events and event-to-state translation. Balls report contacts and bounces; a focused bridge gives those events meaning as session statistics. The session observes the resulting score changes. This keeps physics behavior independent of shared state and UI. The [ball manager](Source/TestFeatures/Features/Gameplay/FeatureBallManager.h) owns the pool, reuses retired actors, and schedules replacements.
+The ball cycle demonstrates Observer events and event-to-state translation. Balls report contacts and bounces; a focused bridge gives those events meaning as session statistics. The session observes the resulting score changes. The ball manager announces each newly created actor so the scoring bridge can subscribe once before activation. The session controls when the manager starts, pauses, resumes, and stops. The manager owns reuse and queued replacements. [Ball manager](Source/TestFeatures/Features/Gameplay/FeatureBallManager.h)
 
 <details>
 <summary>Class reference</summary>
@@ -101,9 +101,9 @@ Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySessi
 
 ### UI architecture
 
-![Square UI architecture diagram: declarative menu definitions, shared menu, gameplay HUD and composed debug panels.](docs/images/feature-ui-flow.png)
+![Square UI architecture diagram showing menu definitions, action routing, saved-progress composition, and HUD ownership.](docs/images/feature-ui-flow.png)
 
-The four menu views demonstrate declarative differences over shared construction: common layout and behavior have one implementation, and each view supplies its heading and actions. The menu controller owns menu lifetime and executes actions; GameMode supplies flow changes and configured session starts. The player controller manages HUD lifetime. Widgets own their Observer bindings, so display changes stay within UI code and controllers do not need to know which state events update which labels.
+The four menu views demonstrate declarative differences over shared construction: common layout and behavior have one implementation, and each view supplies its heading and actions. The world-scoped menu controller owns menu lifetime and routes actions. It publishes `OnStartRequested` for New Game and Continue. GameMode supplies the session settings and passes flow changes back to the controller. The player controller manages HUD lifetime. Widgets own their Observer bindings, so display changes stay within UI code and controllers do not need to know which state events update which labels.
 
 The [saved-progress panel](Source/TestFeatures/Features/UI/Widgets/FeatureSavedProgressPanel.cpp) owns asynchronous preview loading, summary formatting, and deletion observation. The menu composes it and updates Continue/Delete Save from its saved-level and slot-availability events, with an initial read when the binding is attached.
 
@@ -130,7 +130,7 @@ Source: [controller](Source/TestFeatures/Features/UI/Controllers/FeatureMenuCont
 
 ![Square session architecture diagram: the gameplay session requests operations through a progress-binding component; game state owns values, while the coordinator and storage handle I/O.](docs/images/feature-workflow-flow.png)
 
-A small enum-based state machine makes round transitions explicit. GameMode attaches a focused persistence component to the game state: the component connects restored snapshots, routes load/save requests, and owns cancellation and teardown saving. The state owns progress, mutations, and notifications without storage or save-subsystem dependencies. World and game-instance lifetimes remain separate, and the save subsystem publishes restored data and I/O status.
+The world-scoped session moves from Ready to Playing, can pause and resume, and ends when an outcome is recorded. GameMode attaches a progress component to game state. The component routes save and load requests to the game-instance coordinator and binds its `OnLoaded` event directly to state initialization. The coordinator restores the world’s previous pause state when I/O finishes. On teardown, the binding cancels outstanding callbacks and saves initialized progress synchronously when needed.
 
 <details>
 <summary>Class reference</summary>
@@ -178,9 +178,9 @@ Source: [AS rules](Source/TestFeatures/Features_GameLogic/FeatureLevelRules.as) 
 
 ### Non-UE helper architecture
 
-![Square non-UE helper architecture diagram: save coordination and menu previews share a focused storage helper.](docs/images/feature-nonue-flow.png)
+![Square non-UE helper architecture diagram showing shared save storage and the console command route to the menu controller.](docs/images/feature-nonue-flow.png)
 
-This view focuses on ownership and narrow helper APIs. The storage helper contains save-slot, serialization, and disk API details used by the save coordinator and saved-progress preview. It is a plain C++ class using Unreal types, with no UObject lifetime of its own. Event scoring belongs to the gameplay view, rendered composition to the UI view, and pause/result coordination to the session view.
+The save coordinator and menu preview share one storage API for the slot, serialization, and disk access. The console registrar uses the world supplied by Unreal to find that world’s menu controller. In non-Shipping builds, it dispatches `Feature.NewGame` through the same action path as the startup button. Both helpers are plain C++ classes that use Unreal APIs.
 
 <details>
 <summary>Class and ownership reference</summary>
@@ -189,15 +189,16 @@ This view focuses on ownership and narrow helper APIs. The storage helper contai
 | --- | --- | --- |
 | Save coordinator | `UFeatureSaveGameSubsystem` | Extends `UGameInstanceSubsystem`; coordinates persistence |
 | Saved-progress preview | `UFeatureSavedProgressPanel` | Extends `UUserWidget`; reads storage without mutating live state |
-| Save storage helper | `FFeatureSaveGameStorage` | Creates `UFeatureSaveGame` snapshots for the save coordinator; also serves menu previews |
+| Save storage helper | `FFeatureSaveGameStorage` | Creates `UFeatureSaveGame` objects and reads progress snapshots for both consumers |
+| Console registrar | `FFeatureConsoleCommands` | Registers `FAutoConsoleCommandWithWorld` and dispatches to `UFeatureMenuController` |
 
 </details>
 
-Source: [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [player controller](Source/test_UE_584_G1_c/test_UE_584_G1_cPlayerController.cpp).
+Source: [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage.cpp) · [console commands](Source/TestFeatures/Features_NonUE/FeatureConsoleCommands.cpp).
 
 The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements level, player, and ball rules through an embedded standalone runtime.
 
-Within `TestFeatures/Features`, `Gameplay` contains the ball manager, balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. The plain C++ storage helper and console command registrar live in `Features_NonUE`.
+Within `TestFeatures/Features`, `Gameplay` contains the ball manager and scoring state, with ball and bounds actors in `Gameplay/Actors`. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. The plain C++ storage helper and console command registrar live in `Features_NonUE`.
 
 
 ## Development

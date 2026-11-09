@@ -67,4 +67,4 @@ Both objective lines are formatted on every stats update even when only one coun
 
 For a future authorized profiling session, compare the same Win64 build, map, resolution, and logging settings. Record frame-time distributions plus game-thread, physics, Slate, and GPU contributions. Vary ball count, contact density, diagnostic operations, and saved-session count separately; include startup, steady play, replacement bursts, and save/teardown.
 
-No performance gains are claimed by this review. The November 8 Gauntlet follow-up passed all seven smoke checks after test-fixture corrections; that validates selected behaviors, not performance. Editor startup diagnostics remain tracked separately. See the [smoke-check results](DEVELOPMENT.md#smoke-checks) and [tracked bug](../AGENTS.MD#bugs).
+No performance gains are claimed by this review. The November 9 Gauntlet run passed all seven smoke checks. Performance measurements remain a separate task. Editor startup diagnostics remain tracked separately. See the [smoke-check results](DEVELOPMENT.md#smoke-checks) and [tracked bug](../AGENTS.MD#bugs).

@@ -19,15 +19,13 @@ This guide covers running and testing Crazy balls, changing its implementation, 
 
 ### Smoke checks
 
-After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for seven `Feature.Smoke` checks: menu definitions, session state and progression, pool reuse, ball contact/retirement/replacement policy, scripted outcomes and limits, save serialization, and player-speed boosts including refresh, expiry, and stacking. Logs are stored under `Intermediate/FeatureSmoke`; the runner exports `Report/index.json` and `Report/index.html` there. Repeated runs replace the current artifacts. These headless checks do not replace a playthrough or exercise the rendered UI.
+After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. Gauntlet runs seven `Feature.Smoke` checks covering menu definitions, session state and progression, outcome thresholds, pool reuse, ball contacts and scoring, save history, and player-speed boosts. Each run replaces the logs in `Intermediate/FeatureSmoke` and exports `Report/index.json` and `Report/index.html`. The headless suite exercises behavior in fixtures and does not render the UI.
 
 The six shared feature checks live at the `TestFeatures` module root. The player-speed check lives in the game module because it spawns the project character. [Shared feature checks](../Source/TestFeatures/FeatureSmokeTests.cpp) · [Player-speed check](../Source/test_UE_584_G1_c/FeatureGameplaySmokeTests.cpp)
 
-November 8, 2026: the Development Editor build succeeded and Gauntlet passed all seven checks with exit code 0 and no per-test warnings or errors. The [saved JSON report](validation/2026-11-08-gauntlet-report.json) records each result. Two fixture failures found in the initial run were corrected: the replacement fixture now supplies a non-bot player state and exercises the queued replacement timer; the speed fixture advances across engine frames and uses separate characters for independent boost configurations.
+On November 9, 2026, the Development Editor build and all seven Gauntlet checks passed. The run exited with code 0 and reported zero per-test warnings or errors. The updated fixtures cover scoring after reuse, discarding queued replacements at session end, chronological save history, and ignoring speed-boost events for another pawn. [November 9 report](validation/2026-11-09-gauntlet-report.json)
 
-That report predates the player, outcome, progression, and ball-rule extractions. Their updated checks compiled, and all three scripts passed compilation and binding-signature checks; Gauntlet has not been rerun against those changes. This documentation review adds no runtime validation or new captures.
-
-The editor still logs startup diagnostics before the checks, including 14 `LogAutomationTest: Error: Condition failed` messages in this passing run. These were not suppressed. The previous initialization failure was not reproduced when running outside the restricted execution environment; its cause remains unconfirmed. See the [tracked startup issue](../AGENTS.MD#bugs).
+The editor logged 14 `LogAutomationTest: Error: Condition failed` messages before the first smoke check. The earlier engine initialization failure did not recur. The November 8 report preserves the baseline before the rule and ownership refactors. [Tracked startup issue](../AGENTS.MD#bugs) · [November 8 report](validation/2026-11-08-gauntlet-report.json)
 
 ### Package for Win64
 

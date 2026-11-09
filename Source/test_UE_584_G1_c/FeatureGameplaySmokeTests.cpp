@@ -33,6 +33,8 @@ bool FFeaturePlayerSpeedBoostSmokeTest::RunTest(const FString& Parameters)
 	Atest_UE_584_G1_cCharacter* StackingCharacter = World->SpawnActor<Atest_UE_584_G1_cCharacter>(CharacterClass);
 	UFeaturePlayerRules* StackingLogic = StackingCharacter->FindComponentByClass<UFeaturePlayerRules>();
 	StackingLogic->ConfigureSpeed(0.5f, 2.0f, 5.0f, true);
+	StackingLogic->HandleBallContact(*Character);
+	TestEqual(TEXT("Contact for another pawn leaves baseline speed unchanged"), StackingCharacter->GetCharacterMovement()->MaxWalkSpeed, 250.0f);
 	StackingLogic->HandleBallContact(*StackingCharacter);
 	StackingLogic->HandleBallContact(*StackingCharacter);
 	TestEqual(TEXT("Stacking adds one contact boost per contact"), StackingCharacter->GetCharacterMovement()->MaxWalkSpeed, 750.0f);

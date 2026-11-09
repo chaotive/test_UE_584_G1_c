@@ -18,7 +18,7 @@ Start with the startup flow below. The later sections explain the event connecti
 | `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
 | `UI` | Menu and HUD archetypes, action definitions grouped by purpose in `UI/Controllers`, declarative menu views, and panel widgets |
 
-The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) contains level, player, and ball rules and their focused C++ bridges. AngelScript owns limits, outcomes, progression, speed calculations, and ball-lifetime decisions; native code applies the results. The sibling `Features_NonUE` folder contains plain C++ helpers for spawning and storage. These helpers still use Unreal APIs. They do not derive from UObject.
+The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) contains level, player, and ball rules and their focused C++ bridges. AngelScript owns limits, outcomes, progression, speed calculations, and ball-lifetime decisions; native code applies the results. The sibling `Features_NonUE` folder contains plain C++ helpers for console registration and storage. These helpers still use Unreal APIs. They do not derive from UObject.
 
 ![Standalone gameplay after moving feature classes into responsibility folders](../../../docs/images/feature-organized-gameplay.png)
 
@@ -131,9 +131,9 @@ AFeatureBall* Ball = GetWorld()->SpawnActor<AFeatureBall>(Location, FRotator::Ze
 
 Unreal constructs the actor and its inherited mesh component. The ball constructor caches that component once, loads the built-in sphere, prepares physics, and creates its bouncy material. The ball applies the material in `BeginPlay()`, when physics can update the mesh. Initially, the ball is hidden and inactive.
 
-The manager assigns `Training_Ball_0`, then `Training_Ball_1`, and so on, using the pool list index. It sets both the internal object name and the editor's Outliner label. It adds the actor to `SpawnedBalls` and broadcasts `OnBallCreated` before activation.
+The manager assigns `Training_Ball_0`, then `Training_Ball_1`, and so on, using the pool list index. It sets the internal object name in every build and the Outliner label in editor builds. It adds the actor to `SpawnedBalls` and broadcasts `OnBallCreated` before activation.
 
-The controller's `ObserveBall()` subscribes to that actor's bounce event. Reusing the actor skips `CreateBall()`, so it also skips this subscription step. Each actor retains its original name, list slot, and listener connection.
+The state controller’s `ObserveBall()` subscribes to the actor’s bounce and contact events. Reusing the actor skips `CreateBall()`, so it also skips this subscription step. Each actor retains its original name, list slot, and listener connection.
 
 ## 3. Activation: make the ball move
 

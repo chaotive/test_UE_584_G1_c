@@ -3,6 +3,7 @@
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/Gameplay/Actors/FeatureBall.h"
 #include "Features/Gameplay/FeatureBallManager.h"
+#include "Features/Gameplay/FeatureGameStateController.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
@@ -15,6 +16,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/AutomationTest.h"
+#include "Misc/DateTime.h"
 #include "TimerManager.h"
 
 // Initializes a fresh state fixture without involving persistence or a game instance.
@@ -52,7 +54,12 @@ bool FFeatureMenuSmokeTest::RunTest(const FString& Parameters)
 		&& Initial.Items[3].Action == EFeatureMenuAction::Exit);
 	TestTrue(TEXT("Escape exits from the initial menu"), Initial.bExitOnEscape && !Initial.bPauseMenu);
 	TestTrue(TEXT("Pause menu starts with Resume"), Pause.Items[0].Action == EFeatureMenuAction::Resume && Pause.bPauseMenu);
-	TestTrue(TEXT("Victory starts the saved next level"), Victory.Items[0].Action == EFeatureMenuAction::Retry);
+	TestTrue(TEXT("Pause offers return to menu and exit"), Pause.Items[1].Action == EFeatureMenuAction::ReturnToMenu
+		&& Pause.Items[2].Action == EFeatureMenuAction::Exit);
+	TestTrue(TEXT("Victory offers saved-level reload and exit"), Victory.Items[0].Action == EFeatureMenuAction::Retry
+		&& Victory.Items[1].Action == EFeatureMenuAction::Exit);
+	TestFalse(TEXT("Result screens do not use pause or startup Escape behavior"),
+		Victory.bPauseMenu || Victory.bExitOnEscape || Defeat.bPauseMenu || Defeat.bExitOnEscape);
 	TestTrue(TEXT("Defeat offers Retry and Exit"), Defeat.Items[0].Action == EFeatureMenuAction::Retry
 		&& Defeat.Items[1].Action == EFeatureMenuAction::Exit);
 	return true;
@@ -153,6 +160,11 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	UFeatureBallManager* Manager = World->GetSubsystem<UFeatureBallManager>();
+	AFeatureGameState* State = World->SpawnActor<AFeatureGameState>();
+	InitializeFreshSession(*State, 1);
+	UFeatureGameStateController* StateController = NewObject<UFeatureGameStateController>(State);
+	StateController->Initialize(*State);
+	Manager->OnBallCreated.AddUObject(StateController, &UFeatureGameStateController::ObserveBall);
 	Manager->Start(1, 1.0f, 1.0f, 5, FBox(FVector(-100.0f), FVector(100.0f)));
 	AFeatureBall* Ball = Manager->GetSpawnedBalls()[0].Get();
 	APawn* PlayerPawn = World->SpawnActor<APawn>();
@@ -168,6 +180,8 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 
 	Ball->OnBallHit(nullptr, PlayerPawn, nullptr, FVector::ZeroVector, FHitResult());
 	TestTrue(TEXT("Player contact is published"), bPlayerContactAnnounced);
+	TestEqual(TEXT("The state bridge records the contact once"), State->GetGameplaySessions().Last().PlayerBallCollisions, 1);
+	TestEqual(TEXT("Player contact leaves the aggregate bounce count unchanged"), State->GetTotalBounces(), 0);
 	TestFalse(TEXT("The contacted ball is retired"), Ball->IsActive());
 	TestEqual(TEXT("Retirement schedules one replacement"), Manager->PendingBallReplacements, 1);
 	TestEqual(TEXT("A swept player contact does not count as a non-player bounce"), Ball->BounceCount, 0);
@@ -185,6 +199,7 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("The ball remains active below its rebound limit"), Ball->IsActive());
 	Ball->OnBallHit(nullptr, nullptr, nullptr, FVector::UpVector, FHitResult());
 	TestEqual(TEXT("The rebound limit counts the last bounce"), Ball->BounceCount, 2);
+	TestEqual(TEXT("Pool reuse preserves a single scoring subscription"), State->GetTotalBounces(), 2);
 	TestFalse(TEXT("The scripted rebound limit retires the ball"), Ball->IsActive());
 	TestEqual(TEXT("Non-player retirement also schedules replacement"), Manager->PendingBallReplacements, 1);
 
@@ -194,9 +209,12 @@ bool FFeaturePlayerBallReplacementSmokeTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Deferred replacement remains queued"), Manager->PendingBallReplacements, 1);
 	Manager->Resume();
 	TestTrue(TEXT("Active gameplay permits replacement again"), Ball->IsActive());
-	Manager->Stop();
 	Ball->Deactivate();
-	TestEqual(TEXT("Retirement after the session ends schedules no replacement"), Manager->PendingBallReplacements, 0);
+	TestEqual(TEXT("A retirement before stop queues a replacement"), Manager->PendingBallReplacements, 1);
+	Manager->Stop();
+	TestEqual(TEXT("Stopping discards the queued replacement"), Manager->PendingBallReplacements, 0);
+	Manager->SpawnReplacementBall();
+	TestFalse(TEXT("A stopped manager leaves the retired ball inactive"), Ball->IsActive());
 
 	World->DestroyWorld(false);
 	return true;
@@ -234,7 +252,12 @@ bool FFeatureSaveSmokeTest::RunTest(const FString& Parameters)
 	UFeatureSaveGame* Original = NewObject<UFeatureSaveGame>();
 	Original->Progress.CurrentLevel = 3;
 	Original->Progress.TotalBounces = 14;
+	FFeatureGameplaySessionRecord& Earlier = Original->Progress.Sessions.AddDefaulted_GetRef();
+	Earlier.StartedAtUtc = FDateTime(2026, 11, 8, 12);
+	Earlier.TotalBounces = 10;
+	Earlier.Result = EFeatureGameplaySessionResult::Victory;
 	FFeatureGameplaySessionRecord& Session = Original->Progress.Sessions.AddDefaulted_GetRef();
+	Session.StartedAtUtc = FDateTime(2026, 11, 8, 13);
 	Session.TotalBounces = 4;
 	Session.PlayerBallCollisions = 2;
 	Session.Result = EFeatureGameplaySessionResult::Defeat;
@@ -251,9 +274,13 @@ bool FFeatureSaveSmokeTest::RunTest(const FString& Parameters)
 	}
 	TestEqual(TEXT("Saved level survives"), Restored->Progress.CurrentLevel, 3);
 	TestEqual(TEXT("Aggregate bounces survive"), Restored->Progress.TotalBounces, 14);
-	if (TestEqual(TEXT("Session history survives"), Restored->Progress.Sessions.Num(), 1))
+	if (TestEqual(TEXT("Session history survives"), Restored->Progress.Sessions.Num(), 2))
 	{
-		const FFeatureGameplaySessionRecord& LoadedSession = Restored->Progress.Sessions[0];
+		const FFeatureGameplaySessionRecord& LoadedEarlier = Restored->Progress.Sessions[0];
+		const FFeatureGameplaySessionRecord& LoadedSession = Restored->Progress.Sessions[1];
+		TestEqual(TEXT("Session timestamps survive in chronological order"), LoadedEarlier.StartedAtUtc, FDateTime(2026, 11, 8, 12));
+		TestEqual(TEXT("Latest session timestamp survives"), LoadedSession.StartedAtUtc, FDateTime(2026, 11, 8, 13));
+		TestTrue(TEXT("Earlier session result survives"), LoadedEarlier.Result == EFeatureGameplaySessionResult::Victory);
 		TestEqual(TEXT("Session bounces survive"), LoadedSession.TotalBounces, 4);
 		TestEqual(TEXT("Player contacts survive"), LoadedSession.PlayerBallCollisions, 2);
 		TestTrue(TEXT("Session result survives"), LoadedSession.Result == EFeatureGameplaySessionResult::Defeat);
