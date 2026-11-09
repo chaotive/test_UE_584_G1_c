@@ -14,7 +14,7 @@ Start with the startup flow below. The later sections explain the event connecti
 
 | Folder | Classes and types |
 | --- | --- |
-| `Gameplay` | Ball manager, ball, level bounds, bounce game state, and the ball-to-state event controller |
+| `Gameplay` | Ball manager, bounce game state, and the ball-to-state event controller. Ball and level bounds actors live in `Gameplay/Actors`. |
 | `GameWorkflow` | Gameplay session, flow enum, save data, and persistence subsystem |
 | `UI` | Menu and HUD archetypes, action definitions grouped by purpose in `UI/Controllers`, declarative menu views, and panel widgets |
 
@@ -34,8 +34,8 @@ The sibling [game-logic folder](../Features_GameLogic/README.GAMELOGIC.md) conta
 | `UFeatureBallRules` | Bridges scripted contact effects and replacement eligibility. | [FeatureBallRules.cpp](../Features_GameLogic/FeatureBallRules.cpp) |
 | `UFeaturePlayerRules` | Connects scripted player-speed rules to movement, contacts, and expiry timers. | [FeaturePlayerRules.cpp](../Features_GameLogic/FeaturePlayerRules.cpp) |
 | `UFeatureBallManager` | Creates, configures, and reuses balls; schedules replacements. | [FeatureBallManager.cpp](Gameplay/FeatureBallManager.cpp) |
-| `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](Gameplay/FeatureBall.cpp) |
-| `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](Gameplay/FeatureLevelBounds.cpp) |
+| `AFeatureBall` | Handles its own appearance, movement, collisions, and active/inactive state. | [FeatureBall.cpp](Gameplay/Actors/FeatureBall.cpp) |
+| `AFeatureLevelBounds` | Contains physics balls with six collision faces spawned at session start. | [FeatureLevelBounds.cpp](Gameplay/Actors/FeatureLevelBounds.cpp) |
 | `AFeatureGameState` | Stores the shared bounce total and chronological session records. | [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp) |
 | `UFeatureProgressPersistence` | Connects progress snapshots to loading, saving, cancellation, and teardown fallback. | [FeatureProgressPersistence.cpp](GameWorkflow/FeatureProgressPersistence.cpp) |
 | `UFeatureGameStateController` | Listens to ball events and updates that shared total. | [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) |
@@ -90,7 +90,7 @@ The session groups workflows in `OnGameplaySessionStart`, `OnGameplaySessionResu
 
 On New Game or Continue, the session creates the enclosure and publishes `OnStarted`. The game mode enters `Gameplay` and restarts the player to spawn the pawn. The controller creates the gameplay HUD on possession. The session initializes the state at zero or requests an asynchronous restore, then asks [the ball manager](Gameplay/FeatureBallManager.cpp) to create the initial batch. Continue keeps the world paused until loading finishes.
 
-In non-Shipping builds, `FFeatureConsoleCommands` registers `Feature.NewGame` and routes it to the same action as the New Game button when the command's world is at the startup menu. It clears the existing slot before starting at zero. [Command registration and handler](../../test_UE_584_G1_c/FeatureConsoleCommands.cpp)
+In non-Shipping builds, `FFeatureConsoleCommands` registers `Feature.NewGame` and routes it to the same action as the New Game button when the command's world is at the startup menu. The menu controller clears the existing slot before starting a fresh session. [Command registration and handler](../Features_NonUE/FeatureConsoleCommands.cpp)
 
 ```cpp
 BallManager->SpawnMultiple(BallCount, SpawnBounds);
@@ -223,7 +223,7 @@ The ball manager prewarms one pool entry per initial ball, then requests the ini
 
 ### Example to try: prove that an actor is reused
 
-Inside a gameplay-session method, the following experiment exercises explicit release and reuse. Add a direct include for `Features/Gameplay/FeatureBall.h` when trying it.
+Inside a gameplay-session method, the following experiment exercises explicit release and reuse. Add a direct include for `Features/Gameplay/Actors/FeatureBall.h` when trying it.
 
 ```cpp
 UWorld& World = *GameState->GetWorld();
@@ -344,7 +344,7 @@ For a first measurement pass, use `stat unit` to inspect frame/thread timings an
 
 This example assumes the configured training game state and controller wiring. It does not implement replication of the custom bounce total or a network event transport. `Broadcast()` here is a local C++ call, not a message sent to other machines.
 
-For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) → [FeatureBallManager.cpp](Gameplay/FeatureBallManager.cpp) → [FeatureBall.cpp](Gameplay/FeatureBall.cpp) → [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) → [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp).
+For a first code-reading pass, follow [GameMode.cpp](../../test_UE_584_G1_c/test_UE_584_G1_cGameMode.cpp) → [FeatureGameplaySession.cpp](GameWorkflow/FeatureGameplaySession.cpp) → [FeatureBallManager.cpp](Gameplay/FeatureBallManager.cpp) → [FeatureBall.cpp](Gameplay/Actors/FeatureBall.cpp) → [FeatureGameStateController.cpp](Gameplay/FeatureGameStateController.cpp) → [FeatureGameState.cpp](Gameplay/FeatureGameState.cpp).
 
 ## In-game load/save (tasks 14–16)
 

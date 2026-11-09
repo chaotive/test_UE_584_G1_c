@@ -1,5 +1,5 @@
 #include "FeatureGameStateController.h"
-#include "FeatureBall.h"
+#include "Actors/FeatureBall.h"
 #include "FeatureGameState.h"
 #include "GameFramework/Pawn.h"
 #include "TestFeatures.h"

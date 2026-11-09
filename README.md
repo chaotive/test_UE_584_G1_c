@@ -97,7 +97,7 @@ The ball cycle demonstrates Observer events and event-to-state translation. Ball
 
 </details>
 
-Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [ball manager](Source/TestFeatures/Features/Gameplay/FeatureBallManager.cpp) · [ball](Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) · [state bridge](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp).
+Source: [session](Source/TestFeatures/Features/GameWorkflow/FeatureGameplaySession.cpp) · [ball manager](Source/TestFeatures/Features/Gameplay/FeatureBallManager.cpp) · [ball](Source/TestFeatures/Features/Gameplay/Actors/FeatureBall.cpp) · [state bridge](Source/TestFeatures/Features/Gameplay/FeatureGameStateController.cpp).
 
 ### UI architecture
 
@@ -197,7 +197,7 @@ Source: [save storage](Source/TestFeatures/Features_NonUE/FeatureSaveGameStorage
 
 The `TestFeatures` runtime module houses gameplay, UI, and persistence. Unreal and Blueprint provide the framework and supplementary assets; AngelScript implements level, player, and ball rules through an embedded standalone runtime.
 
-Within `TestFeatures/Features`, `Gameplay` contains the ball manager, balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. The plain C++ storage helper lives in `Features_NonUE`.
+Within `TestFeatures/Features`, `Gameplay` contains the ball manager, balls, bounds, and bounce state. `GameWorkflow` contains session and persistence code. `UI` contains menus and HUD panels. AngelScript rules and their C++ bridges live together in the sibling `Features_GameLogic` folder. The plain C++ storage helper and console command registrar live in `Features_NonUE`.
 
 
 ## Development

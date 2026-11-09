@@ -1,5 +1,5 @@
 #include "FeatureBallManager.h"
-#include "FeatureBall.h"
+#include "Actors/FeatureBall.h"
 #include "Features_GameLogic/FeatureBallRules.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"

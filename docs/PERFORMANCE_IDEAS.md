@@ -35,7 +35,7 @@ The pool has no trimming policy. Inactive world actors remain allocated, and ext
 
 ## Physics, rendering, and logging
 
-[Ball activation and hit handling](../Source/TestFeatures/Features/Gameplay/FeatureBall.cpp) enable simulation and publish contacts synchronously. AlwaysSpawn and independently randomized positions permit initial overlap. At larger counts, contact density can grow much faster than actor count. Spacing and collision filtering are options only if they preserve intended gameplay: ball-to-ball impacts currently contribute to the non-player count.
+[Ball activation and hit handling](../Source/TestFeatures/Features/Gameplay/Actors/FeatureBall.cpp) enable simulation and publish contacts synchronously. AlwaysSpawn and independently randomized positions permit initial overlap. At larger counts, contact density can grow much faster than actor count. Spacing and collision filtering are options only if they preserve intended gameplay: ball-to-ball impacts currently contribute to the non-player count.
 
 The counter accepts nonzero-impulse hit callbacks, rather than separately detecting a complete visual rebound. The default retirement limit is five. A collision cooldown or discarded impacts would change rules, not merely optimize them. Physical-material application now occurs in BeginPlay; the old constructor-application concern is no longer a current recommendation.
 

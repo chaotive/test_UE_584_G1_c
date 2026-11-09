@@ -15,11 +15,13 @@ This guide covers running and testing Crazy balls, changing its implementation, 
 
 1. Open `test_UE_584_G1_c.uproject` in Unreal Engine 5.8 and build the editor target.
 2. Open the Third Person map and press **Play**.
-3. In a non-Shipping build, enter `Feature.NewGame` in the console at the startup menu to start immediately. In Play In Editor, use the Output Log command field. [Console command implementation](../Source/test_UE_584_G1_c/FeatureConsoleCommands.cpp)
+3. In a non-Shipping build, enter `Feature.NewGame` in the console at the startup menu to start immediately. In Play In Editor, use the Output Log command field. [Console command implementation](../Source/TestFeatures/Features_NonUE/FeatureConsoleCommands.cpp)
 
 ### Smoke checks
 
 After building the Development Editor target, run `./Run-FeatureSmoke.ps1` in PowerShell. It invokes Unreal's Gauntlet editor automation runner for seven `Feature.Smoke` checks: menu definitions, session state and progression, pool reuse, ball contact/retirement/replacement policy, scripted outcomes and limits, save serialization, and player-speed boosts including refresh, expiry, and stacking. Logs are stored under `Intermediate/FeatureSmoke`; the runner exports `Report/index.json` and `Report/index.html` there. Repeated runs replace the current artifacts. These headless checks do not replace a playthrough or exercise the rendered UI.
+
+The six shared feature checks live at the `TestFeatures` module root. The player-speed check lives in the game module because it spawns the project character. [Shared feature checks](../Source/TestFeatures/FeatureSmokeTests.cpp) · [Player-speed check](../Source/test_UE_584_G1_c/FeatureGameplaySmokeTests.cpp)
 
 November 8, 2026: the Development Editor build succeeded and Gauntlet passed all seven checks with exit code 0 and no per-test warnings or errors. The [saved JSON report](validation/2026-11-08-gauntlet-report.json) records each result. Two fixture failures found in the initial run were corrected: the replacement fixture now supplies a non-bot player state and exercises the queued replacement timer; the speed fixture advances across engine frames and uses separate characters for independent boost configurations.
 

@@ -1,8 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
-#include "FeatureGameState.h"
-#include "FeatureBall.h"
-#include "FeatureBallManager.h"
+#include "Features/Gameplay/FeatureGameState.h"
+#include "Features/Gameplay/Actors/FeatureBall.h"
+#include "Features/Gameplay/FeatureBallManager.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/UI/Views/FeatureMenuViews.h"
