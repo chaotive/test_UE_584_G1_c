@@ -10,11 +10,9 @@ class TESTFEATURES_API FFeatureSaveGameStorage
 public:
 
 	// Reports whether the local slot has data for a Continue attempt.
-	// Returns bool by value without pointer or reference ownership.
 	static bool HasSave();
 
 	// Deletes the local slot, treating an already empty slot as success.
-	// Returns bool by value without pointer or reference ownership.
 	static bool DeleteSave();
 
 	// Loads a snapshot without blocking rendering while disk data is read.

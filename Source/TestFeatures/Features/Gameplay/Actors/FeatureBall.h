@@ -37,7 +37,6 @@ public:
 	AFeatureBall();
 
 	// Configures this pooled ball's size, launch speed, and retirement limit.
-	// All parameters are passed by value without pointer or reference ownership.
 	void Configure(float Size, float SpeedMultiplier, int32 ReboundLimit);
 
 	// Resets and launches this ball for a new use at the requested position.
@@ -59,13 +58,12 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Logs why the ball stopped playing and runs the inherited cleanup.
-	// EndPlayReason is passed by value; no pointer or reference ownership is transferred.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 	// Allows the replacement smoke check to deliver native collision callbacks.
 	// The test class retains no actor, component, or script-runtime ownership.
-	friend class FFeaturePlayerBallReplacementSmokeTest;
+	friend class FFeatureSmokeSpec;
 
 	// Assigns the sphere mesh and prepares an inactive ball for later activation.
 	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
@@ -91,19 +89,15 @@ private:
 	TObjectPtr<UStaticMeshComponent> BallMesh;
 
 	// Scales the initial random launch speed for each activation.
-	// float stores the multiplier by value without object ownership.
 	float LaunchSpeedMultiplier = 1.0f;
 
 	// Sets the number of non-player rebounds before retirement.
-	// int32 stores the positive limit by value.
 	int32 ReboundsBeforeRetirement = 5;
 
 	// Tracks how many times this ball has bounced during its current activation.
-	// int32 stores a per-instance counter by value without pointer ownership or a wrapper.
 	int32 BounceCount = 0;
 
 	// Distinguishes active balls from inactive balls available for reuse.
-	// bool stores per-instance state by value without pointer ownership or a wrapper.
 	bool bActive = false;
 
 	// Supplies the restitution that makes the sphere rebound on contact.

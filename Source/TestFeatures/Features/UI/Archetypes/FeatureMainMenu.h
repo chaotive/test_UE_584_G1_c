@@ -48,7 +48,6 @@ protected:
 
 private:
 	// Builds the menu for the selected flow.
-	// Flow is passed by value without pointer or reference ownership.
 	void BuildMenu(EFeatureGameFlow Flow);
 
 	// Builds the shared logo, title, subtitle, and optional view heading.
@@ -75,7 +74,6 @@ private:
 	TObjectPtr<UFeatureSavedProgressPanel> SavedProgressPanel;
 
 	// Retains the declarative Continue caption used when no readable level is available.
-	// FText owns a localized value copied from the view definition without widget ownership.
 	FText DefaultContinueLabel;
 
 	// Keeps the generated logo texture available while this menu is displayed.
@@ -84,11 +82,9 @@ private:
 	TObjectPtr<UTexture2D> LogoTexture;
 
 	// Identifies whether this menu supports Escape to resume.
-	// bool stores the input behavior by value.
 	bool bPauseMenu = false;
 
 	// Identifies whether Escape exits from this menu.
-	// bool stores the input behavior by value without pointer ownership.
 	bool bExitOnEscape = false;
 
 	// Adds a labeled action button to the menu stack.

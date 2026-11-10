@@ -23,17 +23,17 @@ class Atest_UE_584_G1_cPlayerController : public APlayerController
 protected:
 
 	// Lists the input mapping assets enabled for every local player.
-	// UPROPERTY tracks the asset references in this growable TArray of raw UObject pointers; callers do not delete the assets.
+	// EditAnywhere lets designers set the mapping assets. Reflection keeps the asset references tracked.
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
 
 	// Lists additional input mappings enabled when touch controls are not in use.
-	// UPROPERTY tracks the asset references in this growable TArray of raw UObject pointers; callers do not delete the assets.
+	// EditAnywhere lets designers set the non-touch mapping assets. Reflection keeps the asset references tracked.
 	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
 	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
 
 	// Selects the widget class used for mobile touch controls.
-	// TSubclassOf restricts this reflected class reference to UUserWidget subclasses rather than storing a widget instance.
+	// EditAnywhere allows a designer-selected widget. TSubclassOf limits the class picker to UUserWidget subclasses.
 	UPROPERTY(EditAnywhere, Category="Input|Touch Controls")
 	TSubclassOf<UUserWidget> MobileControlsWidgetClass;
 
@@ -43,7 +43,7 @@ protected:
 	TObjectPtr<UUserWidget> MobileControlsWidget;
 
 	// Enables touch controls even when running on a non-mobile platform.
-	// bool is stored by value; UPROPERTY exposes it for editing and Config allows configuration-file defaults.
+	// Config loads the platform override from configuration. EditAnywhere also exposes the setting in controller defaults.
 	UPROPERTY(EditAnywhere, Config, Category = "Input|Touch Controls")
 	bool bForceTouchControls = false;
 
@@ -52,7 +52,6 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
 	// Removes the gameplay overlay when this controller stops playing.
-	// EndPlayReason is passed by value; no pointer or reference ownership is transferred.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	// Keeps the runtime debug overlay available throughout this player's session.
@@ -75,7 +74,6 @@ protected:
 
 private:
 	// Forwards the gameplay pause input to the game mode.
-	// No pointer or reference parameters or return value.
 	void RequestPause();
 
 	// Creates the gameplay overlay and optional mobile controls.

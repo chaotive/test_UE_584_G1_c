@@ -32,7 +32,6 @@ public:
     int32 SessionBouncesToLose(int32 Level, int32 BaseBounces, int32 DecreasePerLevel, int32 MinimumBounces) const;
 
     // Chooses the current session result, including simultaneous-limit precedence.
-    // Counts, limits, and the native result enum are passed by value without pointers or references.
     EFeatureGameplaySessionResult SessionOutcome(int32 PlayerContacts, int32 Bounces, int32 WinLimit, int32 LossLimit) const;
 
     // Calculates the saved level after recording a session result.

@@ -26,11 +26,9 @@ public:
 	void PresentFlow(EFeatureGameFlow Flow);
 
 	// Executes a menu intent through session, persistence, or engine navigation APIs.
-	// Action is copied by value without pointer or reference ownership.
 	void Execute(EFeatureMenuAction Action);
 
 	// Reads the flow currently presented by this UI controller.
-	// Returns the enum by value without pointer or reference ownership.
 	EFeatureGameFlow GetFlowState() const;
 
 	// Removes menu subscriptions and its widget when the world shuts down.
@@ -39,7 +37,6 @@ public:
 
 private:
 	// Applies the New Game or Continue save policy before requesting session startup.
-	// bContinue is copied by value; no pointer or reference ownership is transferred.
 	void StartSession(bool bContinue);
 
 	// Exits directly from startup or saves the active progress before quitting.
@@ -52,6 +49,6 @@ private:
 	TObjectPtr<UFeatureMainMenu> FlowMenu;
 
 	// Retains the displayed flow to select startup-specific exit behavior.
-	// The enum is a UI snapshot passed by value from the authoritative GameMode.
+	// This mirrors GameMode’s flow for UI routing.
 	EFeatureGameFlow PresentedFlow = EFeatureGameFlow::StartupMenu;
 };

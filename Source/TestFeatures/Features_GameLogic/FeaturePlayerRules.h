@@ -31,20 +31,18 @@ protected:
     virtual void BeginPlay() override;
 
     // Removes the contact binding and expiry timer when gameplay ends.
-    // EndPlayReason is passed by value without pointer or reference ownership.
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
     // Allows the focused smoke check to deliver contacts to this component.
     // The test class owns no actor, component, or native runtime references.
-    friend class FFeaturePlayerSpeedBoostSmokeTest;
+    friend class FFeaturePlayerSpeedBoostSpec;
 
     // Applies the script's next bonus state when this component's pawn is contacted.
     // Pawn is a borrowed world-owned actor reference without ownership transfer.
     void HandleBallContact(APawn& Pawn);
 
     // Clears expired bonus state and reapplies the scripted baseline speed.
-    // No pointer or reference arguments or return value.
     void ResetSpeed();
 
     // Writes the script's calculated speed to Unreal's movement component.
@@ -77,26 +75,20 @@ private:
     FTimerHandle SpeedTimer;
 
     // Captures the character's walking speed before this feature is configured.
-    // float stores native movement data by value without pointers or references.
     float NativeWalkSpeed = 0.0f;
 
     // Stores the game-mode baseline multiplier supplied to the script.
-    // float stores configuration by value; no duplicate defaults are authored here.
     float BaseSpeedMultiplier = 0.0f;
 
     // Stores the game-mode contact multiplier supplied to the script.
-    // float stores configuration by value without pointers or references.
     float ContactSpeedMultiplier = 0.0f;
 
     // Stores the game-mode duration used by the script and native timer.
-    // float stores gameplay seconds by value without pointers or references.
     float BoostDuration = 0.0f;
 
     // Stores the configured stacking policy supplied to the script.
-    // bool stores configuration by value without pointers or references.
     bool bStackSpeedBonuses = false;
 
     // Tracks the active bonus count returned by the script.
-    // int32 stores transient state by value; C++ does not implement the increment rule.
     int32 SpeedBonusCount = 0;
 };

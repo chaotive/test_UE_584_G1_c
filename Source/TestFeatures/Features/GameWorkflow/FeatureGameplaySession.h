@@ -57,46 +57,37 @@ public:
 	void OnGameplaySessionPaused();
 
 	// Ends gameplay, records the outcome, and announces victory or defeat to observers.
-	// bVictory is passed by value without pointer or reference ownership.
 	void OnGameplaySessionEnded(bool bVictory);
 
 	// Reads the current session's player-contact victory threshold.
-	// Returns int32 by value without pointers or references.
 	int32 GetPlayerContactsToWin() const;
 
 	// Reads the current session's non-player bounce defeat threshold.
-	// Returns int32 by value without pointers or references.
 	int32 GetSessionBouncesToLose() const;
 
 private:
 	// Grants focused automation checks access to loss-limit behavior.
 	// The test classes retain no runtime objects and are compiled only with development automation.
-	friend class FFeatureLossLimitSmokeTest;
+	friend class FFeatureSmokeSpec;
 
 	enum class ESessionState : uint8 { Ready, Playing, Paused, Ended };
 
 	// Tracks which lifecycle requests the session can accept.
-	// Stores the private enum by value without pointer or reference ownership.
 	ESessionState SessionState = ESessionState::Ready;
 
 	// Sets the level-one player contact limit, increased by the configured amount for each subsequent level.
-	// int32 stores the configured positive threshold by value without object ownership.
 	int32 PlayerContactsToWin = 0;
 
 	// Sets the level-one bounce limit, decreased per level down to the configured minimum.
-	// int32 stores the configured positive threshold by value without object ownership.
 	int32 SessionBouncesToLose = 0;
 
 	// Sets the lowest non-player bounce defeat limit for any level.
-	// int32 stores the positive configured floor by value.
 	int32 MinimumSessionBouncesToLose = 0;
 
 	// Sets the per-level increase in required player contacts.
-	// int32 stores the increment by value.
 	int32 ContactsIncreasePerLevel = 0;
 
 	// Sets the per-level decrease in allowed non-player bounces.
-	// int32 stores the decrement by value.
 	int32 BouncesDecreasePerLevel = 0;
 
 	// Ends the current session once it reaches its victory or defeat limit.
@@ -125,10 +116,8 @@ private:
 	TWeakObjectPtr<UFeatureBallManager> BallManager;
 
 	// Reports whether persistence currently owns the world's pause state.
-	// Returns bool by value with no pointer or reference parameters.
 	bool IsPersistenceBusy() const;
 
 	// Reports whether gameplay can accept a pause or end request.
-	// Returns bool by value with no pointer or reference parameters.
 	bool CanLeaveGameplay() const;
 };

@@ -40,7 +40,6 @@ public:
 	void RecordPlayerBallCollision();
 
 	// Stores the current session's outcome and stops accepting further gameplay statistics.
-	// bVictory is passed by value without pointer or reference ownership.
 	void RecordSessionResult(bool bVictory);
 
 	// Exposes the saved game's chronological session history for inspection.
@@ -48,7 +47,6 @@ public:
 	const TArray<FFeatureGameplaySessionRecord>& GetGameplaySessions() const;
 
 	// Reads the saved level to start next or retry after defeat.
-	// Returns int32 by value without pointers or references.
 	int32 GetCurrentLevel() const;
 
 	// Reads the saved game's aggregate bounce count for C++ or Blueprint callers.
@@ -65,7 +63,6 @@ public:
 	const FFeatureGameProgress& GetProgress() const;
 
 	// Reports whether progress includes a session initialized for this world.
-	// Returns bool by value without pointers or references.
 	bool IsSessionInitialized() const;
 
 protected:
@@ -75,17 +72,15 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Logs the final bounce count and dispatches native actor teardown.
-	// EndPlayReason is passed by value; no pointer or reference ownership is transferred.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 
 	// Distinguishes initialized session records from the state's default values.
-	// bool records session readiness by value without pointer ownership.
 	bool bSessionInitialized = false;
 
 	// Retains the aggregate bounce total and every started session's statistics.
-	// The reflected struct owns its values and array; UPROPERTY exposes read-only Blueprint inspection.
+	// VisibleAnywhere allows editor inspection. BlueprintReadOnly with AllowPrivateAccess gives Blueprint readers access while C++ owns mutations.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Training_Ball", meta=(AllowPrivateAccess="true"))
 	FFeatureGameProgress Progress;
 };

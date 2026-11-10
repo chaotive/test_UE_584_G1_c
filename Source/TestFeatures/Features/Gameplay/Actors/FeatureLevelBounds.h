@@ -28,17 +28,17 @@ protected:
 
 private:
 	// Defines the clear interior distance from the actor origin to each face.
-	// FVector is stored by value; editor metadata exposes positive dimensions in centimeters.
+	// EditAnywhere lets designers size the enclosure. ClampMin keeps each editor dimension at least one centimeter.
 	UPROPERTY(EditAnywhere, Category="Feature Bounds", meta=(ClampMin="1"))
 	FVector HalfExtent = FVector(6000.0f, 6000.0f, 3000.0f);
 
 	// Gives each wall enough depth to provide a solid collision surface.
-	// float is stored by value with positive centimeter units exposed in the editor.
+	// EditAnywhere lets designers tune wall thickness. ClampMin keeps it at least one centimeter in the editor.
 	UPROPERTY(EditAnywhere, Category="Feature Bounds", meta=(ClampMin="1"))
 	float WallThickness = 100.0f;
 
 	// Retains the six collision components in positive and negative axis pairs.
-	// UPROPERTY tracks strong TObjectPtr entries in a TArray; this actor owns the components.
+	// VisibleAnywhere exposes the generated faces for inspection. Reflected TObjectPtr entries track the actor-owned components.
 	UPROPERTY(VisibleAnywhere, Category="Feature Bounds")
 	TArray<TObjectPtr<UBoxComponent>> Walls;
 

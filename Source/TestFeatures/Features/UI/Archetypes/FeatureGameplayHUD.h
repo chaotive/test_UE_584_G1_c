@@ -38,7 +38,6 @@ private:
 	void UpdateStats(const FFeatureGameplaySessionRecord& Stats);
 
 	// Displays the current saved level.
-	// CurrentLevel is passed by value without pointers or references.
 	void SetCurrentLevel(int32 CurrentLevel);
 
 	// Displays the current progression level above the objective counts.

@@ -13,46 +13,42 @@ enum class EFeatureGameplaySessionResult : uint8
 	Defeat
 };
 
-/** Value data recorded for one started gameplay session. */
+// Records the statistics and result of one started session.
+// SaveGame marks persistent fields. VisibleAnywhere and BlueprintReadOnly let tools inspect them without editing.
 USTRUCT(BlueprintType)
 struct TESTFEATURES_API FFeatureGameplaySessionRecord
 {
 	GENERATED_BODY()
 
 	// Records when this session initialized its gameplay state.
-	// FDateTime stores a UTC timestamp by value without object ownership.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
 	FDateTime StartedAtUtc;
 
 	// Counts ball bounces accepted during this session.
-	// int32 stores the count by value without pointer or reference ownership.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
 	int32 TotalBounces = 0;
 
 	// Counts blocking ball contacts with player-controlled pawns during this session.
-	// int32 stores the count by value without retaining players or balls.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
 	int32 PlayerBallCollisions = 0;
 
 	// Records whether this session is running, won, or lost.
-	// The reflected enum is serialized by value without object ownership.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
 	EFeatureGameplaySessionResult Result = EFeatureGameplaySessionResult::InProgress;
 };
 
-/** Complete progress snapshot for one saved game. */
+// Holds a complete save snapshot.
+// SaveGame marks persistent fields. VisibleAnywhere and BlueprintReadOnly keep editor and Blueprint access read-only.
 USTRUCT(BlueprintType)
 struct TESTFEATURES_API FFeatureGameProgress
 {
 	GENERATED_BODY()
 
 	// Retains the level to start next, advancing only after victory.
-	// int32 stores the persistent scalar by value without pointer or reference ownership.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
 	int32 CurrentLevel = 1;
 
 	// Accumulates bounces across this saved game's sessions.
-	// int32 stores the total by value without object ownership.
 	UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly)
 	int32 TotalBounces = 0;
 
@@ -71,7 +67,7 @@ class TESTFEATURES_API UFeatureSaveGame : public USaveGame
 public:
 
 	// Preserves the aggregate total and all session records.
-	// The reflected struct stores a value snapshot; SaveGame marks its persistent fields.
+	// SaveGame marks the progress snapshot for persistence.
 	UPROPERTY(SaveGame)
 	FFeatureGameProgress Progress;
 };

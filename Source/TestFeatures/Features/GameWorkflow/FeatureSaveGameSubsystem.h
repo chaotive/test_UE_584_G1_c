@@ -24,10 +24,8 @@ public:
 	FSaveDeletedEvent OnSaveDeleted;
 
 	// Reports whether a save exists for a Continue request.
-	// Returns bool by value without pointers or references.
 	bool HasSave() const;
 	// Deletes the slot and announces whether the operation succeeded.
-	// Returns bool by value without pointers or references.
 	bool DeleteSave();
 
 	// Requests a paused, in-game load.
@@ -40,10 +38,8 @@ public:
 	// No pointer or reference parameters or return value; advances a value generation token.
 	void CancelOperation();
 	// Reports whether gameplay is currently gated by persistence.
-	// Returns bool by value without pointers or references.
 	bool IsBusy() const { return bBusy; }
 	// Reports whether an orderly quit already persisted the current snapshot.
-	// Returns bool by value without pointers or references.
 	bool HasSavedForQuit() const { return bSavedForQuit; }
 	// Reads retained diagnostic transitions.
 	// Returns a const array reference without copying or transferring ownership.
@@ -56,10 +52,8 @@ public:
 	FString GetSaveFilePath() const;
 private:
 	// Starts asynchronous disk access for the pending operation.
-	// No pointer or reference parameters or return value.
 	void BeginPendingIO();
 	// Restores the previous pause state or quits after disk access completes.
-	// No pointer or reference parameters or return value.
 	void FinishOperation();
 	// Pauses the current world and announces a pending operation.
 	// Progress is borrowed read-only; bLoad and bQuitAfter are values without ownership transfer.
@@ -74,27 +68,20 @@ private:
 	// TWeakObjectPtr observes world lifetime without retaining a destroyed level.
 	TWeakObjectPtr<UWorld> OperationWorld;
 	// Identifies the current callback generation across level teardown.
-	// uint32 is a value token without pointer ownership.
 	uint32 OperationId = 0;
 	// Holds the requested or restored progress, including session records.
 	// The reflected struct owns a value snapshot without live actor references.
 	FFeatureGameProgress PendingProgress;
 	// Indicates a persistence gate is active.
-	// bool is per-instance value state without pointers.
 	bool bBusy = false;
 	// Selects loading rather than saving.
-	// bool is per-instance value state without pointers.
 	bool bLoading = false;
 	// Remembers the operation's success.
-	// bool is per-instance value state without pointers.
 	bool bSucceeded = false;
 	// Requests quit only after a successful save.
-	// bool is per-instance value state without pointers.
 	bool bQuitRequested = false;
 	// Preserves a pause that existed before this operation.
-	// bool is per-instance value state without pointers.
 	bool bWasPaused = false;
 	// Suppresses redundant shutdown saving after the gated quit path.
-	// bool is per-instance value state without pointers.
 	bool bSavedForQuit = false;
 };

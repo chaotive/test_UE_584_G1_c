@@ -26,10 +26,8 @@ private:
 	// No pointer or reference parameters or return value; controls belong to the widget tree.
 	void BuildLayout();
 	// Displays the accumulated bounce total.
-	// TotalBounces is passed by value without pointers or references.
 	void SetTotalBounces(int32 TotalBounces);
 	// Displays the current saved level.
-	// CurrentLevel is passed by value without pointers or references.
 	void SetCurrentLevel(int32 CurrentLevel);
 	// Displays the total reported by the game state.
 	// UPROPERTY tracks a strong TObjectPtr to the tree-owned text widget for garbage collection.

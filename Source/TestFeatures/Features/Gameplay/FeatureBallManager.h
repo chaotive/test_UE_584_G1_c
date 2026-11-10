@@ -35,11 +35,9 @@ public:
 	void Start(int32 BallCount, float InBallSize, float InBallSpeedMultiplier, int32 ReboundLimit, const FBox& SpawnBounds);
 
 	// Defers queued replacements while gameplay is paused.
-	// No pointer or reference parameters or return value.
 	void Pause();
 
 	// Allows replacements again and consumes the deferred queue.
-	// No pointer or reference parameters or return value.
 	void Resume();
 
 	// Stops replacement scheduling and discards queued work at session end.
@@ -65,7 +63,7 @@ public:
 private:
 	// Grants the existing replacement smoke check access to pool and queue observations.
 	// The test class owns no runtime manager or actor references.
-	friend class FFeaturePlayerBallReplacementSmokeTest;
+	friend class FFeatureSmokeSpec;
 
 	// Creates, configures, and observes a new pool entry before announcing it.
 	// Location is borrowed read-only; the raw return pointer observes a world-owned actor.
@@ -88,31 +86,24 @@ private:
 	void SpawnReplacementBall();
 
 	// Queries the existing scripted replacement policy with native activity state.
-	// Returns bool by value without pointer or reference parameters.
 	bool CanReplaceBalls() const;
 
 	// Stores whether lifecycle coordination currently permits replacements.
-	// bool is native activity state passed by value to the script.
 	bool bRunning = false;
 
 	// Retains the uniform scale configured for newly created balls.
-	// float stores configuration by value without pointer ownership.
 	float BallSize = 1.0f;
 
 	// Retains the launch speed multiplier for newly created balls.
-	// float stores configuration by value without pointer ownership.
 	float BallSpeedMultiplier = 1.0f;
 
 	// Retains the non-player rebound retirement threshold.
-	// int32 stores configuration by value without pointer ownership.
 	int32 BallReboundLimit = 5;
 
 	// Retains the region used for initial and replacement spawns.
-	// FBox stores world-space bounds by value without actor references.
 	FBox BallSpawnBounds;
 
 	// Tracks queued replacements across pause and resume.
-	// int32 stores a count by value without pointer ownership.
 	int32 PendingBallReplacements = 0;
 
 	// Retains pool entries in creation order so reuse preserves actor names and indices.

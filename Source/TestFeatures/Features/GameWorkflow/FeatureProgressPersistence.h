@@ -37,7 +37,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Unsubscribes, cancels stale operations, and performs the teardown save fallback.
-	// EndPlayReason is copied by value without pointer or reference ownership.
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:

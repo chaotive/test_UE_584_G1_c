@@ -18,11 +18,9 @@ enum class EFeatureMenuAction : uint8
 struct TESTFEATURES_API FFeatureMenuActionDefinition
 {
 	// Selects the operation published by a control.
-	// The enum is stored by value without pointer or reference ownership.
 	EFeatureMenuAction Action;
 
 	// Supplies the localized caption, which a view may override.
-	// FText stores a localized value without widget ownership.
 	FText Label;
 
 	// Copies the definition with a context-specific caption.

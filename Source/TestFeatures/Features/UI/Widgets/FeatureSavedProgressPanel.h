@@ -22,7 +22,6 @@ public:
 	FPreviewChangedEvent OnPreviewChanged;
 
 	// Selects the full startup summary or the compact pause summary before presentation.
-	// bDetailed is copied by value without pointers or references.
 	void Configure(bool bDetailed);
 
 	// Reports the level available from the most recently completed preview.
@@ -30,7 +29,6 @@ public:
 	const TOptional<int32>& GetSavedLevel() const;
 
 	// Reports whether a physical save slot is available for deletion.
-	// Returns bool by value without pointers or references.
 	bool HasSaveSlot() const;
 
 protected:
@@ -60,7 +58,6 @@ private:
 	void PublishPreview(const FText& Summary);
 
 	// Clears the displayed preview after deletion or reports a failed attempt.
-	// bSucceeded is copied by value without pointers or references.
 	void HandleSaveDeleted(bool bSucceeded);
 
 	// Retains the label displaying the current preview or operation result.
@@ -77,14 +74,11 @@ private:
 	TOptional<int32> SavedLevel;
 
 	// Invalidates callbacks after deletion, refresh, or removal from the viewport.
-	// uint32 stores a generation token by value without pointer ownership.
 	uint32 PreviewGeneration = 0;
 
 	// Selects startup details instead of the pause menu's saved total alone.
-	// bool stores presentation configuration by value without pointer ownership.
 	bool bDetailedSummary = false;
 
-	// Distinguishes an existing slot from a readable saved level.
-	// bool stores preview state by value so unreadable saves remain deletable.
+	// Distinguishes an existing slot from a readable saved level so unreadable slots can still be deleted.
 	bool bHasSaveSlot = false;
 };

@@ -8,19 +8,15 @@
 struct FFeatureMenuView
 {
 	// Supplies the heading; an empty value selects the configured project title.
-	// FText stores a localized value without widget ownership.
 	FText Heading;
 
 	// Enables Escape to resume gameplay for the pause view.
-	// bool is stored by value without pointer ownership.
 	bool bPauseMenu;
 
 	// Makes Escape invoke Exit on the initial menu.
-	// bool is stored by value without pointer ownership.
 	bool bExitOnEscape;
 
 	// Requests the saved-game summary below the action list.
-	// bool is stored by value without pointer ownership.
 	bool bShowSaveSummary;
 
 	// Lists the buttons in their presentation order.
@@ -33,7 +29,6 @@ class TESTFEATURES_API FFeatureMenuViews
 {
 public:
 	// Selects the view corresponding to the current game flow.
-	// Flow and the returned view are values; no pointers or references are transferred.
 	static FFeatureMenuView ForFlow(EFeatureGameFlow Flow);
 
 private:
