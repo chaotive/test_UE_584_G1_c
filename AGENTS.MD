@@ -129,16 +129,13 @@ Done entries record completed milestones at the time they were implemented. Pres
 52. When the ball rebounds on the player, it is retired and respawns
 53. Gameplay: Add a configurable minimum non-player rebound loss limit, defaulting to 50.
 54. Gameplay: Configure the base player speed multiplier and a temporary speed multiplier and duration after ball contact.
+1602. Added 23 standalone AngelScript tests for ball, level, and player rules. The PowerShell launcher uses the bundled Win64 runner and reports failures with exit code 1. The test scripts stay out of packaged builds. See [standalone unit tests](docs/DEVELOPMENT.md#standalone-unit-tests) for the command.
 1001601. Build: Add a root PowerShell script that discovers Unreal Engine, generates project files, and packages Development, DebugGame, and Shipping for Win64 into a reusable archive ID defaulting to Dev.
 
 ### To do
 
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
-1602. Write standalone AngelScript unit tests for game-owned rules in `Source/TestFeatures/Features_GameLogic/Tests`. Include the stock Win64 `asrun` tool from the pinned SDK so a fresh checkout can run the suite from a terminal without Unreal, the SDK cache, a game build, a project-specific C++ harness, or a change to the generated solution.
-   - Load the ball, level, and player rule scripts directly. Group named cases with `Describe` and `It`, report failures, and return a nonzero exit code when a case fails.
-   - Keep the script cases out of game packages. Gauntlet Automation Specs cover functional behavior across game systems.
-   - Use the PowerShell script beside the suite to run it with the bundled runner. See [standalone unit tests](docs/DEVELOPMENT.md#standalone-unit-tests) for the command.
 
 ## Bugs
 

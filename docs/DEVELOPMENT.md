@@ -21,7 +21,7 @@ For Visual Studio, right-click `test_UE_584_G1_c.uproject` and choose **Generate
 
 ### Standalone unit tests
 
-Run the standalone suite from a PowerShell terminal at the repository root. The script uses the bundled runner and returns its exit code. [Unit test script](../Source/TestFeatures/Features_GameLogic/Tests/Run-FeatureUnitTests.ps1)
+Run the standalone suite from a Win64 PowerShell terminal. The launcher uses the bundled runner and returns its exit code. Use the command below from the repository root or invoke the script by its full path from another directory. [Unit test script](../Source/TestFeatures/Features_GameLogic/Tests/Run-FeatureUnitTests.ps1)
 
 ```powershell
 .\Source\TestFeatures\Features_GameLogic\Tests\Run-FeatureUnitTests.ps1

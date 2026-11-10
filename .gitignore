@@ -78,6 +78,7 @@ DerivedDataCache/*
 
 # IDE
 .idea
+*.DotSettings.user
 
 # Downloaded SDK source and dependency build intermediates
 /.dependencies/
