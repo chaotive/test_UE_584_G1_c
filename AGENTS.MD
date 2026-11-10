@@ -68,7 +68,7 @@ These goals will guide future tasks:
 27. For related UI views, keep shared construction, styling, and behavior in common UI code, and express each view's differences declaratively in code. Use another data format only when it provides a clear benefit.
 28. Development runs, tests, documentation updates, and requested screenshot sessions may use, replace, or delete the game's save slot without preserving player progress or asking for permission.
 29. In documentation, link to other documents and prefer displaying pictures directly as inline images.
-30. Keep all AngelScript (.as) source files exclusively in `Source/TestFeatures/Features_GameLogic`. Packaged script copies are build artifacts; do not author scripts elsewhere.
+30. Keep all project-authored AngelScript (.as) files in `Source/TestFeatures/Features_GameLogic`. Put runtime rules at the folder root and standalone script tests in `Tests/`. Stage only the runtime scripts in packaged builds.
 31. Keep a single source of truth across C++ and AngelScript: each gameplay rule has one authoritative implementation, without mirrored implementations in the other language. C++ owns configuration and persistent state; scripts receive values and return results. Bindings, snapshots, and test fixtures may pass or copy data, but must not duplicate rule implementations or independently maintained gameplay defaults.
 32. Keep project-authored AngelScript bridge code, including C++ script hosts and bindings, in `Source/TestFeatures/Features_GameLogic` alongside the `.as` scripts. This also applies to UE-derived bridge classes as a focused exception to the general UE folder rule. Keep the external SDK/library dependency separate under ThirdParty, with SDK implementation source in the ignored dependency cache.
 33. Documentation organization: keep `README.md` as the root entry point; `CHANGES.md` and `AGENTS.MD` may also remain at the root. Keep general supporting guides under `docs/`. Specialized per-folder guides may remain under `Source`, but name them `README.<TOPIC>.md` (for example, `README.FEATURES.md`), never plain `README.md`. Keep historical game-evolution captures consolidated in `CHANGES.md`.
@@ -135,6 +135,10 @@ Done entries record completed milestones at the time they were implemented. Pres
 
 1501. Mass, as a second element (a square)
 1600. generalize spawner with objects pooling
+1602. Write standalone AngelScript unit tests for game-owned rules in `Source/TestFeatures/Features_GameLogic/Tests`. Include the stock Win64 `asrun` tool from the pinned SDK so a fresh checkout can run the suite from a terminal without Unreal, the SDK cache, a game build, a project-specific C++ harness, or a change to the generated solution.
+   - Load the ball, level, and player rule scripts directly. Group named cases with `Describe` and `It`, report failures, and return a nonzero exit code when a case fails.
+   - Keep the script cases out of game packages. Gauntlet Automation Specs cover functional behavior across game systems.
+   - Use the PowerShell script beside the suite to run it with the bundled runner. See [standalone unit tests](docs/DEVELOPMENT.md#standalone-unit-tests) for the command.
 
 ## Bugs
 

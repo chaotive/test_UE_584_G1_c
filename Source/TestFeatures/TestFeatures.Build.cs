@@ -16,7 +16,7 @@ public class TestFeatures : ModuleRules
             "EngineSettings", "InputCore", "PhysicsCore", "Slate", "SlateCore", "FeatureAngelScriptRuntime"
         });
         string GameLogicDirectory = Path.Combine(ModuleDirectory, "Features_GameLogic");
-        foreach (string Script in Directory.GetFiles(GameLogicDirectory, "*.as", SearchOption.AllDirectories))
+        foreach (string Script in Directory.GetFiles(GameLogicDirectory, "*.as"))
         {
             RuntimeDependencies.Add(Script, StagedFileType.UFS);
         }

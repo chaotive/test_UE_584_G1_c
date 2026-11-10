@@ -205,7 +205,7 @@ Within `TestFeatures/Features`, `Gameplay` contains the ball manager and scoring
 
 ### Run and test
 
-Open the project in Unreal Engine 5.8.4, build the Development Editor target, open the Third Person map, and press **Play**. The [build-and-run instructions](docs/DEVELOPMENT.md#build-and-run) cover setup and the development console command. After building, use [Gauntlet smoke checks](docs/DEVELOPMENT.md#smoke-checks) to check selected features; that guide explains their scope and report location.
+Open the project in Unreal Engine 5.8.4, build the Development Editor target, open the Third Person map, and press **Play**. The [build-and-run instructions](docs/DEVELOPMENT.md#build-and-run) cover setup and the development console command. After building, use [Gauntlet smoke checks](docs/DEVELOPMENT.md#smoke-checks) to check selected gameplay flows. For fast checks of ball, level, and player rules without a game build, run the [standalone AngelScript unit tests](docs/DEVELOPMENT.md#standalone-unit-tests).
 
 ### Make changes
 

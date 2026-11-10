@@ -35,6 +35,7 @@
 *.xcodeproj
 *.xcworkspace
 *.sln
+*.slnx
 *.suo
 *.opensdf
 *.sdf
@@ -81,5 +82,6 @@ DerivedDataCache/*
 # Downloaded SDK source and dependency build intermediates
 /.dependencies/
 
-# Deliberately versioned AngelScript static-library artifacts
+# Deliberately versioned AngelScript runtime and development tool
 !Source/ThirdParty/FeatureAngelScriptRuntime/*/lib/Win64/Release/angelscript.lib
+!Source/ThirdParty/FeatureAngelScriptRuntime/*/tools/Win64/asrun.exe

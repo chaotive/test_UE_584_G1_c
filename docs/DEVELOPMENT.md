@@ -4,7 +4,7 @@ This guide covers running and testing Crazy balls, changing its implementation, 
 
 ## Topic index
 
-- **Run, test, and deliver:** [Build and run](#build-and-run) · [Smoke checks](#smoke-checks) · [Package for Win64](#package-for-win64) · [Unreal Editor MCP](#local-unreal-editor-mcp).
+- **Run, test, and deliver:** [Build and run](#build-and-run) · [Standalone unit tests](#standalone-unit-tests) · [Smoke checks](#smoke-checks) · [Package for Win64](#package-for-win64) · [Unreal Editor MCP](#local-unreal-editor-mcp).
 - **Gameplay and diagnostics:** [Game-mode configuration](#game-mode-configuration) · [Arena collision bounds](#arena-collision-bounds) · [Session results](#session-results) · [Debug HUD and save diagnostics](#debug-hud-and-save-diagnostics).
 - **Change game logic:** [Game-logic workflow](../Source/TestFeatures/Features_GameLogic/README.GAMELOGIC.md) · [Script loading](#angelscript-rules) · [Library versioning and updates](../Source/ThirdParty/FeatureAngelScriptRuntime/README.ANGELSCRIPT.md).
 - **Implementation references:** [Feature walkthrough](../Source/TestFeatures/Features/README.FEATURES.md) · [Non-UE helpers](../Source/TestFeatures/Features_NonUE/README.NON_UE.md) · [Performance review](PERFORMANCE_IDEAS.md).
@@ -16,6 +16,22 @@ This guide covers running and testing Crazy balls, changing its implementation, 
 1. Open `test_UE_584_G1_c.uproject` in Unreal Engine 5.8 and build the editor target.
 2. Open the Third Person map and press **Play**.
 3. In a non-Shipping build, enter `Feature.NewGame` in the console at the startup menu to start immediately. In Play In Editor, use the Output Log command field. [Console command implementation](../Source/TestFeatures/Features_NonUE/FeatureConsoleCommands.cpp)
+
+For Visual Studio, right-click `test_UE_584_G1_c.uproject` and choose **Generate Visual Studio project files**, then open the generated game solution. UnrealBuildTool owns the solution and project files, which are generated locally. [Epic's project generation guide](https://dev.epicgames.com/documentation/unreal-engine/how-to-generate-unreal-engine-project-files-for-your-ide)
+
+### Standalone unit tests
+
+Run the standalone suite from a PowerShell terminal at the repository root. The script uses the bundled runner and returns its exit code. [Unit test script](../Source/TestFeatures/Features_GameLogic/Tests/Run-FeatureUnitTests.ps1)
+
+```powershell
+.\Source\TestFeatures\Features_GameLogic\Tests\Run-FeatureUnitTests.ps1
+```
+
+Each run compiles the production rule scripts and reports cases under Ball, Level, and Player rules. A failed assertion prints the expected and actual values. The suite runs the remaining cases and exits with code 1 if any case fails. [Suite entry point](../Source/TestFeatures/Features_GameLogic/Tests/FeatureGameLogicTests.as)
+
+Add cases with `It` and put `ExpectEqual(actual, expected)` or `ExpectNear(actual, expected)` inside the case body. The entry point groups the rule files with `Describe`. Ball and level tests use test-only enums with deliberately different values. Unreal owns the production enum values, and the smoke checks exercise the native bindings. [Spec helpers](../Source/TestFeatures/Features_GameLogic/Tests/FeatureSpec.as)
+
+To step through a script, invoke the bundled `asrun.exe` directly with `-d` before the script path. [Runner provenance and rebuild instructions](../Source/ThirdParty/FeatureAngelScriptRuntime/README.ANGELSCRIPT.md#development-runner) · [AngelScript runner manual](https://www.angelcode.com/angelscript/sdk/docs/manual/doc_samples_asrun_manual.html)
 
 ### Smoke checks
 
@@ -83,6 +99,6 @@ The level script also selects session outcomes and the next saved level. [Featur
 
 [FeaturePlayerRules.as](../Source/TestFeatures/Features_GameLogic/FeaturePlayerRules.as) owns player speed and contact-bonus calculations. Its actor-component bridge observes contacts, stores transient state, schedules expiry, and writes speed to native character movement. The existing game-mode settings remain the source of configuration. Edit this script to change those rules, then restart PIE; it loads when the spawned character is configured. The existing player-speed smoke check now targets this component and its scripted results.
 
-The [rules world subsystem](../Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) reads and compiles the saved `.as` file once per world. For script-only changes, stop PIE, edit and save the script, then start PIE again. The new PIE world creates a fresh host that reads the latest file from disk. This requires neither a C++ game rebuild nor an editor restart; the AngelScript compiler handles the updated rules when the world initializes. Script errors are logged and stop execution rather than selecting a duplicate C++ fallback. The build stages `.as` files as UFS runtime dependencies for packaged games.
+The [rules world subsystem](../Source/TestFeatures/Features_GameLogic/FeatureLevelRules.cpp) reads and compiles the saved `.as` file once per world. For script-only changes, stop PIE, edit and save the script, then start PIE again. The new PIE world creates a fresh host that reads the latest file from disk. This requires neither a C++ game rebuild nor an editor restart; the AngelScript compiler handles the updated rules when the world initializes. Script errors are logged and stop execution rather than selecting a duplicate C++ fallback. Packaged games stage only the `.as` files at the root of `Features_GameLogic` as UFS runtime dependencies.
 
 The project links a prebuilt Win64 AngelScript static library through an external Unreal module. The [dependency manifest](../Source/ThirdParty/FeatureAngelScriptRuntime/Dependency.json) pins its version, archive checksum, toolchain and build options. The [library README](../Source/ThirdParty/FeatureAngelScriptRuntime/README.ANGELSCRIPT.md) describes the supplied artifacts and update process. SDK source and build intermediates stay in the ignored `.dependencies/AngelScript/<version>` cache; normal Unreal builds only validate and link the library.

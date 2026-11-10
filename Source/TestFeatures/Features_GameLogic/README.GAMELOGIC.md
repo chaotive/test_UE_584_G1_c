@@ -30,9 +30,9 @@ Keep existing entry-point argument and return types when changing a rule. The br
 
 ## Develop and verify behavior
 
-Use the [development guide](../../../docs/DEVELOPMENT.md) for builds, tests, and diagnostics. The [architecture view](../../../README.md#game-logic-architecture) explains the value-based boundary and its intended benefits. Script compilation diagnostics are logged by the host; changes to the bindings need C++ compilation as well.
+Use the [standalone unit tests](../../../docs/DEVELOPMENT.md#standalone-unit-tests) to check changes to ball, level, and player rules without building or launching Unreal. Each spec in `Tests/` includes its production rule file. The [architecture view](../../../README.md#game-logic-architecture) explains the value-based boundary and its intended benefits. Script compilation diagnostics are logged by the host; changes to the bindings need C++ compilation as well.
 
-All authored `.as` source and project-specific C++ hosts and bindings stay together here. Packaged games use a staged script copy, so distributing a rule update also requires updating that deployed content.
+All authored `.as` source and project-specific C++ hosts and bindings stay together here. Keep runtime scripts at the folder root so packaged games stage them. The `Tests/` subfolder is for development only. Distributing a rule update also requires updating the staged copy.
 
 ## Runtime dependency
 
