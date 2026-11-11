@@ -22,7 +22,7 @@ public:
 	FStartRequestedEvent OnStartRequested;
 
 	// Replaces the displayed menu to match the authoritative game flow.
-	// Flow is copied by value; this subsystem retains the created widget through UPROPERTY.
+	// This subsystem retains the created widget through UPROPERTY.
 	void PresentFlow(EFeatureGameFlow Flow);
 
 	// Executes a menu intent through session, persistence, or engine navigation APIs.

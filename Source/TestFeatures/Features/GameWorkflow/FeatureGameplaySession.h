@@ -21,15 +21,15 @@ public:
 	DECLARE_EVENT_OneParam(UFeatureGameplaySession, FSessionEndedEvent, bool);
 
 	// Announces that gameplay can provision the local player and HUD.
-	// Native multicast event stores weak UObject bindings; no pointer or reference arguments.
+	// Native multicast event stores weak UObject bindings.
 	FSessionEvent OnStarted;
 
 	// Announces that the paused session has returned to gameplay.
-	// Native multicast event stores weak UObject bindings; no pointer or reference arguments.
+	// Native multicast event stores weak UObject bindings.
 	FSessionEvent OnResumed;
 
 	// Announces that a gameplay pause request succeeded.
-	// Native multicast event stores weak UObject bindings; no pointer or reference arguments.
+	// Native multicast event stores weak UObject bindings.
 	FSessionEvent OnPaused;
 
 	// Announces the gameplay result so observers can present the end screen.

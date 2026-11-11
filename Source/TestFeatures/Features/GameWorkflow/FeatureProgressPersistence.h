@@ -26,7 +26,7 @@ public:
 	void StartSession(bool bContinue, int32 InitialLevel);
 
 	// Requests a snapshot save and optionally an orderly quit after success.
-	// bQuitAfter is copied by value; the persistence subsystem copies the borrowed progress snapshot.
+	// The persistence subsystem copies the borrowed progress snapshot.
 	UFUNCTION(BlueprintCallable, Category="Feature Progress")
 	void SaveSession(bool bQuitAfter = false);
 

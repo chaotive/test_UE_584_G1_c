@@ -14,7 +14,7 @@ class FFeatureConsoleCommands
 	static FAutoConsoleCommandWithWorld NewGameCommand;
 
 	// Starts a fresh session when the command targets a world at the startup menu.
-	// World is a nullable, borrowed engine-owned pointer. This function returns void.
+	// World is a nullable, borrowed engine-owned pointer.
 	static void StartNewGame(UWorld* World);
 };
 

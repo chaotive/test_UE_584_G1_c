@@ -33,7 +33,7 @@ public:
     virtual void Deinitialize() override;
 
     // Translates collision facts and asks the script which ball effects to apply.
-    // OtherActor is a borrowed nullable world-owned pointer; the remaining inputs and flags are copied values.
+    // OtherActor is a borrowed nullable world-owned pointer.
     EFeatureBallContactAction EvaluateContact(AActor* OtherActor, bool bHasSolverImpulse, int32 BounceCount, int32 ReboundLimit) const;
 
     // Asks the script whether the current session phase permits replacement.
