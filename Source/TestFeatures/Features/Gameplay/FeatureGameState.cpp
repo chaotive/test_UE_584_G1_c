@@ -1,4 +1,5 @@
 #include "FeatureGameState.h"
+#include "FeatureGameplaySessionResult.h"
 #include "Features_GameLogic/FeatureLevelRules.h"
 #include "Engine/World.h"
 #include "TestFeatures.h"

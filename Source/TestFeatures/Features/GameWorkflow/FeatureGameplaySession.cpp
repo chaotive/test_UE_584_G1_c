@@ -2,6 +2,7 @@
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/Gameplay/FeatureBallManager.h"
 #include "Features/Gameplay/FeatureGameStateController.h"
+#include "Features/Gameplay/FeatureGameplaySessionResult.h"
 #include "Features/Gameplay/Actors/FeatureLevelBounds.h"
 #include "FeatureSaveGameSubsystem.h"
 #include "FeatureProgressPersistence.h"

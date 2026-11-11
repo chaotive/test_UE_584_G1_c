@@ -1,4 +1,5 @@
 #include "FeatureSavedProgressPanel.h"
+#include "Features/Gameplay/FeatureGameplaySessionResult.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
 #include "Features/GameWorkflow/FeatureSaveGameSubsystem.h"
 #include "Features_NonUE/FeatureSaveGameStorage.h"

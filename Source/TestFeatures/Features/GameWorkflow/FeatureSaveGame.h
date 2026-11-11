@@ -1,17 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Features/Gameplay/FeatureGameplaySessionResult.h"
 #include "GameFramework/SaveGame.h"
 #include "FeatureSaveGame.generated.h"
-
-/** Outcome of a gameplay session, retained with its statistics. */
-UENUM(BlueprintType)
-enum class EFeatureGameplaySessionResult : uint8
-{
-	InProgress,
-	Victory,
-	Defeat
-};
 
 // Records the statistics and result of one started session.
 // SaveGame marks persistent fields. VisibleAnywhere and BlueprintReadOnly let tools inspect them without editing.

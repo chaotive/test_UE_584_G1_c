@@ -4,6 +4,7 @@
 #include "Features/Gameplay/FeatureBallManager.h"
 #include "Features/Gameplay/FeatureGameState.h"
 #include "Features/Gameplay/FeatureGameStateController.h"
+#include "Features/Gameplay/FeatureGameplaySessionResult.h"
 #include "Features/GameWorkflow/FeatureGameFlow.h"
 #include "Features/GameWorkflow/FeatureGameplaySession.h"
 #include "Features/GameWorkflow/FeatureSaveGame.h"
