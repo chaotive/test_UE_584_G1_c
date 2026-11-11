@@ -8,7 +8,7 @@
 class AActor;
 
 // Defines the native effects a scripted ball-contact decision may request.
-// uint8 flags are copied values; their numeric definitions are registered with AngelScript from this enum.
+// The flag definitions are registered with AngelScript from this enum.
 enum class EFeatureBallContactAction : uint8
 {
     None = 0,
@@ -29,7 +29,7 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
     // Releases the compiled rules when the world is torn down.
-    // No pointer or reference arguments or return value; releases the owned native runtime.
+    // Releases the owned native runtime.
     virtual void Deinitialize() override;
 
     // Translates collision facts and asks the script which ball effects to apply.
@@ -37,7 +37,6 @@ public:
     EFeatureBallContactAction EvaluateContact(AActor* OtherActor, bool bHasSolverImpulse, int32 BounceCount, int32 ReboundLimit) const;
 
     // Asks the script whether the current session phase permits replacement.
-    // The bool input and result are copied values without pointers or references.
     bool ShouldReplaceBall(bool bSessionPlaying) const;
 
 private:

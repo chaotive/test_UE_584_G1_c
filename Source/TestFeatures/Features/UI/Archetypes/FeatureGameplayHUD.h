@@ -17,20 +17,20 @@ class TESTFEATURES_API UFeatureGameplayHUD : public UUserWidget
 
 protected:
 	// Builds the objective display once for this widget instance.
-	// No pointer or reference parameters or return value; the widget tree owns its controls.
+	// The widget tree owns its controls.
 	virtual void NativeOnInitialized() override;
 
 	// Observes session statistics and synchronizes the current display.
-	// No pointer or reference parameters or return value; the world owns the observed state and session.
+	// The world owns the observed state and session.
 	virtual void NativeConstruct() override;
 
 	// Stops observing session statistics when the widget leaves the viewport.
-	// No pointer or reference parameters or return value; weak observations do not own world objects.
+	// Weak observations do not own world objects.
 	virtual void NativeDestruct() override;
 
 private:
 	// Constructs the objective panel and its labels.
-	// No pointer or reference parameters or return value; controls belong to the widget tree.
+	// Controls belong to the widget tree.
 	void BuildLayout();
 
 	// Updates both objective counts from the active session record.

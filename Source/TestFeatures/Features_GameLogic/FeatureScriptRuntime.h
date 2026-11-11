@@ -22,7 +22,7 @@ public:
         TFunctionRef<void(AngelScript::asIScriptEngine&)> RegisterTypes = [](AngelScript::asIScriptEngine&) {});
 
     // Releases the context before its script engine.
-    // No pointer or reference parameters; disposes exclusively owned native resources.
+    // Disposes exclusively owned native resources.
     ~FFeatureScriptRuntime();
 
     // Prevents sharing ownership through a shallow runtime copy.
@@ -42,7 +42,7 @@ public:
     AngelScript::asIScriptContext& Prepare(AngelScript::asIScriptFunction& Function);
 
     // Executes the prepared function and reports script exceptions.
-    // No pointer or reference parameters or return value; the reusable context retains the result.
+    // The reusable context retains the result.
     void Execute();
 
 private:

@@ -29,13 +29,13 @@ public:
 	bool DeleteSave();
 
 	// Requests a paused, in-game load.
-	// No pointer or reference parameters or return value; callbacks use this game-instance subsystem.
+	// Callbacks use this game-instance subsystem.
 	void RequestLoad();
 	// Requests an in-game save, optionally followed by a successful orderly quit.
 	// Progress is a borrowed read-only value snapshot and bQuitAfter is passed by value.
 	void RequestSave(const FFeatureGameProgress& Progress, bool bQuitAfter = false);
 	// Invalidates callbacks when the owning level is forcibly torn down.
-	// No pointer or reference parameters or return value; advances a value generation token.
+	// Advances a value generation token.
 	void CancelOperation();
 	// Reports whether gameplay is currently gated by persistence.
 	bool IsBusy() const { return bBusy; }

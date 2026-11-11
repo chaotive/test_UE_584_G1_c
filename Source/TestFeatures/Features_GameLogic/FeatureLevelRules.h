@@ -20,22 +20,19 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
     // Releases the execution context before shutting down its script engine.
-    // No pointer or reference arguments or return value; releases subsystem-owned native resources.
+    // Releases subsystem-owned native resources.
     virtual void Deinitialize() override;
 
     // Invokes the script's player-contact threshold rule.
-    // All int32 inputs and the result are copied values without pointers or references.
     int32 PlayerContactsToWin(int32 Level, int32 BaseContacts, int32 IncreasePerLevel) const;
 
     // Invokes the script's non-player bounce threshold rule.
-    // All int32 inputs and the result are copied values without pointers or references.
     int32 SessionBouncesToLose(int32 Level, int32 BaseBounces, int32 DecreasePerLevel, int32 MinimumBounces) const;
 
     // Chooses the current session result, including simultaneous-limit precedence.
     EFeatureGameplaySessionResult SessionOutcome(int32 PlayerContacts, int32 Bounces, int32 WinLimit, int32 LossLimit) const;
 
     // Calculates the saved level after recording a session result.
-    // Level, Result, and the returned int32 are copied values without pointers or references.
     int32 NextLevel(int32 Level, EFeatureGameplaySessionResult Result) const;
 
 private:

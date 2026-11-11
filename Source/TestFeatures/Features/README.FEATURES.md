@@ -303,7 +303,7 @@ The panel displays TRAINING DEBUG HUD, Crazy balls, the current level, Total bou
 
 `TObjectPtr` with `UPROPERTY` participates in garbage-collection tracking. A weak pointer can become invalid when its actor is destroyed; `FindAvailableBall()` checks the result of `Get()` before using it. Inactive pooled actors remain world actors even though our list is weak. Explicit actor destruction is still possible.
 
-See [Object Pointers](https://dev.epicgames.com/documentation/en-us/unreal-engine/object-pointers-in-unreal-engine) for the full distinction. Function declarations and properties in our headers have a functional comment first and a technical comment second.
+See [Object Pointers](https://dev.epicgames.com/documentation/en-us/unreal-engine/object-pointers-in-unreal-engine) for the full distinction. Function declarations and properties have purpose comments; technical comments explain non-obvious ownership and lifetime details where useful.
 
 ## Performance: what this design costs
 

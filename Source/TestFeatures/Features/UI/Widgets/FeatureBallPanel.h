@@ -13,17 +13,17 @@ class TESTFEATURES_API UFeatureBallPanel : public UUserWidget
 	GENERATED_BODY()
 protected:
 	// Builds the ball diagnostics once.
-	// No pointer or reference parameters or return value; this widget owns its tree.
+	// This widget owns its tree.
 	virtual void NativeOnInitialized() override;
 	// Subscribes to bounce changes and synchronizes the initial display.
-	// No pointer or reference parameters or return value; the world-owned state is observed weakly.
+	// The world-owned state is observed weakly.
 	virtual void NativeConstruct() override;
 	// Removes the bounce subscription when the panel leaves the viewport.
-	// No pointer or reference parameters or return value; releases observation without owning the state.
+	// Releases observation without owning the state.
 	virtual void NativeDestruct() override;
 private:
 	// Creates the bounce-count label and its presentation.
-	// No pointer or reference parameters or return value; controls belong to the widget tree.
+	// Controls belong to the widget tree.
 	void BuildLayout();
 	// Displays the accumulated bounce total.
 	void SetTotalBounces(int32 TotalBounces);

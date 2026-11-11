@@ -32,11 +32,11 @@ public:
 	FCurrentLevelChangedEvent OnCurrentLevelChanged;
 
 	// Adds a bounce to the saved-game total and active session record, then notifies observers.
-	// No pointer or reference parameters or return value; modifies this world-owned game state.
+	// Modifies this world-owned game state.
 	void RecordBounce();
 
 	// Records one player-ball contact in the active session.
-	// No pointer or reference parameters or return value; increments a value counter.
+	// Increments a value counter.
 	void RecordPlayerBallCollision();
 
 	// Stores the current session's outcome and stops accepting further gameplay statistics.
@@ -68,7 +68,7 @@ public:
 protected:
 
 	// Logs state startup while workflow bindings initialize independently.
-	// No pointer or reference parameters or return value; operates on this world-owned game state.
+	// Operates on this world-owned game state.
 	virtual void BeginPlay() override;
 
 	// Logs the final bounce count and dispatches native actor teardown.

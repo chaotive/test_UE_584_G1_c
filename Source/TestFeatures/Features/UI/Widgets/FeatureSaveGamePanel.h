@@ -15,17 +15,17 @@ class TESTFEATURES_API UFeatureSaveGamePanel : public UUserWidget
 	GENERATED_BODY()
 protected:
 	// Builds the persistence controls and diagnostic section once.
-	// No pointer or reference parameters or return value; this widget owns its tree.
+	// This widget owns its tree.
 	virtual void NativeOnInitialized() override;
 	// Connects save diagnostics and orderly window close handling.
-	// No pointer or reference parameters or return value; cached world references are weak.
+	// Cached world references are weak.
 	virtual void NativeConstruct() override;
 	// Removes bindings when this section is removed.
-	// No pointer or reference parameters or return value; releases observations without destroying systems.
+	// Releases observations without destroying systems.
 	virtual void NativeDestruct() override;
 private:
 	// Composes the persistence section from controls and a scrollable history.
-	// No pointer or reference parameters or return value; controls belong to the widget tree.
+	// Controls belong to the widget tree.
 	void BuildLayout();
 	// Creates save and save-and-quit controls.
 	// Returns a raw pointer to a tree-owned control without ownership transfer.
@@ -40,11 +40,11 @@ private:
 	// Status is read-only and busy is by value; event data is not retained by reference.
 	void RefreshSaveStatus(const FString& Status, bool bBusy);
 	// Requests saving without leaving the current game.
-	// No pointer or reference parameters or return value; acts on the weakly observed workflow binding.
+	// Acts on the weakly observed workflow binding.
 	UFUNCTION()
 	void HandleSaveClicked();
 	// Requests saving followed by a successful orderly quit.
-	// No pointer or reference parameters or return value; acts on the weakly observed workflow binding.
+	// Acts on the weakly observed workflow binding.
 	UFUNCTION()
 	void HandleSaveAndQuitClicked();
 	// Gates native game-window close through the save-and-quit flow.

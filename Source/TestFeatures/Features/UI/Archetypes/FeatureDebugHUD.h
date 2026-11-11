@@ -15,14 +15,14 @@ class TESTFEATURES_API UFeatureDebugHUD : public UUserWidget
 	GENERATED_BODY()
 protected:
 	// Builds the outer debug overlay once.
-	// No pointer or reference parameters or return value; this widget owns its tree.
+	// This widget owns its tree.
 	virtual void NativeOnInitialized() override;
 	// Enables interactive input for the composed debug panels.
-	// No pointer or reference parameters or return value; the owning player manages input.
+	// The owning player manages input.
 	virtual void NativeConstruct() override;
 private:
 	// Positions the composed debug panel in the player's viewport.
-	// No pointer or reference parameters or return value; controls belong to the widget tree.
+	// Controls belong to the widget tree.
 	void BuildLayout();
 	// Builds the shared heading and composes the specialized child panels.
 	// Returns a raw pointer to a tree-owned border without ownership transfer.

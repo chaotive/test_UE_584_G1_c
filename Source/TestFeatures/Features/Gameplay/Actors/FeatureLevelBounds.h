@@ -14,7 +14,7 @@ class TESTFEATURES_API AFeatureLevelBounds : public AActor
 
 public:
 	// Creates the enclosure's root and six collision faces.
-	// No pointer or reference parameters; the world owns this actor and its components.
+	// The world owns this actor and its components.
 	AFeatureLevelBounds();
 
 	// Resizes the enclosure's interior before the session launches its balls.
@@ -43,6 +43,6 @@ private:
 	TArray<TObjectPtr<UBoxComponent>> Walls;
 
 	// Places and sizes the six faces around the clear interior.
-	// No pointer or reference parameters or return value; updates actor-owned components.
+	// Updates actor-owned components.
 	void UpdateWalls();
 };

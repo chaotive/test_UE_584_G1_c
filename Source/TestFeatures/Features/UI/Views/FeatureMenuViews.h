@@ -33,18 +33,14 @@ public:
 
 private:
 	// Defines the startup menu and its save controls.
-	// Returns an owned view value without pointer or reference parameters.
 	static FFeatureMenuView InitialMenu();
 
 	// Defines the paused-game menu and its input behavior.
-	// Returns an owned view value without pointer or reference parameters.
 	static FFeatureMenuView PauseMenu();
 
 	// Defines the victory result actions.
-	// Returns an owned view value without pointer or reference parameters.
 	static FFeatureMenuView VictoryMenu();
 
 	// Defines the defeat result actions.
-	// Returns an owned view value without pointer or reference parameters.
 	static FFeatureMenuView DefeatMenu();
 };

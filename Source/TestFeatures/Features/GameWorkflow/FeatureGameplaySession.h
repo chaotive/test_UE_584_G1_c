@@ -41,7 +41,7 @@ public:
 	void BindGameState(AFeatureGameState& State, int32 ContactsToWin, int32 BouncesToLose, int32 ContactsIncrease, int32 BouncesDecrease, int32 MinimumBouncesToLose);
 
 	// Removes this subsystem's observation when its world shuts down.
-	// No pointer or reference parameters or return value; releases weak UObject subscriptions.
+	// Releases weak UObject subscriptions.
 	virtual void Deinitialize() override;
 
 	// Starts the player workflow, initializes progress, and creates the enclosure and ball volley.
@@ -49,11 +49,11 @@ public:
 	void OnGameplaySessionStart(bool bContinue, int32 InitialLevel, int32 BallCount, float BallSize, float BallSpeedMultiplier, int32 ReboundLimit, const FBox& SpawnBounds, const FBox& LevelBounds);
 
 	// Unpauses the active session and announces its return to gameplay.
-	// No pointer or reference parameters or return value; updates the observed state's world.
+	// Updates the observed state's world.
 	void OnGameplaySessionResume();
 
 	// Pauses gameplay and announces the pause workflow.
-	// No pointer or reference parameters or return value; updates the observed state's world.
+	// Updates the observed state's world.
 	void OnGameplaySessionPaused();
 
 	// Ends gameplay, records the outcome, and announces victory or defeat to observers.

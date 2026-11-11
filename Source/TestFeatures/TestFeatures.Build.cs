@@ -4,7 +4,6 @@ using System.IO;
 public class TestFeatures : ModuleRules
 {
     // Configures the runtime features and their direct engine dependencies.
-    // Target is a read-only rules reference; no native pointers or ownership are involved.
     public TestFeatures(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;

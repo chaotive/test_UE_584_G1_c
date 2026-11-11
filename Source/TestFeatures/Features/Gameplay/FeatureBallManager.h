@@ -27,7 +27,7 @@ public:
 	FPlayerBallContactEvent OnPlayerBallContact;
 
 	// Releases timer callbacks and subscriptions when the world shuts down.
-	// No pointer or reference parameters or return value; actors remain world-owned.
+	// Actors remain world-owned.
 	virtual void Deinitialize() override;
 
 	// Configures the pool and launches the initial ball volley.
@@ -41,7 +41,7 @@ public:
 	void Resume();
 
 	// Stops replacement scheduling and discards queued work at session end.
-	// No pointer or reference parameters or return value; pooled actors remain world-owned.
+	// Pooled actors remain world-owned.
 	void Stop();
 
 	// Creates inactive pool entries up to the requested count.
@@ -82,7 +82,7 @@ private:
 	void HandleBallRetired(AFeatureBall& Ball);
 
 	// Reuses a pooled ball from the configured spawn region when replacement is allowed.
-	// No pointer or reference parameters or return value; the world owns the spawned actor.
+	// The world owns the spawned actor.
 	void SpawnReplacementBall();
 
 	// Queries the existing scripted replacement policy with native activity state.

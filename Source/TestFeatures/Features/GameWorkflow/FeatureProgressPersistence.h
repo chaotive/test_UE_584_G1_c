@@ -15,7 +15,7 @@ class TESTFEATURES_API UFeatureProgressPersistence : public UActorComponent
 
 public:
 	// Creates an event-driven persistence binding without a per-frame tick.
-	// No pointer or reference parameters; the owning actor retains this component.
+	// The owning actor retains this component.
 	UFeatureProgressPersistence();
 
 	// Attaches the persistence workflow when GameMode provisions its game state.
@@ -23,7 +23,6 @@ public:
 	static void AttachTo(AFeatureGameState& State);
 
 	// Loads continued progress or initializes a fresh session from configuration.
-	// bContinue and InitialLevel are copied values without pointer or reference ownership.
 	void StartSession(bool bContinue, int32 InitialLevel);
 
 	// Requests a snapshot save and optionally an orderly quit after success.
@@ -33,7 +32,7 @@ public:
 
 protected:
 	// Connects loaded snapshots to the state once its actor enters gameplay.
-	// No pointer or reference parameters; observes the owner and game-instance subsystem weakly.
+	// Observes the owner and game-instance subsystem weakly.
 	virtual void BeginPlay() override;
 
 	// Unsubscribes, cancels stale operations, and performs the teardown save fallback.

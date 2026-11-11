@@ -30,16 +30,16 @@ public:
 	static UFeatureMainMenu* Present(UGameInstance& GameInstance, EFeatureGameFlow Flow);
 
 	// Removes the menu and returns keyboard and mouse routing to gameplay.
-	// No pointer or reference parameters or return value; operates on the viewport hosting this widget.
+	// Operates on the viewport hosting this widget.
 	void Dismiss();
 
 protected:
 	// Binds save-related buttons to the child panel's current preview.
-	// No pointer or reference parameters; the menu owns its child widget and weak native event binding.
+	// The menu owns its child widget and weak native event binding.
 	virtual void NativeConstruct() override;
 
 	// Removes the preview binding when the menu is detached.
-	// No pointer or reference parameters or return value; releases the weak native event binding.
+	// Releases the weak native event binding.
 	virtual void NativeDestruct() override;
 
 	// Routes Escape to Resume or Exit for the pause and initial menus.
@@ -96,32 +96,32 @@ private:
 	void AddViewAction(UVerticalBox& Rows, const FFeatureMenuActionDefinition& Item);
 
 	// Publishes the New Game selection.
-	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	// Bound to a widget-owned button.
 	UFUNCTION()
 	void HandleNewGame();
 
 	// Publishes the Continue selection.
-	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	// Bound to a widget-owned button.
 	UFUNCTION()
 	void HandleContinue();
 
 	// Publishes the Resume selection.
-	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	// Bound to a widget-owned button.
 	UFUNCTION()
 	void HandleResume();
 
 	// Publishes the Return to Main Menu selection.
-	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	// Bound to a widget-owned button.
 	UFUNCTION()
 	void HandleReturnToMenu();
 
 	// Publishes the request to retry a defeated session.
-	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	// Bound to a widget-owned button.
 	UFUNCTION()
 	void HandleRetry();
 
 	// Publishes Delete Save so the action controller can clear the slot.
-	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	// Bound to a widget-owned button.
 	UFUNCTION()
 	void HandleDeleteSave();
 
@@ -130,7 +130,7 @@ private:
 	void UpdateSaveActions(const TOptional<int32>& SavedLevel, bool bHasSave);
 
 	// Publishes the Exit selection.
-	// No pointer or reference parameters or return value; bound to a widget-owned button.
+	// Bound to a widget-owned button.
 	UFUNCTION()
 	void HandleExit();
 };

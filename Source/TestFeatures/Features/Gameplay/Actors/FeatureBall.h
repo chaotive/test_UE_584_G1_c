@@ -33,7 +33,7 @@ public:
 	FRetiredEvent OnRetired;
 
 	// Creates a training ball with its sphere mesh and physics configured.
-	// No pointer or reference parameters; Unreal creates and owns this actor instance.
+	// Unreal creates and owns this actor instance.
 	AFeatureBall();
 
 	// Configures this pooled ball's size, launch speed, and retirement limit.
@@ -44,7 +44,7 @@ public:
 	void Activate(const FVector& Location);
 
 	// Stops and hides this ball so the ball manager can reuse it later.
-	// No pointer or reference parameters or return value; modifies this world-owned actor.
+	// Modifies this world-owned actor.
 	void Deactivate();
 
 	// Reports whether this ball is currently in use rather than available in the pool.
@@ -54,7 +54,7 @@ public:
 protected:
 
 	// Logs play startup, applies the bounce material, and connects collision handling.
-	// No pointer or reference parameters or return value; operates on this actor instance.
+	// Operates on this actor instance.
 	virtual void BeginPlay() override;
 
 	// Logs why the ball stopped playing and runs the inherited cleanup.
@@ -66,15 +66,15 @@ private:
 	friend class FFeatureSmokeSpec;
 
 	// Assigns the sphere mesh and prepares an inactive ball for later activation.
-	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
+	// Modifies the mesh component owned by this actor.
 	void ConfigureBall();
 
 	// Creates the bounce material and enables collision notifications.
-	// No pointer or reference parameters or return value; modifies this actor's mesh and owned material.
+	// Modifies this actor's mesh and owned material.
 	void ConfigureBouncing();
 
 	// Applies a random upward launch velocity and logs it.
-	// No pointer or reference parameters or return value; modifies the mesh component owned by this actor.
+	// Modifies the mesh component owned by this actor.
 	void StartRandomMovement();
 
 	// Reports contacts and applies the script's bounce-count and retirement effects.

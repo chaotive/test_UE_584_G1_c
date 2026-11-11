@@ -33,20 +33,20 @@ public:
 
 protected:
 	// Builds the summary label once with the menu's existing typography.
-	// No pointer or reference arguments; the widget tree owns the created label.
+	// The widget tree owns the created label.
 	virtual void NativeOnInitialized() override;
 
 	// Observes deletion and starts a fresh preview when displayed.
-	// No pointer or reference arguments; observes the game-instance-owned subsystem weakly.
+	// Observes the game-instance-owned subsystem weakly.
 	virtual void NativeConstruct() override;
 
 	// Invalidates pending previews and removes deletion observation when detached.
-	// No pointer or reference arguments; releases weak bindings without retaining the subsystem.
+	// Releases weak bindings without retaining the subsystem.
 	virtual void NativeDestruct() override;
 
 private:
 	// Loads saved progress asynchronously without pausing gameplay for a menu preview.
-	// No pointer or reference arguments; the callback observes this widget through a weak pointer.
+	// The callback observes this widget through a weak pointer.
 	void RefreshPreview();
 
 	// Builds the full or compact summary from a loaded snapshot.

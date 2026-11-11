@@ -18,16 +18,16 @@ class TESTFEATURES_API UFeaturePlayerRules : public UActorComponent
 
 public:
     // Creates an event-driven component without a per-frame tick.
-    // No pointer or reference arguments; the owning actor retains the default subobject.
+    // The owning actor retains the default subobject.
     UFeaturePlayerRules();
 
     // Loads the player rules and applies the supplied movement configuration.
-    // All arguments are copied values; native configuration and transient bonus state remain here.
+    // Native configuration and transient bonus state remain here.
     void ConfigureSpeed(float BaseMultiplier, float ContactMultiplier, float Duration, bool bStackBonuses);
 
 protected:
     // Observes player-ball contacts once the actor enters gameplay.
-    // No pointer or reference arguments; the event stores a weak UObject binding.
+    // The event stores a weak UObject binding.
     virtual void BeginPlay() override;
 
     // Removes the contact binding and expiry timer when gameplay ends.
@@ -46,7 +46,7 @@ private:
     void ResetSpeed();
 
     // Writes the script's calculated speed to Unreal's movement component.
-    // No pointer or reference arguments; native movement remains owned by the actor.
+    // Native movement remains owned by the actor.
     void ApplySpeed();
 
     // Retains the script runtime loaded when this character is configured.

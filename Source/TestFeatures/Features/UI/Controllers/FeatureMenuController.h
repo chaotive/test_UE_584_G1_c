@@ -32,7 +32,7 @@ public:
 	EFeatureGameFlow GetFlowState() const;
 
 	// Removes menu subscriptions and its widget when the world shuts down.
-	// No pointer or reference parameters or return value; releases the retained widget.
+	// Releases the retained widget.
 	virtual void Deinitialize() override;
 
 private:
@@ -40,7 +40,7 @@ private:
 	void StartSession(bool bContinue);
 
 	// Exits directly from startup or saves the active progress before quitting.
-	// No pointer or reference parameters or return value; native systems perform the operation.
+	// Native systems perform the operation.
 	void ExitGame();
 
 	// Retains the active menu and owns its action subscription.

@@ -33,19 +33,15 @@ class TESTFEATURES_API FFeatureMenuSessionActions
 {
 public:
 	// Starts a new game.
-	// Returns an owned action definition; no pointer or reference parameters.
 	static FFeatureMenuActionDefinition NewGame();
 
 	// Starts the saved game.
-	// Returns an owned action definition; no pointer or reference parameters.
 	static FFeatureMenuActionDefinition Continue();
 
 	// Resumes the paused session.
-	// Returns an owned action definition; no pointer or reference parameters.
 	static FFeatureMenuActionDefinition Resume();
 
 	// Restarts at the saved level.
-	// Returns an owned action definition; no pointer or reference parameters.
 	static FFeatureMenuActionDefinition Retry();
 };
 
@@ -54,7 +50,6 @@ class TESTFEATURES_API FFeatureMenuPersistenceActions
 {
 public:
 	// Deletes saved progress.
-	// Returns an owned action definition; no pointer or reference parameters.
 	static FFeatureMenuActionDefinition DeleteSave();
 };
 
@@ -63,10 +58,8 @@ class TESTFEATURES_API FFeatureMenuNavigationActions
 {
 public:
 	// Returns to the startup menu.
-	// Returns an owned action definition; no pointer or reference parameters.
 	static FFeatureMenuActionDefinition ReturnToMenu();
 
 	// Exits the game through the current workflow.
-	// Returns an owned action definition; no pointer or reference parameters.
 	static FFeatureMenuActionDefinition Exit();
 };

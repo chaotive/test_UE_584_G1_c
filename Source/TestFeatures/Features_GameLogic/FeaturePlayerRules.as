@@ -1,5 +1,4 @@
 // Calculates active contact bonuses, including the disabled-duration rule.
-// All arguments and the int result are copied values; no pointers, references, or owned state.
 int PlayerSpeedBonusCount(int PreviousBonuses, bool StackBonuses, float Duration)
 {
     if (Duration <= 0.0f)
